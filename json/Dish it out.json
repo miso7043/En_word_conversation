@@ -1,0 +1,100 @@
+{
+  "title": "Dish it out but can't take it",
+  "description": ["\"남에게는 비판, 비아냥, 장난, 막말을 잘 쏟아내면서 정작 자기가 당하면 참지 못하고 화를 낸다\"는 뜻의 영어 표현.",
+    "\"Dish it out\" : \"(남에게) 비판이나 공격을 퍼붓다\"",
+    "\"Can't take it\" : \"(자신이 받는 비판이나 공격을) 감당하지 못하다, 못 참다\"",
+    "보통 \"남을 놀리거나 까는 건 좋아하면서 정작 본인은 쪼금만 놀려도 삐치거나 화내는 사람\"을 지적할 때 쓰입니다."
+  ],
+  "conversations": [
+    {
+      "id": 1,
+      "title": "장난이나 농담에 화낼 때",
+      "description": "",
+      "lines": [
+        {
+          "speaker": "A",
+          "text": "Why is Tom so mad at you?",
+          "meaning": "톰이 너한테 왜 그렇게 화가 났어?"
+        },
+        {
+          "speaker": "B",
+          "text": "I just made a small joke about his hair. He constantly roasts everyone else, but he can dish it out, but can't take it.",
+          "meaning": "걔 머리 스타일 가지고 약간 농담 좀 했을 뿐이야. 남들은 맨날 놀리면서 정작 본인은 조금만 당해도 못 참는다니까."
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "title": "게임이나 경기 중 쪼으기(트래시 토크)",
+      "description": "",
+      "lines": [
+        {
+          "speaker": "A",
+          "text": "Min-soo left the game room abruptly after I beat him.",
+          "meaning": "민수 나한테 지고 나더니 갑자기 게임 방 나가버렸어."
+        },
+        {
+          "speaker": "B",
+          "text": "He was talking so much trash while he was winning! Classic case of someone who can dish it out but can't take it.",
+          "meaning": "자기가 이기고 있을 땐 그렇게 트래시 토크를 해대더니! 전형적으로 남은 잘 까면서 자기는 못 참는 유형이네."
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "title": "직장에서 남에게만 엄격한 동료",
+      "description": "",
+      "lines": [
+        {
+          "speaker": "A",
+          "text": "Sarah was criticizing everyone's code quality in the meeting, but she got totally defensive when I pointed out her bug.",
+          "meaning": "사라는 미팅 때 모든 사람 코드 품질을 비판하더니, 내가 자기 버그 지적하니까 완전 정색하더라."
+        },
+        {
+          "speaker": "B",
+          "text": "Yeah, she loves to dish it out, but she really can't take it.",
+          "meaning": "맞아, 남한테 지적질하는 건 좋아하면서 자기 지적받는 건 진짜 못 견디더라."
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "title": "연인 간의 말다툼",
+      "description": "",
+      "lines": [
+        {
+          "speaker": "A",
+          "text": "You always make fun of my cooking, but when I say one thing about your driving, you stop talking to me!",
+          "meaning": "너는 내 요리 솜씨 매번 놀리면서, 내가 너 운전하는 거 가지고 한마디 했다고 말도 안 해?"
+        },
+        {
+          "speaker": "B",
+          "text": "That's completely different!",
+          "meaning": "그건 완전히 다른 문제지!"
+        },
+        {
+          "speaker": "A",
+          "text": "No, it's not. You can dish it out, but you can't take it.",
+          "meaning": "아니, 똑같아. 너는 남 놀릴 줄만 알지 정작 본인은 조금도 못 받아들이잖아."
+        }
+      ]
+    },
+    {
+      "id": 5,
+      "title": "친구들끼리의 유쾌한 핀잔",
+      "description": "",
+      "lines": [
+        {
+          "speaker": "A",
+          "text": "Ouch, stop teasing me about my outfit!",
+          "meaning": "아, 내 옷차림 가지고 그만 좀 놀려!"
+        },
+        {
+          "speaker": "B",
+          "text": "Come on, you spent the entire morning laughing at my shoes! Don't dish it out if you can't take it.",
+          "meaning": "에이 왜 그래, 너 아침 내내 내 신발 보고 웃었잖아. 남 놀렸으면 너도 놀림받을 각오는 해야지."
+        }
+      ]
+    }
+  ]
+}

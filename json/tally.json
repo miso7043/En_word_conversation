@@ -1,0 +1,76 @@
+{
+  "title": "tally",
+  "description": [],
+  "conversations": [
+    {
+      "id": 1,
+      "lines": [
+        { "speaker": "A", "text": "How many people signed up so far?" },
+        { "speaker": "B", "text": "I haven't done a full tally yet, but it looks like around forty." }
+      ]
+    },
+    {
+      "id": 2,
+      "lines": [
+        { "speaker": "A", "text": "Did the final numbers match what we expected?" },
+        { "speaker": "B", "text": "Not quite. The expenses don't fully tally with the receipts we collected." }
+      ]
+    },
+    {
+      "id": 3,
+      "lines": [
+        { "speaker": "A", "text": "When should we count the votes?" },
+        { "speaker": "B", "text": "Let's do the tally on Monday evening after everyone has submitted their ballots." }
+      ]
+    },
+    {
+      "id": 4,
+      "lines": [
+        { "speaker": "A", "text": "Are you keeping track of the scores?" },
+        { "speaker": "B", "text": "Yeah, I've been making a running tally on my phone." }
+      ]
+    },
+    {
+      "id": 5,
+      "lines": [
+        { "speaker": "A", "text": "The inventory count feels off." },
+        { "speaker": "B", "text": "You're right. The physical stock doesn't tally with what's in the system." }
+      ]
+    },
+    {
+      "id": 6,
+      "lines": [
+        { "speaker": "A", "text": "How many hours did you work this week?" },
+        { "speaker": "B", "text": "I'll tally them up later tonight and send you the total." }
+      ]
+    },
+    {
+      "id": 7,
+      "lines": [
+        { "speaker": "A", "text": "Did the donations reach the goal?" },
+        { "speaker": "B", "text": "Almost. The current tally is just under the target." }
+      ]
+    },
+    {
+      "id": 8,
+      "lines": [
+        { "speaker": "A", "text": "Why do the two lists look different?" },
+        { "speaker": "B", "text": "Because the names don't completely tally. A few people are missing from one side." }
+      ]
+    },
+    {
+      "id": 9,
+      "lines": [
+        { "speaker": "A", "text": "Should we update the spreadsheet now?" },
+        { "speaker": "B", "text": "Better to wait until the end of the day so we can tally everything at once." }
+      ]
+    },
+    {
+      "id": 10,
+      "lines": [
+        { "speaker": "A", "text": "Any idea how many tickets we sold?" },
+        { "speaker": "B", "text": "Not exactly. I'll do a proper tally tomorrow morning and let you know." }
+      ]
+    }
+  ]
+}

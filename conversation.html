@@ -1,0 +1,831 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>영어 대화 연습</title>
+<style>
+  :root { color-scheme: dark; font-family: Inter, system-ui, sans-serif; background: #101923; color: #f0f5f7; }
+  * { box-sizing: border-box; }
+  body { margin: 0; }
+  .layout { display: grid; grid-template-columns: minmax(220px, 285px) minmax(0, 820px); justify-content: center; min-height: 100vh; }
+  aside {
+    position: sticky;
+    top: 0;
+    align-self: start;
+    height: 100dvh;
+    display: grid;
+    grid-template-rows: auto minmax(0, 1fr) auto;
+    padding: 30px 20px max(20px, env(safe-area-inset-bottom));
+    background: #15222e;
+    border-right: 1px solid #2c3d4b;
+  }
+  .lesson-list { overflow-y: auto; overscroll-behavior-y: contain; padding: 5px; margin-inline: -5px; }
+  aside h1 { font-size: 1.15rem; margin: 0 0 24px; }
+  nav { display: grid; gap: 8px; }
+  button, .file-label { font: inherit; color: inherit; background: #203343; border: 1px solid #385263; border-radius: 9px; padding: 9px 13px; cursor: pointer; }
+  button:hover:not(:disabled), .file-label:hover { background: #304858; }
+  button:disabled { opacity: .48; cursor: default; }
+  button:focus-visible, .file-label:focus-within { outline: 2px solid #86e2cf; outline-offset: 3px; }
+  nav button { text-align: left; overflow-wrap: anywhere; }
+  nav button[aria-current="true"] { border-color: #86e2cf; color: #a1efdf; background: #1d3e41; }
+  nav small { display: block; margin-top: 4px; }
+  small, .muted, .meaning, #load-status, #speech-status { color: #b4c6d1; }
+  .file-label { display: inline-block; margin-top: 20px; font-size: .87rem; }
+  .file-label input { position: absolute; width: 1px; height: 1px; opacity: 0; }
+  #load-status { font-size: .86rem; line-height: 1.6; }
+  main { padding: 0 clamp(14px, 4vw, 42px) 42px; min-width: 0; }
+  .player { padding-top: 14px; margin-top: 10px; border-top: 1px solid #385263; text-align: center; }
+  .controls { display: flex; justify-content: center; flex-wrap: wrap; gap: 8px; }
+  #play { display: grid; place-items: center; width: 44px; min-height: 44px; background: #86e2cf; color: #102721; }
+  #play::before { content: ""; border-block: 8px solid transparent; border-left: 12px solid currentColor; margin-left: 2px; }
+  #play[data-playing="true"]::before { width: 12px; height: 16px; margin: 0; border: solid currentColor; border-width: 0 4px; }
+  #play:hover:not(:disabled) { background: #a1efdf; }
+  #speech-status { margin: 7px 0 0; font-size: .84rem; }
+  #speech-status:empty { margin: 0; }
+  h2 { margin: 28px 0 12px; font-size: clamp(1.65rem, 4vw, 2.65rem); overflow-wrap: anywhere; }
+  #content { line-height: 1.6; }
+  article { margin-top: 16px; padding: 16px; border: 1px solid #2c3d4b; border-radius: 13px; background: #172532; }
+  article h3 { margin: 0 0 5px; font-size: 1.05rem; }
+  .cast { margin: 0 0 10px; font-size: .82rem; overflow-wrap: anywhere; }
+  .line { display: grid; grid-template-columns: auto 1fr; gap: 10px; padding: 9px; border-radius: 8px; }
+  .line + .line { margin-top: 4px; }
+  .speaker { align-self: start; min-width: 2em; padding: 2px 6px; text-align: center; border-radius: 6px; color: #a1efdf; background: #214246; }
+  .meaning { display: block; margin-top: 2px; font-size: .9rem; }
+  .reading { outline: 1px solid #86e2cf; background: #244048; }
+  @media (max-width: 660px) {
+    .layout { grid-template-columns: minmax(0, 1fr); }
+    aside { position: static; height: auto; max-height: 60dvh; padding: 18px 14px; border-right: 0; border-bottom: 1px solid #2c3d4b; }
+    aside h1 { margin-bottom: 12px; }
+  }
+</style>
+</head>
+<body>
+<div class="layout">
+  <aside>
+    <h1>영어 대화 연습</h1>
+    <div class="lesson-list">
+      <nav id="lessons" aria-label="대화 목록"></nav>
+      <label class="file-label">JSON 폴더 열기 <input id="folder" type="file" webkitdirectory multiple></label>
+      <p id="load-status" role="status"></p>
+    </div>
+    <section class="player" aria-label="음성 재생">
+      <div class="controls">
+        <button id="play" type="button" aria-label="재생" title="재생" disabled></button>
+        <button id="stop" type="button" disabled>정지</button>
+      </div>
+      <p id="speech-status" role="status"></p>
+    </section>
+  </aside>
+  <main>
+    <div id="content"></div>
+  </main>
+</div>
+<script>
+  const lessons = document.querySelector('#lessons');
+  const content = document.querySelector('#content');
+  const folder = document.querySelector('#folder');
+  const loadStatus = document.querySelector('#load-status');
+  const speechStatus = document.querySelector('#speech-status');
+  const play = document.querySelector('#play');
+  const stop = document.querySelector('#stop');
+  const synth = window.speechSynthesis;
+  const locales = new Set(['en-us', 'en-ca', 'en-gb', 'en-au']);
+  const childVoice = /\b(?:child(?:ren)?|kid(?:s)?|junior|teen(?:ager)?|boy|girl|zippy|bahh|boing|bubbles|jester|good news|bad news|superstar)\b/i;
+  const dateFormat = new Intl.DateTimeFormat('ko-KR', { timeZone: 'Asia/Seoul', dateStyle: 'medium', timeStyle: 'short' });
+  let documents = [];
+  let selected = null;
+  let cards = [];
+  let lines = [];
+  let voices = [];
+  let current = 0;
+  let state = 'idle';
+  let utterance = null;
+  let loadVersion = 0;
+
+  function add(parent, tag, text, className) {
+    const element = document.createElement(tag);
+    if (text != null) element.textContent = text;
+    if (className) element.className = className;
+    parent.append(element);
+    return element;
+  }
+
+  function describe(parent, description) {
+    for (const paragraph of [].concat(description || [])) {
+      if (paragraph) add(parent, 'p', paragraph, 'muted');
+    }
+  }
+
+  function assignVoices() {
+    // Continue the rotation across both topics so adjacent dialogues get different assignments.
+    const preceding = documents.slice(0, documents.indexOf(selected))
+      .reduce((count, item) => count + item.data.conversations.length, 0);
+    cards.forEach(({ speakers, cast, entries }, index) => {
+      const mapping = new Map(speakers.map((speaker, position) => [
+        speaker, voices.length ? voices[(preceding + index + position) % voices.length] : undefined
+      ]));
+      for (const entry of entries) entry.voice = mapping.get(entry.speaker);
+      const assignments = speakers.map(speaker => {
+        const voice = mapping.get(speaker);
+        return voice && `${speaker} · ${voice.name} (${voice.lang})`;
+      });
+      cast.textContent = voices.length ? assignments.join(' / ') : '';
+    });
+  }
+
+  function updateControls() {
+    play.disabled = !lines.length || !voices.length;
+    const playing = state === 'playing';
+    const action = playing ? '일시정지' : state === 'paused' ? '이어 듣기' : '재생';
+    play.setAttribute('data-playing', String(playing));
+    play.setAttribute('aria-label', action);
+    play.title = action;
+    for (const line of lines) line.button.disabled = !line.voice;
+    stop.disabled = state === 'idle';
+  }
+
+  function voiceStatus() {
+    if (!synth) return '이 브라우저는 음성 재생을 지원하지 않습니다.';
+    if (!voices.length) return '사용 가능한 미국·캐나다·영국·호주 영어 음성이 없습니다.';
+    if (cards.some(card => card.speakers.length > voices.length)) {
+      return '사용 가능한 영어 음성이 부족해 일부 화자가 같은 목소리를 사용합니다.';
+    }
+    return '';
+  }
+
+  function refreshVoices() {
+    if (state !== 'idle') return;
+    const groups = new Map([...locales].map(locale => [locale, []]));
+    const seen = new Set();
+    for (const voice of synth?.getVoices() || []) {
+      const locale = voice.lang.toLowerCase().replaceAll('_', '-');
+      const key = voice.voiceURI || `${voice.name}:${locale}`;
+      if (!groups.has(locale) || childVoice.test(voice.name) || seen.has(key)) continue;
+      groups.get(locale).push(voice);
+      seen.add(key);
+    }
+    // Interleave regions to avoid exhausting all voices from one region first.
+    const regions = [...groups.values()];
+    voices = [];
+    for (let index = 0; index < Math.max(...regions.map(region => region.length)); index++) {
+      for (const region of regions) {
+        if (region[index]) voices.push(region[index]);
+      }
+    }
+    assignVoices();
+    updateControls();
+    speechStatus.textContent = voiceStatus();
+  }
+
+  function resetPlayback(message) {
+    const wasActive = state !== 'idle';
+    state = 'idle';
+    utterance = null;
+    current = 0;
+    if (wasActive) {
+      synth.cancel();
+      if (synth.paused) synth.resume();
+    }
+    for (const line of lines) line.element.classList.remove('reading');
+    refreshVoices();
+    if (message) speechStatus.textContent = message;
+  }
+
+  function speakCurrent() {
+    if (current >= lines.length) {
+      resetPlayback('재생이 끝났습니다.');
+      return;
+    }
+    const entry = lines[current];
+    entry.element.classList.add('reading');
+    entry.element.scrollIntoView({
+      behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth',
+      block: 'center'
+    });
+    speechStatus.textContent = `읽는 중 · ${current + 1} / ${lines.length}`;
+    const next = new SpeechSynthesisUtterance(entry.text);
+    next.voice = entry.voice;
+    next.lang = entry.voice.lang;
+    next.rate = 0.95;
+    utterance = next;
+    next.onend = () => {
+      if (utterance !== next) return;
+      utterance = null;
+      entry.element.classList.remove('reading');
+      current++;
+      if (state === 'playing') speakCurrent();
+    };
+    next.onerror = () => {
+      if (utterance === next) resetPlayback('음성 재생 중 오류가 발생했습니다.');
+    };
+    synth.speak(next);
+  }
+
+  function startOrResume() {
+    state = 'playing';
+    updateControls();
+    if (utterance) {
+      synth.resume();
+      speechStatus.textContent = `읽는 중 · ${current + 1} / ${lines.length}`;
+    } else {
+      if (synth.paused) synth.resume();
+      speakCurrent();
+    }
+  }
+  play.addEventListener('click', () => {
+    if (state !== 'playing') {
+      startOrResume();
+      return;
+    }
+    state = 'paused';
+    synth.pause();
+    updateControls();
+    speechStatus.textContent = '일시정지됨';
+  });
+  stop.addEventListener('click', () => {
+    resetPlayback('재생을 정지했습니다.');
+    window.scrollTo(0, 0);
+  });
+  synth?.addEventListener('voiceschanged', refreshVoices);
+  window.addEventListener('pagehide', () => resetPlayback());
+
+  function showDocument(item) {
+    resetPlayback();
+    selected = item;
+    for (const lesson of documents) {
+      lesson.button.setAttribute('aria-current', String(lesson === item));
+    }
+    content.replaceChildren();
+    cards = [];
+    lines = [];
+    add(content, 'h2', item.data.title);
+    describe(content, item.data.description);
+    item.data.conversations.forEach((conversation, index) => {
+      const article = add(content, 'article');
+      add(article, 'h3', conversation.title || `대화 ${conversation.id ?? index + 1}`);
+      describe(article, conversation.description);
+      const cast = add(article, 'p', '', 'cast muted');
+      const entries = conversation.lines.map((line, lineIndex) => {
+        const element = add(article, 'div', null, 'line');
+        const button = add(element, 'button', line.speaker, 'speaker');
+        button.type = 'button';
+        button.setAttribute('aria-label', `${line.speaker} · ${lineIndex + 1}번째 대사부터 재생`);
+        const position = lines.length + lineIndex;
+        button.addEventListener('click', () => {
+          resetPlayback();
+          if (button.disabled) return;
+          current = position;
+          startOrResume();
+        });
+        const dialogue = add(element, 'div');
+        add(dialogue, 'span', line.text).lang = 'en';
+        if (line.meaning) add(dialogue, 'span', line.meaning, 'meaning');
+        return { element, button, text: line.text, speaker: line.speaker };
+      });
+      const speakers = [...new Set(entries.map(entry => entry.speaker))];
+      cards.push({ cast, entries, speakers });
+      lines.push(...entries);
+    });
+    refreshVoices();
+    window.scrollTo(0, 0);
+  }
+
+  function readDocument(data, name, modified) {
+    if (typeof data?.title !== 'string' || !Array.isArray(data.conversations) ||
+        !data.conversations.every(conversation => Array.isArray(conversation?.lines) &&
+          conversation.lines.every(line => typeof line?.text === 'string' && typeof line.speaker === 'string'))) {
+      throw new Error('대화 JSON 형식이 올바르지 않습니다.');
+    }
+    return { data, name, date: Date.parse(data.date) || modified || 0 };
+  }
+
+  async function loadDocuments(sources) {
+    const version = ++loadVersion;
+    loadStatus.textContent = '대화 목록을 불러오는 중입니다.';
+    const results = await Promise.allSettled(sources.map(source => source.read()));
+    if (version !== loadVersion) return;
+    const loaded = results.filter(result => result.status === 'fulfilled').map(result => result.value);
+    const failed = sources.filter((_, index) => results[index].status === 'rejected').map(source => source.name);
+    if (loaded.length) {
+      resetPlayback();
+      documents = loaded.sort((a, b) => b.date - a.date || a.name.localeCompare(b.name));
+      lessons.replaceChildren();
+      for (const item of documents) {
+        item.button = add(lessons, 'button', item.data.title);
+        if (item.date) add(item.button, 'small', dateFormat.format(item.date));
+        item.button.addEventListener('click', () => showDocument(item));
+      }
+      showDocument(documents[0]);
+    }
+    loadStatus.textContent = failed.length ? `불러오지 못한 파일: ${failed.join(', ')}` : '';
+    if (!loaded.length) {
+      loadStatus.textContent += ' JSON 폴더 열기를 눌러 프로젝트의 json 폴더를 선택하세요.';
+    }
+  }
+
+  folder.addEventListener('change', () => {
+    const sources = [...folder.files].filter(file => /\.json$/i.test(file.name)).map(file => ({
+      name: file.name,
+      read: async () => readDocument(JSON.parse(await file.text()), file.name, file.lastModified)
+    }));
+    loadDocuments(sources);
+    folder.value = '';
+  });
+
+  async function loadFromServer() {
+    const directory = new URL('./json/', location.href);
+    let urls;
+    const version = loadVersion;
+    try {
+      const index = await fetch(directory, { cache: 'no-cache' });
+      if (!index.ok) throw new Error(`HTTP ${index.status}`);
+      const listing = new DOMParser().parseFromString(await index.text(), 'text/html');
+      const discovered = [...listing.querySelectorAll('a[href]')].map(link => new URL(link.getAttribute('href'), directory))
+        .filter(url => /\.json$/i.test(url.pathname) && new URL('.', url).href === directory.href);
+      urls = [...new Map(discovered.map(url => [url.pathname, url])).values()];
+      if (!urls.length) throw new Error('JSON 목록이 비어 있습니다.');
+    } catch {
+      if (version === loadVersion) {
+        loadStatus.textContent = '서버에서 json 폴더 목록을 읽을 수 없습니다. JSON 폴더 열기를 사용하세요.';
+      }
+      return;
+    }
+    if (version !== loadVersion) return;
+    loadDocuments(urls.map(url => {
+      const name = decodeURIComponent(url.pathname.split('/').pop());
+      return {
+        name,
+        read: async () => {
+          const response = await fetch(url, { cache: 'no-cache' });
+          if (!response.ok) throw new Error(`HTTP ${response.status}`);
+          return readDocument(await response.json(), name, Date.parse(response.headers.get('Last-Modified')));
+        }
+      };
+    }));
+  }
+
+  if (location.protocol === 'file:') {
+    // Direct file access uses a copy of the default lessons. The folder picker can load updated files.
+    const defaultLessons = [
+      {
+        "name": "Dish it out.json",
+        "modified": 1794448782657,
+        "data": {
+          "title": "Dish it out but can't take it",
+          "description": [
+            "\"남에게는 비판, 비아냥, 장난, 막말을 잘 쏟아내면서 정작 자기가 당하면 참지 못하고 화를 낸다\"는 뜻의 영어 표현.",
+            "\"Dish it out\" : \"(남에게) 비판이나 공격을 퍼붓다\"",
+            "\"Can't take it\" : \"(자신이 받는 비판이나 공격을) 감당하지 못하다, 못 참다\"",
+            "보통 \"남을 놀리거나 까는 건 좋아하면서 정작 본인은 쪼금만 놀려도 삐치거나 화내는 사람\"을 지적할 때 쓰입니다."
+          ],
+          "conversations": [
+            {
+              "id": 1,
+              "title": "장난이나 농담에 화낼 때",
+              "description": "",
+              "lines": [
+                {
+                  "speaker": "A",
+                  "text": "Why is Tom so mad at you?",
+                  "meaning": "톰이 너한테 왜 그렇게 화가 났어?"
+                },
+                {
+                  "speaker": "B",
+                  "text": "I just made a small joke about his hair. He constantly roasts everyone else, but he can dish it out, but can't take it.",
+                  "meaning": "걔 머리 스타일 가지고 약간 농담 좀 했을 뿐이야. 남들은 맨날 놀리면서 정작 본인은 조금만 당해도 못 참는다니까."
+                }
+              ]
+            },
+            {
+              "id": 2,
+              "title": "게임이나 경기 중 쪼으기(트래시 토크)",
+              "description": "",
+              "lines": [
+                {
+                  "speaker": "A",
+                  "text": "Min-soo left the game room abruptly after I beat him.",
+                  "meaning": "민수 나한테 지고 나더니 갑자기 게임 방 나가버렸어."
+                },
+                {
+                  "speaker": "B",
+                  "text": "He was talking so much trash while he was winning! Classic case of someone who can dish it out but can't take it.",
+                  "meaning": "자기가 이기고 있을 땐 그렇게 트래시 토크를 해대더니! 전형적으로 남은 잘 까면서 자기는 못 참는 유형이네."
+                }
+              ]
+            },
+            {
+              "id": 3,
+              "title": "직장에서 남에게만 엄격한 동료",
+              "description": "",
+              "lines": [
+                {
+                  "speaker": "A",
+                  "text": "Sarah was criticizing everyone's code quality in the meeting, but she got totally defensive when I pointed out her bug.",
+                  "meaning": "사라는 미팅 때 모든 사람 코드 품질을 비판하더니, 내가 자기 버그 지적하니까 완전 정색하더라."
+                },
+                {
+                  "speaker": "B",
+                  "text": "Yeah, she loves to dish it out, but she really can't take it.",
+                  "meaning": "맞아, 남한테 지적질하는 건 좋아하면서 자기 지적받는 건 진짜 못 견디더라."
+                }
+              ]
+            },
+            {
+              "id": 4,
+              "title": "연인 간의 말다툼",
+              "description": "",
+              "lines": [
+                {
+                  "speaker": "A",
+                  "text": "You always make fun of my cooking, but when I say one thing about your driving, you stop talking to me!",
+                  "meaning": "너는 내 요리 솜씨 매번 놀리면서, 내가 너 운전하는 거 가지고 한마디 했다고 말도 안 해?"
+                },
+                {
+                  "speaker": "B",
+                  "text": "That's completely different!",
+                  "meaning": "그건 완전히 다른 문제지!"
+                },
+                {
+                  "speaker": "A",
+                  "text": "No, it's not. You can dish it out, but you can't take it.",
+                  "meaning": "아니, 똑같아. 너는 남 놀릴 줄만 알지 정작 본인은 조금도 못 받아들이잖아."
+                }
+              ]
+            },
+            {
+              "id": 5,
+              "title": "친구들끼리의 유쾌한 핀잔",
+              "description": "",
+              "lines": [
+                {
+                  "speaker": "A",
+                  "text": "Ouch, stop teasing me about my outfit!",
+                  "meaning": "아, 내 옷차림 가지고 그만 좀 놀려!"
+                },
+                {
+                  "speaker": "B",
+                  "text": "Come on, you spent the entire morning laughing at my shoes! Don't dish it out if you can't take it.",
+                  "meaning": "에이 왜 그래, 너 아침 내내 내 신발 보고 웃었잖아. 남 놀렸으면 너도 놀림받을 각오는 해야지."
+                }
+              ]
+            }
+          ]
+        }
+      },
+      {
+        "name": "inFavorOf.json",
+        "modified": 1794454201014,
+        "data": {
+          "title": "in favor of",
+          "description": [
+            "\"~을 찬성하여\", \"~을 지지하여\", \"~에 유리하게\"라는 뜻의 영어 표현.",
+            "\"be in favor of ~\" : \"~을 찬성하다, 지지하다\"",
+            "\"decide / rule / vote in favor of ~\" : \"~에 유리한 결정을 내리다, ~을 가결하다\"",
+            "보통 의견, 투표, 선택, 판정 등에서 어떤 쪽을 지지하거나 유리하게 작용할 때 자주 쓰입니다."
+          ],
+          "conversations": [
+            {
+              "id": 1,
+              "title": "회의에서 안건 찬성할 때",
+              "description": "",
+              "lines": [
+                {
+                  "speaker": "A",
+                  "text": "So, are you in favor of extending the deadline?",
+                  "meaning": "그래서 너 마감일 연장하는 거 찬성해?"
+                },
+                {
+                  "speaker": "B",
+                  "text": "Yeah, I'm definitely in favor of it. The team needs more time.",
+                  "meaning": "응, 완전 찬성이야. 팀이 시간이 더 필요해."
+                }
+              ]
+            },
+            {
+              "id": 2,
+              "title": "친구들끼리 식당 고를 때",
+              "description": "",
+              "lines": [
+                {
+                  "speaker": "A",
+                  "text": "Italian or Korean food tonight?",
+                  "meaning": "오늘 저녁 이탈리안 갈까, 한식 갈까?"
+                },
+                {
+                  "speaker": "B",
+                  "text": "I'm in favor of Korean. I've been craving kimchi chigae all day.",
+                  "meaning": "나는 한식 쪽이 더 좋겠어. 하루 종일 김치찌개 먹고 싶었거든."
+                },
+                {
+                  "speaker": "C",
+                  "text": "Same here. I'm also in favor of Korean.",
+                  "meaning": "나도. 나도 한식 찬성."
+                }
+              ]
+            },
+            {
+              "id": 3,
+              "title": "회사에서 새 정책 논의할 때",
+              "description": "",
+              "lines": [
+                {
+                  "speaker": "A",
+                  "text": "The new remote-work policy is up for a vote next week.",
+                  "meaning": "다음 주에 재택근무 새 정책 투표하잖아."
+                },
+                {
+                  "speaker": "B",
+                  "text": "I'm strongly in favor of it. Commuting three hours a day is killing me.",
+                  "meaning": "나는 완전 찬성이야. 하루 세 시간 출퇴근하는 거 진짜 힘들거든."
+                }
+              ]
+            },
+            {
+              "id": 4,
+              "title": "스포츠 경기 판정 이야기",
+              "description": "",
+              "lines": [
+                {
+                  "speaker": "A",
+                  "text": "Did you see the referee's final decision?",
+                  "meaning": "심판 최종 판정 봤어?"
+                },
+                {
+                  "speaker": "B",
+                  "text": "Yeah, he ruled in favor of the home team. That was a controversial call.",
+                  "meaning": "응, 홈팀 쪽으로 판정 내렸더라. 논란의 판정이었어."
+                }
+              ]
+            },
+            {
+              "id": 5,
+              "title": "연인 사이에서 여행지 정할 때",
+              "description": "",
+              "lines": [
+                {
+                  "speaker": "A",
+                  "text": "Jeju or Busan for our next trip?",
+                  "meaning": "다음 여행 제주 갈까, 부산 갈까?"
+                },
+                {
+                  "speaker": "B",
+                  "text": "I'm in favor of Jeju. I really want to see the ocean and eat black pork.",
+                  "meaning": "나는 제주 쪽이야. 바다 보고 흑돼지도 먹고 싶어서."
+                },
+                {
+                  "speaker": "A",
+                  "text": "Okay, then let's go with Jeju. I'm in favor of whatever makes you happy.",
+                  "meaning": "알겠어, 그럼 제주로 가자. 네가 행복하면 나도 찬성이야."
+                }
+              ]
+            },
+            {
+              "id": 6,
+              "title": "친구 사이에서 의견 나눌 때",
+              "description": "",
+              "lines": [
+                {
+                  "speaker": "A",
+                  "text": "Do you think we should tell Min-ho the truth?",
+                  "meaning": "민호한테 진짜 얘기해 줘야 할까?"
+                },
+                {
+                  "speaker": "B",
+                  "text": "I'm in favor of being honest. Hiding it will only make things worse later.",
+                  "meaning": "솔직하게 말하는 쪽에 한 표야. 숨기면 나중에 더 나빠질 거야."
+                }
+              ]
+            },
+            {
+              "id": 7,
+              "title": "법원이나 분쟁 결과 이야기",
+              "description": "",
+              "lines": [
+                {
+                  "speaker": "A",
+                  "text": "How did the lawsuit end?",
+                  "meaning": "그 소송 어떻게 됐어?"
+                },
+                {
+                  "speaker": "B",
+                  "text": "The court decided in favor of the plaintiff. They got full compensation.",
+                  "meaning": "법원이 원고 쪽으로 판결 냈어. 전액 배상받기로 했대."
+                }
+              ]
+            },
+            {
+              "id": 8,
+              "title": "팀 프로젝트 방향 정할 때",
+              "description": "",
+              "lines": [
+                {
+                  "speaker": "A",
+                  "text": "Should we go with the simpler design or the more creative one?",
+                  "meaning": "더 단순한 디자인으로 갈까, 아니면 더 창의적인 쪽으로 갈까?"
+                },
+                {
+                  "speaker": "B",
+                  "text": "I'm in favor of the simpler one. We don't have much time left.",
+                  "meaning": "나는 단순한 쪽이 좋겠어. 시간도 얼마 안 남았잖아."
+                },
+                {
+                  "speaker": "C",
+                  "text": "Same. I'm also in favor of keeping it simple.",
+                  "meaning": "나도 동의해. 간단하게 가는 쪽에 찬성이야."
+                }
+              ]
+            },
+            {
+              "id": 9,
+              "title": "선거 결과에 대해 이야기할 때",
+              "description": "",
+              "lines": [
+                {
+                  "speaker": "A",
+                  "text": "Most people in our department voted in favor of the new manager.",
+                  "meaning": "우리 부서 사람들 대부분 새 매니저 쪽에 투표했대."
+                },
+                {
+                  "speaker": "B",
+                  "text": "I'm not surprised. A lot of us were already in favor of her from the beginning.",
+                  "meaning": "별로 안 놀랍네. 처음부터 그녀를 지지하는 사람이 많았잖아."
+                }
+              ]
+            },
+            {
+              "id": 10,
+              "title": "날씨나 확률에 대해 말할 때",
+              "description": "",
+              "lines": [
+                {
+                  "speaker": "A",
+                  "text": "Do you think it'll rain during the picnic?",
+                  "meaning": "피크닉 중에 비 올 것 같아?"
+                },
+                {
+                  "speaker": "B",
+                  "text": "The forecast is in favor of clear skies. We should be fine.",
+                  "meaning": "예보가 맑은 날씨 쪽으로 나오고 있어. 괜찮을 거야."
+                }
+              ]
+            }
+          ]
+        }
+      },
+      {
+        "name": "tally.json",
+        "modified": 1794448816730,
+        "data": {
+          "title": "tally",
+          "description": [],
+          "conversations": [
+            {
+              "id": 1,
+              "lines": [
+                {
+                  "speaker": "A",
+                  "text": "How many people signed up so far?"
+                },
+                {
+                  "speaker": "B",
+                  "text": "I haven't done a full tally yet, but it looks like around forty."
+                }
+              ]
+            },
+            {
+              "id": 2,
+              "lines": [
+                {
+                  "speaker": "A",
+                  "text": "Did the final numbers match what we expected?"
+                },
+                {
+                  "speaker": "B",
+                  "text": "Not quite. The expenses don't fully tally with the receipts we collected."
+                }
+              ]
+            },
+            {
+              "id": 3,
+              "lines": [
+                {
+                  "speaker": "A",
+                  "text": "When should we count the votes?"
+                },
+                {
+                  "speaker": "B",
+                  "text": "Let's do the tally on Monday evening after everyone has submitted their ballots."
+                }
+              ]
+            },
+            {
+              "id": 4,
+              "lines": [
+                {
+                  "speaker": "A",
+                  "text": "Are you keeping track of the scores?"
+                },
+                {
+                  "speaker": "B",
+                  "text": "Yeah, I've been making a running tally on my phone."
+                }
+              ]
+            },
+            {
+              "id": 5,
+              "lines": [
+                {
+                  "speaker": "A",
+                  "text": "The inventory count feels off."
+                },
+                {
+                  "speaker": "B",
+                  "text": "You're right. The physical stock doesn't tally with what's in the system."
+                }
+              ]
+            },
+            {
+              "id": 6,
+              "lines": [
+                {
+                  "speaker": "A",
+                  "text": "How many hours did you work this week?"
+                },
+                {
+                  "speaker": "B",
+                  "text": "I'll tally them up later tonight and send you the total."
+                }
+              ]
+            },
+            {
+              "id": 7,
+              "lines": [
+                {
+                  "speaker": "A",
+                  "text": "Did the donations reach the goal?"
+                },
+                {
+                  "speaker": "B",
+                  "text": "Almost. The current tally is just under the target."
+                }
+              ]
+            },
+            {
+              "id": 8,
+              "lines": [
+                {
+                  "speaker": "A",
+                  "text": "Why do the two lists look different?"
+                },
+                {
+                  "speaker": "B",
+                  "text": "Because the names don't completely tally. A few people are missing from one side."
+                }
+              ]
+            },
+            {
+              "id": 9,
+              "lines": [
+                {
+                  "speaker": "A",
+                  "text": "Should we update the spreadsheet now?"
+                },
+                {
+                  "speaker": "B",
+                  "text": "Better to wait until the end of the day so we can tally everything at once."
+                }
+              ]
+            },
+            {
+              "id": 10,
+              "lines": [
+                {
+                  "speaker": "A",
+                  "text": "Any idea how many tickets we sold?"
+                },
+                {
+                  "speaker": "B",
+                  "text": "Not exactly. I'll do a proper tally tomorrow morning and let you know."
+                }
+              ]
+            }
+          ]
+        }
+      }
+    ];
+    loadDocuments(defaultLessons.map(({ name, modified, data }) => ({
+      name,
+      read: async () => readDocument(data, name, modified)
+    }))).then(() => {
+      if (loadVersion === 1 && documents.length) {
+        loadStatus.textContent = '기본 대화입니다. 새 파일은 JSON 폴더 열기로 불러오세요.';
+      }
+    });
+  } else {
+    loadFromServer();
+  }
+  refreshVoices();
+</script>
+</body>
+</html>
