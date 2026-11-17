@@ -7,7 +7,6 @@ export type Lesson = {
   description: string[];
   conversations: Dialogue[];
   position: number;
-  level?: string;
   revision?: string;
   sourceDate?: string | null;
 };
@@ -44,7 +43,6 @@ export function parseLesson(id: string, value: unknown, modified: number): Lesso
     description: paragraphs(data.description),
     position: 0,
     sourceDate: Number.isFinite(declaredDate) ? new Date(declaredDate).toISOString() : null,
-    level: data.level == null ? undefined : level(data.level),
     conversations: data.conversations.map((value, index) => {
       const dialogue = record(value);
       if (!Array.isArray(dialogue.lines)) throw new Error('lines 배열이 필요합니다.');
@@ -70,10 +68,6 @@ export function parseLesson(id: string, value: unknown, modified: number): Lesso
 function stringArray(value: unknown, field: string): string[] {
   if (!Array.isArray(value) || value.length > 100) throw new Error(`${field} 배열을 확인하세요.`);
   return [...new Set(value.map(item => requiredText(item, field)))];
-}
-function level(value: unknown): string {
-  if (typeof value !== 'string' || !/^[ABC][12]$/.test(value)) throw new Error('level은 A1~C2입니다.');
-  return value;
 }
 export function remapPosition(oldLines: Array<Pick<Line, 'speaker' | 'text'>>, newLines: Array<Pick<Line, 'speaker' | 'text'>>, position: number) {
   const old = oldLines[position];

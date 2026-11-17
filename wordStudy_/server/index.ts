@@ -5,7 +5,7 @@ import fastifyStatic from '@fastify/static';
 import { migrate } from 'drizzle-orm/node-postgres/migrator';
 import { parseLesson } from '../shared/lesson.ts';
 import { identity, registerAuth, requireUser, requireAdmin } from './auth.ts';
-import { db, listLessons, pool, saveLesson, saveProgress, importLesson } from './store.ts';
+import { db, listLessons, pool, saveProgress, importLesson } from './store.ts';
 
 const app = Fastify({ logger: { redact: ['req.headers.cookie', 'req.headers.authorization', 'req.headers.x-csrf-token'] }, disableRequestLogging: true });
 registerAuth(app);
@@ -58,7 +58,7 @@ try {
     const path = join('seed', entry.name);
     const [raw, info] = await Promise.all([readFile(path, 'utf8'), stat(path)]);
     try {
-      await saveLesson(parseLesson(entry.name, JSON.parse(raw.replace(/^\uFEFF/, '')), info.mtimeMs), false);
+      await importLesson(parseLesson(entry.name, JSON.parse(raw.replace(/^\uFEFF/, '')), info.mtimeMs), 'skip');
     } catch (error) {
       throw new Error(`${entry.name} 가져오기 실패`, { cause: error });
     }

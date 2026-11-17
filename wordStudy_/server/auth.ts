@@ -9,7 +9,7 @@ const digest = (value: string) => createHash('sha256').update(secret).update(val
 const origin = process.env.PUBLIC_ORIGIN ?? 'http://localhost:43871';
 const callback = `${origin}/api/auth/callback`;
 export const authEnabled = !!(process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET && secret.length >= 32);
-export type Identity = { sub: string; admin: boolean; csrf: string };
+type Identity = { sub: string; admin: boolean; csrf: string };
 
 async function admins(): Promise<string[]> {
   try {
@@ -70,7 +70,7 @@ export function registerAuth(app: FastifyInstance) {
     return payload;
   });
   app.get('/api/auth/session', async request => ({ enabled: authEnabled, user: await identity(request) }));
-  app.get('/api/auth/login', async (request, reply) => {
+  app.get('/api/auth/login', async (_request, reply) => {
     if (!authEnabled) return reply.code(503).send({ message: '운영자가 Google 인증 설정을 완료해야 합니다.' });
     const token = random(), state = random(), nonce = random(), verifier = random();
     await pool.query('DELETE FROM auth_sessions WHERE expires_at<=now()');

@@ -49,7 +49,7 @@ try {
   await db.query("INSERT INTO progress VALUES ('local','legacy.json',1), ('admin','legacy.json',1)");
   await start();
   const legacy = (await request('lessons')).find(l => l.id === 'legacy.json');
-  assert.equal(legacy.title, '기존 자료');assert.equal(legacy.conversations[0].lines.length, 2);assert.equal('tags' in legacy,false);
+  assert.equal(legacy.title, '기존 자료');assert.equal(legacy.conversations[0].lines.length, 2);assert.equal('tags' in legacy,false);assert.equal('level' in legacy,false);
   assert.equal((await db.query("SELECT position FROM progress WHERE user_id='local' AND lesson_id='legacy.json'")).rows[0].position,1);
   const seeds=(await request('lessons')).filter(l=>l.id!=='legacy.json');assert.equal(seeds.length,22);assert.equal(seeds.flatMap(l=>l.conversations).length,222);assert.equal(seeds.flatMap(l=>l.conversations.flatMap(c=>c.lines)).length,430);
   assert.deepEqual(await request('config'),{canImport:false});
@@ -68,6 +68,8 @@ try {
   assert.equal((await find()).position,1);
   assert.deepEqual((await find()).conversations[0].lines[0].keyPhrase,['Hello']);
   assert.equal((await request('import','POST',{...payload(),modified:123456})).status,'unchanged');
+  data.level='retired-field';data.tags=['ignored'];
+  assert.equal((await request('import','POST',payload())).status,'unchanged');assert.equal('level' in await find(),false);
   data.title='수정 자료';
   assert.equal((await request('import','POST',{...payload(),policy:'skip'})).status,'skipped');assert.equal((await find()).title,'검증 자료');
   data.conversations[0].lines.unshift({speaker:'A',text:'Inserted.'});

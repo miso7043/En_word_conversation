@@ -8,18 +8,15 @@ import { conversations, lessons, lines, progress } from './schema.ts';
 
 export const pool = new pg.Pool({ connectionString: process.env.DATABASE_URL });
 export const db = drizzle(pool);
-export function contentHash(lesson: Lesson) {
+function contentHash(lesson: Lesson) {
   const { id, position, revision, date, sourceDate, ...content } = lesson;
   return createHash('sha256').update(JSON.stringify({ ...content, sourceDate: sourceDate ?? null })).digest('hex');
-}
-export async function saveLesson(lesson: Lesson, replace: boolean) {
-  return (await importLesson(lesson, replace ? 'update' : 'skip')) === 'added';
 }
 export async function importLesson(lesson: Lesson, policy: 'skip' | 'update') {
   const { id, title, description } = lesson;
   const revision = contentHash(lesson);
   return db.transaction(async tx => {
-    // Serializes creation as well as updates of the same filename.
+    // 같은 파일명의 추가와 갱신을 모두 직렬화한다.
     await tx.execute(sql`SELECT pg_advisory_xact_lock(hashtext(${id}))`);
     const [existing] = await tx.select().from(lessons).where(eq(lessons.id, id)).for('update');
     if (existing && policy === 'skip') return 'skipped' as const;
@@ -27,8 +24,7 @@ export async function importLesson(lesson: Lesson, policy: 'skip' | 'update') {
     const oldLines = existing ? await tx.select().from(lines).where(eq(lines.lessonId, id))
       .orderBy(asc(lines.conversationOrdinal), asc(lines.ordinal)) : [];
     const oldProgress = existing ? await tx.select().from(progress).where(eq(progress.lessonId, id)) : [];
-    const values = { id, title, description, date: lesson.date ? new Date(lesson.date) : null,
-      level: lesson.level ?? null, revision };
+    const values = { id, title, description, date: lesson.date ? new Date(lesson.date) : null, revision };
     await tx.insert(lessons).values(values).onConflictDoUpdate({ target: lessons.id, set: values });
     if (existing) await tx.delete(conversations).where(eq(conversations.lessonId, id));
     for (const [ordinal, dialogue] of lesson.conversations.entries()) {
@@ -55,7 +51,7 @@ export async function listLessons(userId = ''): Promise<Lesson[]> {
     const byId = new Map<string, Lesson>();
     for (const row of rows) {
       byId.set(row.lessons.id, {
-        ...row.lessons, level: row.lessons.level ?? undefined, date: row.lessons.date?.toISOString() ?? null, position: row.progress?.position ?? 0, conversations: [],
+        ...row.lessons, date: row.lessons.date?.toISOString() ?? null, position: row.progress?.position ?? 0, conversations: [],
       });
     }
     for (const row of dialogueRows) {
