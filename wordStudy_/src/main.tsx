@@ -303,6 +303,7 @@ function App() {
   const currentScope = useRef(scope); currentScope.current = scope;
   const selected = lessons.find(lesson => lesson.id === selectedId) ?? lessons[0];
   const playlist = selectedPlaylist(lessons, checkedIds, order);
+  const allChecked = lessons.length > 0 && playlist.length === lessons.length;
   useEffect(() => { if (authReady) writeStored(`selection-v1:${scope}`, [...checkedIds]); }, [checkedIds]);
   useEffect(() => { writeStored('playlist-order-v1', order); }, [order]);
 
@@ -473,7 +474,19 @@ function App() {
       <aside className="p-4 md:sticky md:top-0 md:flex md:h-dvh md:flex-col md:border-r md:border-edge md:bg-panel md:p-5">
         {page === 'dialogues' && !!lessons.length && (
           <>
-            <p className="mb-2 text-sm">선택 {checkedIds.size}개</p>
+            <div className="mb-2 flex items-center justify-between gap-2 text-sm">
+              <label className="flex min-h-11 items-center gap-2">
+                <input type="checkbox" className="h-4 w-4 shrink-0 accent-sky-400"
+                  checked={allChecked}
+                  ref={input => { if (input) input.indeterminate = playlist.length > 0 && !allChecked; }}
+                  onChange={event => {
+                    selectionAnchor.current = null;
+                    setCheckedIds(new Set(event.target.checked ? lessons.map(lesson => lesson.id) : []));
+                  }} />
+                전체 선택
+              </label>
+              <span>선택 {playlist.length}개</span>
+            </div>
             <p className="mb-2 text-xs text-slate-400">체크: 재생할 자료 선택 · Ctrl+클릭: 개별 선택 · Shift+클릭: 범위 선택</p>
             <nav aria-label="대화 목록" className="max-h-40 sm:max-h-64 min-h-0 flex-1 space-y-2 overflow-y-auto p-1 md:max-h-none">
               {lessons.map(lesson => (
