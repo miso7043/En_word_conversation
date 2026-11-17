@@ -1,4 +1,4 @@
-export type Line = { speaker: string; text: string; meaning?: string };
+export type Line = { speaker: string; text: string; meaning?: string; keyPhrase?: string[] };
 export type Dialogue = { title?: string; description: string[]; lines: Line[] };
 export type Lesson = {
   id: string;
@@ -7,6 +7,10 @@ export type Lesson = {
   description: string[];
   conversations: Dialogue[];
   position: number;
+  tags?: string[];
+  level?: string;
+  revision?: string;
+  sourceDate?: string | null;
 };
 
 function record(value: unknown): Record<string, unknown> {
@@ -40,6 +44,9 @@ export function parseLesson(id: string, value: unknown, modified: number): Lesso
     date: Number.isFinite(date) && Math.abs(date) <= 8.64e15 ? new Date(date).toISOString() : null,
     description: paragraphs(data.description),
     position: 0,
+    sourceDate: Number.isFinite(declaredDate) ? new Date(declaredDate).toISOString() : null,
+    tags: data.tags == null ? [] : stringArray(data.tags, 'tags'),
+    level: data.level == null ? undefined : level(data.level),
     conversations: data.conversations.map((value, index) => {
       const dialogue = record(value);
       if (!Array.isArray(dialogue.lines)) throw new Error('lines 배열이 필요합니다.');
@@ -53,10 +60,26 @@ export function parseLesson(id: string, value: unknown, modified: number): Lesso
           return {
             speaker: requiredText(line.speaker, 'speaker'),
             text: requiredText(line.text, 'text'),
+            keyPhrase: line.keyPhrase == null ? [] : stringArray(typeof line.keyPhrase === 'string' ? [line.keyPhrase] : line.keyPhrase, 'keyPhrase'),
             meaning: line.meaning == null || line.meaning === '' ? undefined : requiredText(line.meaning, 'meaning'),
           };
         }),
       };
     }),
   };
+}
+
+function stringArray(value: unknown, field: string): string[] {
+  if (!Array.isArray(value) || value.length > 100) throw new Error(`${field} 배열을 확인하세요.`);
+  return [...new Set(value.map(item => requiredText(item, field)))];
+}
+function level(value: unknown): string {
+  if (typeof value !== 'string' || !/^[ABC][12]$/.test(value)) throw new Error('level은 A1~C2입니다.');
+  return value;
+}
+export function remapPosition(oldLines: Array<Pick<Line, 'speaker' | 'text'>>, newLines: Array<Pick<Line, 'speaker' | 'text'>>, position: number) {
+  const old = oldLines[position];
+  const matches = newLines.flatMap((line, index) => old && line.speaker === old.speaker && line.text === old.text ? [index] : []);
+  return matches.length ? matches.reduce((a, b) => Math.abs(a - position) <= Math.abs(b - position) ? a : b)
+    : Math.max(0, Math.min(position, newLines.length - 1));
 }
