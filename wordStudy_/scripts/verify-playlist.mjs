@@ -1,0 +1,22 @@
+import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
+import { stripTypeScriptTypes } from 'node:module';
+const source = readFileSync(new URL('../src/playlist.ts', import.meta.url), 'utf8')
+  .replace(/^import type .*;\n/gm, '');
+const { updateSelection, selectedPlaylist } = await import(`data:text/javascript;base64,${Buffer.from(stripTypeScriptTypes(source)).toString('base64')}`);
+const ids = ['a', 'b', 'c', 'd', 'e'];
+let selected = updateSelection(ids, new Set(), 'd', null, false, false);
+assert.deepEqual([...selected], ['d']);
+selected = updateSelection(ids, selected, 'b', 'd', false, true);
+assert.deepEqual([...selected].sort(), ['b', 'd']);
+selected = updateSelection(ids, selected, 'd', 'b', false, true);
+assert.deepEqual([...selected], ['b']);
+selected = updateSelection(ids, selected, 'e', 'b', true, false);
+assert.deepEqual([...selected], ['b', 'c', 'd', 'e']);
+selected = updateSelection(ids, new Set(['e']), 'a', 'c', true, true);
+assert.deepEqual([...selected].sort(), ['a', 'b', 'c', 'e']);
+const lessons = ids.map(id => ({ id, conversations: [{ lines: id === 'c' ? [] : [{}] }] }));
+assert.deepEqual(selectedPlaylist(lessons, selected).map(item => item.id), ['e', 'b', 'a']);
+assert.deepEqual(selectedPlaylist(lessons, new Set()), []);
+assert.deepEqual(selectedPlaylist(lessons, new Set(['unknown'])), []);
+console.log('PASS: individual toggle, Ctrl selection, Shift ranges, Ctrl+Shift additive range, checked-only bottom-to-top playlist, empty lessons');

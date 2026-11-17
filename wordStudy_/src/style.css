@@ -1,0 +1,37 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: Inter, system-ui, sans-serif;
+  --color-canvas: #101923;
+  --color-panel: #15222e;
+  --color-edge: #344858;
+  --color-accent: #7dd3fc;
+}
+
+@layer base {
+  :root {
+    color-scheme: dark;
+  }
+
+  body {
+    @apply bg-canvas font-sans text-slate-100;
+  }
+
+  button, select {
+    @apply focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent;
+  }
+
+  button:enabled {
+    @apply cursor-pointer;
+  }
+
+  button:disabled {
+    @apply opacity-50;
+  }
+}
+
+@layer components {
+  .control {
+    @apply inline-flex min-h-11 items-center justify-center rounded-lg px-3 font-medium;
+  }
+}

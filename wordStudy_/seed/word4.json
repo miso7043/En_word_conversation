@@ -1,0 +1,201 @@
+{
+  "title": "what would have been",
+  "description": [
+    "과거 사실에 반대되는 가정을 할 때 쓰는 표현으로, \"~이었을 것\", \"무엇이 되었을까\", \"~했을 상황\"을 의미합니다.",
+    "주로 후회, 가정, 대안을 이야기할 때 사용됩니다.",
+    "예: \"What would have been different if...\" (만약 ~했다면 무엇이 달라졌을까)",
+    "또는 \"That would have been perfect.\"처럼 실현되지 않은 이상적인 상황을 말할 때도 자주 씁니다."
+  ],
+  "conversations": [
+    {
+      "id": 1,
+      "title": "시험 결과를 보고 후회할 때",
+      "description": "",
+      "lines": [
+        {
+          "speaker": "A",
+          "text": "I only got 70 on the final. I should have studied more.",
+          "meaning": "기말고사 70점밖에 못 받았어. 더 공부했어야 했는데."
+        },
+        {
+          "speaker": "B",
+          "text": "Yeah... what would have been your score if you had reviewed the last chapter?",
+          "meaning": "그렇지... 마지막 챕터 복습했으면 몇 점이나 나왔을까?"
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "title": "경기 결과를 아쉬워할 때",
+      "description": "",
+      "lines": [
+        {
+          "speaker": "A",
+          "text": "We lost by just one point in the last second.",
+          "meaning": "마지막 순간에 1점 차로 졌어."
+        },
+        {
+          "speaker": "B",
+          "text": "I keep thinking about what would have been if that free throw had gone in.",
+          "meaning": "그 자유투가 들어갔으면 어떻게 됐을지 계속 생각나."
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "title": "직장에서 결정을 돌이켜볼 때",
+      "description": "",
+      "lines": [
+        {
+          "speaker": "A",
+          "text": "We chose the cheaper supplier and now the quality is terrible.",
+          "meaning": "싼 업체를 골랐더니 지금 품질이 엉망이야."
+        },
+        {
+          "speaker": "B",
+          "text": "Exactly. What would have been the better choice in the long run?",
+          "meaning": "맞아. 장기적으로 보면 뭐가 더 나은 선택이었을까?"
+        },
+        {
+          "speaker": "C",
+          "text": "Probably the more expensive one. That would have been worth it.",
+          "meaning": "아마 더 비싼 쪽이었을 거야. 그게 결국 이득이었을 텐데."
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "title": "연인 사이에서 과거를 이야기할 때",
+      "description": "",
+      "lines": [
+        {
+          "speaker": "A",
+          "text": "Do you ever wonder what would have been if we had met earlier?",
+          "meaning": "우리가 더 일찍 만났으면 어떻게 됐을지 생각해 본 적 있어?"
+        },
+        {
+          "speaker": "B",
+          "text": "Sometimes. Maybe we would have been together much longer.",
+          "meaning": "가끔. 아마 훨씬 오래 사귀었을지도 모르지."
+        }
+      ]
+    },
+    {
+      "id": 5,
+      "title": "여행 계획이 바뀌었을 때",
+      "description": "",
+      "lines": [
+        {
+          "speaker": "A",
+          "text": "The flight got canceled and we ended up staying home.",
+          "meaning": "비행기가 취소돼서 결국 집에 있었어."
+        },
+        {
+          "speaker": "B",
+          "text": "I know. What would have been a perfect weekend trip turned into nothing.",
+          "meaning": "그렇지. 완벽한 주말 여행이 될 뻔했는데 결국 아무것도 아니게 됐어."
+        }
+      ]
+    },
+    {
+      "id": 6,
+      "title": "친구에게 조언을 구할 때",
+      "description": "",
+      "lines": [
+        {
+          "speaker": "A",
+          "text": "I turned down that job offer last year.",
+          "meaning": "작년에 그 일자리 제안을 거절했었어."
+        },
+        {
+          "speaker": "B",
+          "text": "Really? What would have been different if you had taken it?",
+          "meaning": "진짜? 그때 받아들였으면 지금이랑 뭐가 달라졌을까?"
+        },
+        {
+          "speaker": "A",
+          "text": "Probably a higher salary... and a lot more stress.",
+          "meaning": "아마 연봉은 더 높았겠지만... 스트레스도 훨씬 많았을 거야."
+        }
+      ]
+    },
+    {
+      "id": 7,
+      "title": "영화나 드라마 결말을 이야기할 때",
+      "description": "",
+      "lines": [
+        {
+          "speaker": "A",
+          "text": "I didn't like the ending. It felt too sudden.",
+          "meaning": "결말이 별로였어. 너무 갑작스러웠달까."
+        },
+        {
+          "speaker": "B",
+          "text": "Same. What would have been a better ending for the main character?",
+          "meaning": "나도. 주인공한테 더 나았을 결말은 뭐였을까?"
+        }
+      ]
+    },
+    {
+      "id": 8,
+      "title": "날씨 때문에 일정이 틀어졌을 때",
+      "description": "",
+      "lines": [
+        {
+          "speaker": "A",
+          "text": "We had to cancel the outdoor wedding because of the storm.",
+          "meaning": "폭풍 때문에 야외 결혼식을 취소해야 했어."
+        },
+        {
+          "speaker": "B",
+          "text": "I know. What would have been a beautiful ceremony became a rushed indoor event.",
+          "meaning": "그렇지. 아름다웠을 식장이 급하게 실내로 바뀌어 버렸지."
+        }
+      ]
+    },
+    {
+      "id": 9,
+      "title": "투자나 돈 관련 후회할 때",
+      "description": "",
+      "lines": [
+        {
+          "speaker": "A",
+          "text": "I sold those stocks too early. They doubled after that.",
+          "meaning": "그 주식 너무 일찍 팔았어. 그 후에 두 배가 됐거든."
+        },
+        {
+          "speaker": "B",
+          "text": "Ouch. What would have been your profit if you had held on a bit longer?",
+          "meaning": "아이고. 조금만 더 들고 있었으면 수익이 얼마였을까?"
+        },
+        {
+          "speaker": "A",
+          "text": "At least three times more. That would have been life-changing.",
+          "meaning": "최소 세 배는 됐을 거야. 인생이 바뀌었을 정도였지."
+        }
+      ]
+    },
+    {
+      "id": 10,
+      "title": "과거 선택을 돌아보며 위로할 때",
+      "description": "",
+      "lines": [
+        {
+          "speaker": "A",
+          "text": "Sometimes I wonder if I made the right choice moving here.",
+          "meaning": "가끔 여기로 이사 온 게 옳은 선택이었는지 궁금해."
+        },
+        {
+          "speaker": "B",
+          "text": "Well, what would have been waiting for you if you had stayed?",
+          "meaning": "그럼 거기 그대로 있었으면 뭐가 기다리고 있었을까?"
+        },
+        {
+          "speaker": "A",
+          "text": "Probably the same old routine. Maybe this was better after all.",
+          "meaning": "아마 똑같은 일상뿐이었겠지. 결국 이게 더 나았을지도 몰라."
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,130 @@
+{
+  "title": "revelation",
+  "description": [
+    "\"폭로\", \"드러남\", \"(신의) 계시\"라는 뜻의 명사입니다.",
+    "비밀이나 숨겨져 있던 사실이 세상에 새롭게 밝혀지는 상황이나, 예상치 못한 큰 깨달음을 얻었을 때 주로 사용됩니다.",
+    "\"come to light\" 또는 \"shocking revelation\"(충격적인 폭로) 등의 표현과 자주 결합합니다."
+  ],
+  "conversations": [
+    {
+      "id": 1,
+      "title": "정치적 스캔들 및 비리 폭로를 나타낼 때",
+      "description": "",
+      "lines": [
+        {
+          "speaker": "Ex",
+          "text": "The sudden revelation of confidential government documents regarding the embezzlement scandal completely shattered public trust in the administration.",
+          "meaning": "공금 횡령 스캔들과 관련된 기밀 정부 문서의 갑작스러운 폭로는 행정부에 대한 대중의 신뢰를 완전히 무너뜨렸다."
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "title": "기업의 내부 부정과 회계조작을 밝혀낼 때",
+      "description": "",
+      "lines": [
+        {
+          "speaker": "Ex",
+          "text": "Following the aggressive corporate audit, the shocking revelation of widespread financial fraud led to an immediate investigation by federal regulators.",
+          "meaning": "강도 높은 기업 감사에 이어 광범위한 재정 사기에 대한 충격적인 폭로가 이루어지면서 연방 규제 기관의 즉각적인 수사로 이어졌다."
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "title": "개인적인 진실이나 비밀이 밝혀질 때",
+      "description": "",
+      "lines": [
+        {
+          "speaker": "Ex",
+          "text": "The unexpected revelation of his hidden past changed the dynamics of their relationship and forced them to reevaluate their entire friendship.",
+          "meaning": "그의 숨겨진 과거에 대한 예상치 못한 드러남은 두 사람 관계의 역학을 바꾸어 놓았고 그들 전체의 우정을 재평가하도록 만들었다."
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "title": "과학적 발견이나 새로운 사실을 알게 되었을 때",
+      "description": "",
+      "lines": [
+        {
+          "speaker": "Ex",
+          "text": "The groundbreaking revelation regarding deep-sea hydrothermal vents provided scientists with crucial clues about the origins of early life on Earth.",
+          "meaning": "심해 열수구에 관한 획기적인 발견은 과학자들에게 지구상 초기 생명의 기원에 대한 결정적인 단서를 제공했다."
+        }
+      ]
+    },
+    {
+      "id": 5,
+      "title": "문화적·예술적 충격이나 새로운 깨달음을 느낄 때",
+      "description": "",
+      "lines": [
+        {
+          "speaker": "Ex",
+          "text": "For the young classical musician, listening to the legendary symphony performance felt like a spiritual revelation that redefined her understanding of art.",
+          "meaning": "젊은 클래식 음악가에게 그 전설적인 교향곡 연주를 듣는 것은 예술에 대한 그녀의 이해를 재정의한 영적 계시처럼 느껴졌다."
+        }
+      ]
+    },
+    {
+      "id": 6,
+      "title": "역사적 진실이나 기록이 세상에 드러날 때",
+      "description": "",
+      "lines": [
+        {
+          "speaker": "Ex",
+          "text": "Decades after the war ended, the declassification of wartime intelligence archives brought a vital historical revelation to light.",
+          "meaning": "전쟁이 끝난 지 수십 년이 지난 후, 전시 정보 아카이브의 기밀 해제는 중대한 역사적 진실을 세상에 드러냈다."
+        }
+      ]
+    },
+    {
+      "id": 7,
+      "title": "종교적 혹은 철학적 깨달음을 다룰 때",
+      "description": "",
+      "lines": [
+        {
+          "speaker": "Ex",
+          "text": "The ancient text was interpreted by scholars as a profound theological revelation meant to guide humanity through periods of moral crisis.",
+          "meaning": "그 고대 문헌은 인류가 도덕적 위기의 시기를 헤쳐나가도록 이끌기 위한 심오한 신학적 계시로 학자들에 의해 해석되었다."
+        }
+      ]
+    },
+    {
+      "id": 8,
+      "title": "스포츠나 대중문화에서 뛰어난 신예의 등장을 비유할 때",
+      "description": "",
+      "lines": [
+        {
+          "speaker": "Ex",
+          "text": "The rookie player's stellar performance throughout the championship season proved to be a total revelation for the struggling franchise.",
+          "meaning": "챔피언십 시즌 내내 이어진 신인 선수의 눈부신 활약은 부진을 겪던 구단에 완전한 센세이션(놀라운 발견)임이 입증되었다."
+        }
+      ]
+    },
+    {
+      "id": 9,
+      "title": "수사 과정에서 범죄의 전모가 밝혀질 때",
+      "description": "",
+      "lines": [
+        {
+          "speaker": "Ex",
+          "text": "A series of continuous interrogation breakthroughs led to a critical revelation that exposed the entire criminal syndicate's operational network.",
+          "meaning": "계속된 심문 과정에서의 잇따른 돌파구는 전체 범죄 조직의 운영망을 폭로하는 결정적인 진실의 드러남으로 이어졌다."
+        }
+      ]
+    },
+    {
+      "id": 10,
+      "title": "인간관계나 심리적 변화를 깨닫게 될 때",
+      "description": "",
+      "lines": [
+        {
+          "speaker": "Ex",
+          "text": "Through months of deep self-reflection, she experienced a personal revelation that helped her let go of past grievances and move forward.",
+          "meaning": "수개월간의 깊은 성찰을 통해, 그녀는 과거의 원망을 내려놓고 앞으로 나아갈 수 있도록 돕는 개인적인 깨달음을 얻었다."
+        }
+      ]
+    }
+  ]
+}

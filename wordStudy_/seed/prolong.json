@@ -1,0 +1,181 @@
+{
+  "title": "prolong",
+  "description": [
+    "\"연장하다\", \"길게 하다\", \"더 오래 지속시키다\"라는 뜻의 동사입니다.",
+    "어떤 상황, 기간, 활동 등을 원래보다 더 오래 계속되게 만들 때 사용합니다.",
+    "특히 회의, 계약, 고통, 즐거움 등을 의도적으로 늘릴 때 자주 쓰입니다.",
+    "예: \"They decided to prolong the meeting by another hour.\" (그들은 회의를 한 시간 더 연장하기로 결정했다.)"
+  ],
+  "conversations": [
+    {
+      "id": 1,
+      "title": "회의 시간을 연장할 때",
+      "description": "",
+      "lines": [
+        {
+          "speaker": "A",
+          "text": "We’re almost out of time. Should we wrap up?",
+          "meaning": "시간이 거의 다 됐어. 마무리할까?"
+        },
+        {
+          "speaker": "B",
+          "text": "Actually, I’d like to prolong the discussion a bit. We still have important points to cover.",
+          "meaning": "사실 토론을 조금 더 연장하고 싶어. 아직 중요한 얘기가 남았거든."
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "title": "휴가나 여행을 연장하고 싶을 때",
+      "description": "",
+      "lines": [
+        {
+          "speaker": "A",
+          "text": "I don’t want to go back to work yet. This place is so relaxing.",
+          "meaning": "아직 일하러 돌아가기 싫어. 여기 너무 편해."
+        },
+        {
+          "speaker": "B",
+          "text": "Same. Let’s see if we can prolong our stay by a few more days.",
+          "meaning": "나도. 며칠 더 연장할 수 있는지 알아보자."
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "title": "계약 기간을 연장할 때",
+      "description": "",
+      "lines": [
+        {
+          "speaker": "A",
+          "text": "Our current contract ends next month. What should we do?",
+          "meaning": "현재 계약이 다음 달에 끝나. 어떻게 할까?"
+        },
+        {
+          "speaker": "B",
+          "text": "I think we should prolong it for another year under the same conditions.",
+          "meaning": "같은 조건으로 1년 더 연장하는 게 좋을 것 같아."
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "title": "고통을 오래 끌어가는 상황을 말할 때",
+      "description": "",
+      "lines": [
+        {
+          "speaker": "A",
+          "text": "Why didn’t you just tell him the truth from the beginning?",
+          "meaning": "처음부터 그냥 진실을 말하지 그랬어?"
+        },
+        {
+          "speaker": "B",
+          "text": "I know. By avoiding it, I only prolonged the pain for both of us.",
+          "meaning": "알아. 피하다 보니 우리 둘 다 고통만 더 길게 만들었지."
+        }
+      ]
+    },
+    {
+      "id": 5,
+      "title": "즐거운 시간을 더 늘리고 싶을 때",
+      "description": "",
+      "lines": [
+        {
+          "speaker": "A",
+          "text": "The party is supposed to end at 10, but everyone’s still having fun.",
+          "meaning": "파티가 10시에 끝나기로 했는데, 다들 아직 신나 있네."
+        },
+        {
+          "speaker": "B",
+          "text": "Let’s prolong it a little longer. No one seems ready to leave yet.",
+          "meaning": "조금 더 연장하자. 아직 아무도 떠날 준비가 안 된 것 같아."
+        }
+      ]
+    },
+    {
+      "id": 6,
+      "title": "치료를 받으며 회복 기간을 이야기할 때",
+      "description": "",
+      "lines": [
+        {
+          "speaker": "A",
+          "text": "The doctor said I need to rest for two more weeks.",
+          "meaning": "의사가 2주 더 쉬어야 한다고 했어."
+        },
+        {
+          "speaker": "B",
+          "text": "If you don’t take it seriously, you might prolong the recovery even further.",
+          "meaning": "제대로 안 쉬면 회복 기간이 더 길어질 수도 있어."
+        }
+      ]
+    },
+    {
+      "id": 7,
+      "title": "프로젝트 마감일을 미룰 때",
+      "description": "",
+      "lines": [
+        {
+          "speaker": "A",
+          "text": "We’re not going to finish by Friday. What now?",
+          "meaning": "금요일까지는 못 끝낼 것 같아. 어떻게 하지?"
+        },
+        {
+          "speaker": "B",
+          "text": "I’ll talk to the client and see if we can prolong the deadline by a week.",
+          "meaning": "클라이언트한테 말해서 마감을 일주일 연장할 수 있는지 알아볼게요."
+        }
+      ]
+    },
+    {
+      "id": 8,
+      "title": "불필요한 논쟁을 길게 끌 때",
+      "description": "",
+      "lines": [
+        {
+          "speaker": "A",
+          "text": "We’ve been arguing about this for over an hour.",
+          "meaning": "이 문제로 한 시간 넘게 싸우고 있네."
+        },
+        {
+          "speaker": "B",
+          "text": "There’s no point in prolonging this. Let’s just agree to disagree.",
+          "meaning": "더 길게 끌 필요 없어. 그냥 서로 다른 의견으로 끝내자."
+        }
+      ]
+    },
+    {
+      "id": 9,
+      "title": "비나 날씨가 계속될 때",
+      "description": "",
+      "lines": [
+        {
+          "speaker": "A",
+          "text": "I thought the rain would stop by noon.",
+          "meaning": "정오쯤이면 비가 그칠 줄 알았는데."
+        },
+        {
+          "speaker": "B",
+          "text": "Apparently not. The weather forecast says it might prolong into the evening.",
+          "meaning": "아닌 것 같아. 예보에 따르면 저녁까지 이어질 수도 있대."
+        }
+      ]
+    },
+    {
+      "id": 10,
+      "title": "이별이나 관계를 질질 끌 때",
+      "description": "",
+      "lines": [
+        {
+          "speaker": "A",
+          "text": "I know it’s over, but I keep texting him.",
+          "meaning": "끝난 거 알지만 자꾸 문자를 보내게 돼."
+        },
+        {
+          "speaker": "B",
+          "text": "You’re only prolonging the heartbreak. It’s better to cut contact completely.",
+          "meaning": "그렇게 하면 아픔만 더 길어져. 완전 연락을 끊는 게 나아."
+        }
+      ]
+    }
+  ]
+}

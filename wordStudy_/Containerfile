@@ -1,0 +1,23 @@
+FROM docker.io/library/node:24-bookworm-slim AS build
+WORKDIR /app
+COPY package.json package-lock.json ./
+RUN npm ci --no-audit --no-fund
+COPY tsconfig.json vite.config.ts index.html ./
+COPY src ./src
+COPY server ./server
+COPY shared ./shared
+RUN npm run build && npm prune --omit=dev --no-audit --no-fund
+
+FROM docker.io/library/node:24-bookworm-slim
+WORKDIR /app
+ENV NODE_ENV=production PORT=43871
+COPY --from=build /app/node_modules ./node_modules
+COPY --from=build /app/dist ./dist
+COPY package.json ./
+COPY server ./server
+COPY shared ./shared
+COPY drizzle ./drizzle
+COPY seed ./seed
+USER node
+EXPOSE 43871
+CMD ["node", "--experimental-transform-types", "server/index.ts"]

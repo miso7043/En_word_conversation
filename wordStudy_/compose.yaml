@@ -1,0 +1,33 @@
+services:
+  db:
+    image: docker.io/library/postgres:17
+    container_name: wordstudy-db
+    environment:
+      POSTGRES_DB: wordstudy
+      POSTGRES_USER: wordstudy
+      POSTGRES_PASSWORD: ${WORDSTUDY_DB_PASSWORD:?Run ./start.sh first}
+    volumes:
+      - data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD", "pg_isready", "-h", "127.0.0.1", "-U", "wordstudy", "-d", "wordstudy"]
+      interval: 2s
+      timeout: 3s
+      retries: 30
+    restart: always
+  app:
+    container_name: wordStudy_
+    build:
+      context: .
+      dockerfile: Containerfile
+    environment:
+      DATABASE_URL: postgresql://wordstudy:${WORDSTUDY_DB_PASSWORD:?Run ./start.sh first}@db:5432/wordstudy
+      ENABLE_IMPORT: "1"
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "${WORDSTUDY_PORT:-43871}:43871"
+    restart: always
+volumes:
+  data:
+    name: wordstudy-data

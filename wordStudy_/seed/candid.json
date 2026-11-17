@@ -1,0 +1,191 @@
+{
+  "title": "candid",
+  "description": [
+    "\"솔직한\", \"거리낌 없는\", \"가식 없는\"이라는 뜻의 형용사입니다.",
+    "비판이나 불편한 진실이라도 숨기지 않고 있는 그대로 말하는 태도를 나타낼 때 사용합니다.",
+    "사진이나 영상에서는 피사체가 카메라를 의식하지 않은 \"자연스러운(꾸밈없는)\"이라는 뜻으로도 쓰입니다.",
+    "예: \"To be candid with you, I don’t think the plan will work.\" (솔직히 말해서, 그 계획은 잘 안될 것 같아.)"
+  ],
+  "conversations": [
+    {
+      "id": 1,
+      "title": "직장에서 솔직한 피드백을 요청할 때",
+      "description": "",
+      "lines": [
+        {
+          "speaker": "A",
+          "text": "What did you think of my presentation today?",
+          "meaning": "오늘 내 발표 어땠어?"
+        },
+        {
+          "speaker": "B",
+          "text": "Do you want me to be polite, or do you want my candid opinion?",
+          "meaning": "예의 바르게 말해줄까, 아니면 솔직한 의견을 원해?"
+        },
+        {
+          "speaker": "A",
+          "text": "Please be completely honest. I really want to improve.",
+          "meaning": "완전히 솔직하게 말해줘. 정말 개선하고 싶거든."
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "title": "친구에게 속마음을 털어놓을 때",
+      "description": "",
+      "lines": [
+        {
+          "speaker": "A",
+          "text": "Thanks for being so candid with me about how you’ve been feeling.",
+          "meaning": "그동안 어떻게 지냈는지 솔직하게 털어놔 줘서 고마워."
+        },
+        {
+          "speaker": "B",
+          "text": "It feels good to finally talk about it without holding anything back.",
+          "meaning": "드디어 아무것도 숨기지 않고 이야기하니까 속이 후련해."
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "title": "인터뷰에서 진솔한 모습을 보일 때",
+      "description": "",
+      "lines": [
+        {
+          "speaker": "A",
+          "text": "Did you watch the actor’s interview last night?",
+          "meaning": "어젯밤 그 배우 인터뷰 봤어?"
+        },
+        {
+          "speaker": "B",
+          "text": "Yes, I was surprised by how candid he was about his past struggles.",
+          "meaning": "응, 과거에 힘들었던 일에 대해 너무 솔직하게 말해서 놀랐어."
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "title": "자연스러운 사진을 찍었을 때",
+      "description": "",
+      "lines": [
+        {
+          "speaker": "A",
+          "text": "I love this photo of you laughing at the party.",
+          "meaning": "파티에서 네가 웃고 있는 이 사진 정말 마음에 들어."
+        },
+        {
+          "speaker": "B",
+          "text": "Thanks! I didn’t even know someone was taking it. Candid shots are always the best.",
+          "meaning": "고마워! 누가 찍고 있는지도 몰랐어. 역시 자연스럽게 찍힌 사진이 제일 잘 나오는 것 같아."
+        }
+      ]
+    },
+    {
+      "id": 5,
+      "title": "중요한 결정을 앞두고 솔직하게 대화할 때",
+      "description": "",
+      "lines": [
+        {
+          "speaker": "A",
+          "text": "Before we sign the contract, we need to have a candid discussion about the budget.",
+          "meaning": "계약서에 서명하기 전에 예산에 대해 솔직하게 논의할 필요가 있어."
+        },
+        {
+          "speaker": "B",
+          "text": "Agreed. Let’s put all the numbers on the table right now.",
+          "meaning": "동의해. 지금 모든 수치를 다 꺼내 놓고 이야기하자."
+        }
+      ]
+    },
+    {
+      "id": 6,
+      "title": "제품이나 서비스에 대한 솔직한 후기를 말할 때",
+      "description": "",
+      "lines": [
+        {
+          "speaker": "A",
+          "text": "Have you tried that new restaurant downtown?",
+          "meaning": "시내에 새로 생긴 그 식당 가봤어?"
+        },
+        {
+          "speaker": "B",
+          "text": "To give you a candid review, the atmosphere was great, but the food was overpriced.",
+          "meaning": "솔직한 후기를 말하자면, 분위기는 좋았는데 음식이 가격에 비해 별로였어."
+        }
+      ]
+    },
+    {
+      "id": 7,
+      "title": "팀 회의에서 문제점을 짚을 때",
+      "description": "",
+      "lines": [
+        {
+          "speaker": "A",
+          "text": "Why do you think our sales dropped this quarter?",
+          "meaning": "이번 분기 매출이 왜 떨어졌다고 생각해?"
+        },
+        {
+          "speaker": "B",
+          "text": "If I’m being candid, our marketing strategy hasn’t kept up with recent trends.",
+          "meaning": "솔직히 말씀드리면, 우리 마케팅 전략이 최근 트렌드를 따라가지 못했습니다."
+        },
+        {
+          "speaker": "C",
+          "text": "That’s a fair point. We need to rethink our approach.",
+          "meaning": "타당한 지적이야. 접근 방식을 다시 생각해 봐야겠어."
+        }
+      ]
+    },
+    {
+      "id": 8,
+      "title": "자신의 실수를 솔직하게 인정할 때",
+      "description": "",
+      "lines": [
+        {
+          "speaker": "A",
+          "text": "I appreciate your candid admission that the delay was your fault.",
+          "meaning": "지연된 게 본인 잘못이라고 솔직하게 인정해 줘서 고마워."
+        },
+        {
+          "speaker": "B",
+          "text": "Making excuses wouldn’t help anyone. Let’s focus on fixing it.",
+          "meaning": "변명해 봐야 아무에게도 도움이 안 되니까요. 해결하는 데 집중하죠."
+        }
+      ]
+    },
+    {
+      "id": 9,
+      "title": "멘토에게 현실적인 조언을 구할 때",
+      "description": "",
+      "lines": [
+        {
+          "speaker": "A",
+          "text": "Do you think I’m ready to apply for the senior position?",
+          "meaning": "제가 시니어 포지션에 지원할 준비가 되었다고 보시나요?"
+        },
+        {
+          "speaker": "B",
+          "text": "I’ll be candid with you—you have strong technical skills, but you need a bit more leadership experience.",
+          "meaning": "솔직하게 말씀드릴게요. 기술적인 역량은 뛰어나지만 리더십 경험이 조금 더 필요해 보입니다."
+        }
+      ]
+    },
+    {
+      "id": 10,
+      "title": "연인이나 가족 간에 진심을 나눌 때",
+      "description": "",
+      "lines": [
+        {
+          "speaker": "A",
+          "text": "We rarely get the chance to have a quiet, candid talk like this.",
+          "meaning": "이렇게 조용히 속마음을 터놓고 이야기할 기회가 흔치 않네."
+        },
+        {
+          "speaker": "B",
+          "text": "I know. We should make time for these conversations more often.",
+          "meaning": "맞아. 이런 대화를 나눌 시간을 더 자주 만들어야겠어."
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,196 @@
+{
+  "title": "in favor of",
+  "description": [
+    "\"~을 찬성하여\", \"~을 지지하여\", \"~에 유리하게\"라는 뜻의 영어 표현.",
+    "\"be in favor of ~\" : \"~을 찬성하다, 지지하다\"",
+    "\"decide / rule / vote in favor of ~\" : \"~에 유리한 결정을 내리다, ~을 가결하다\"",
+    "보통 의견, 투표, 선택, 판정 등에서 어떤 쪽을 지지하거나 유리하게 작용할 때 자주 쓰입니다."
+  ],
+  "conversations": [
+    {
+      "id": 1,
+      "title": "회의에서 안건 찬성할 때",
+      "description": "",
+      "lines": [
+        {
+          "speaker": "A",
+          "text": "So, are you in favor of extending the deadline?",
+          "meaning": "그래서 너 마감일 연장하는 거 찬성해?"
+        },
+        {
+          "speaker": "B",
+          "text": "Yeah, I'm definitely in favor of it. The team needs more time.",
+          "meaning": "응, 완전 찬성이야. 팀이 시간이 더 필요해."
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "title": "친구들끼리 식당 고를 때",
+      "description": "",
+      "lines": [
+        {
+          "speaker": "A",
+          "text": "Italian or Korean food tonight?",
+          "meaning": "오늘 저녁 이탈리안 갈까, 한식 갈까?"
+        },
+        {
+          "speaker": "B",
+          "text": "I'm in favor of Korean. I've been craving kimchi chigae all day.",
+          "meaning": "나는 한식 쪽이 더 좋겠어. 하루 종일 김치찌개 먹고 싶었거든."
+        },
+        {
+          "speaker": "C",
+          "text": "Same here. I'm also in favor of Korean.",
+          "meaning": "나도. 나도 한식 찬성."
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "title": "회사에서 새 정책 논의할 때",
+      "description": "",
+      "lines": [
+        {
+          "speaker": "A",
+          "text": "The new remote-work policy is up for a vote next week.",
+          "meaning": "다음 주에 재택근무 새 정책 투표하잖아."
+        },
+        {
+          "speaker": "B",
+          "text": "I'm strongly in favor of it. Commuting three hours a day is killing me.",
+          "meaning": "나는 완전 찬성이야. 하루 세 시간 출퇴근하는 거 진짜 힘들거든."
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "title": "스포츠 경기 판정 이야기",
+      "description": "",
+      "lines": [
+        {
+          "speaker": "A",
+          "text": "Did you see the referee's final decision?",
+          "meaning": "심판 최종 판정 봤어?"
+        },
+        {
+          "speaker": "B",
+          "text": "Yeah, he ruled in favor of the home team. That was a controversial call.",
+          "meaning": "응, 홈팀 쪽으로 판정 내렸더라. 논란의 판정이었어."
+        }
+      ]
+    },
+    {
+      "id": 5,
+      "title": "연인 사이에서 여행지 정할 때",
+      "description": "",
+      "lines": [
+        {
+          "speaker": "A",
+          "text": "Jeju or Busan for our next trip?",
+          "meaning": "다음 여행 제주 갈까, 부산 갈까?"
+        },
+        {
+          "speaker": "B",
+          "text": "I'm in favor of Jeju. I really want to see the ocean and eat black pork.",
+          "meaning": "나는 제주 쪽이야. 바다 보고 흑돼지도 먹고 싶어서."
+        },
+        {
+          "speaker": "A",
+          "text": "Okay, then let's go with Jeju. I'm in favor of whatever makes you happy.",
+          "meaning": "알겠어, 그럼 제주로 가자. 네가 행복하면 나도 찬성이야."
+        }
+      ]
+    },
+    {
+      "id": 6,
+      "title": "친구 사이에서 의견 나눌 때",
+      "description": "",
+      "lines": [
+        {
+          "speaker": "A",
+          "text": "Do you think we should tell Min-ho the truth?",
+          "meaning": "민호한테 진짜 얘기해 줘야 할까?"
+        },
+        {
+          "speaker": "B",
+          "text": "I'm in favor of being honest. Hiding it will only make things worse later.",
+          "meaning": "솔직하게 말하는 쪽에 한 표야. 숨기면 나중에 더 나빠질 거야."
+        }
+      ]
+    },
+    {
+      "id": 7,
+      "title": "법원이나 분쟁 결과 이야기",
+      "description": "",
+      "lines": [
+        {
+          "speaker": "A",
+          "text": "How did the lawsuit end?",
+          "meaning": "그 소송 어떻게 됐어?"
+        },
+        {
+          "speaker": "B",
+          "text": "The court decided in favor of the plaintiff. They got full compensation.",
+          "meaning": "법원이 원고 쪽으로 판결 냈어. 전액 배상받기로 했대."
+        }
+      ]
+    },
+    {
+      "id": 8,
+      "title": "팀 프로젝트 방향 정할 때",
+      "description": "",
+      "lines": [
+        {
+          "speaker": "A",
+          "text": "Should we go with the simpler design or the more creative one?",
+          "meaning": "더 단순한 디자인으로 갈까, 아니면 더 창의적인 쪽으로 갈까?"
+        },
+        {
+          "speaker": "B",
+          "text": "I'm in favor of the simpler one. We don't have much time left.",
+          "meaning": "나는 단순한 쪽이 좋겠어. 시간도 얼마 안 남았잖아."
+        },
+        {
+          "speaker": "C",
+          "text": "Same. I'm also in favor of keeping it simple.",
+          "meaning": "나도 동의해. 간단하게 가는 쪽에 찬성이야."
+        }
+      ]
+    },
+    {
+      "id": 9,
+      "title": "선거 결과에 대해 이야기할 때",
+      "description": "",
+      "lines": [
+        {
+          "speaker": "A",
+          "text": "Most people in our department voted in favor of the new manager.",
+          "meaning": "우리 부서 사람들 대부분 새 매니저 쪽에 투표했대."
+        },
+        {
+          "speaker": "B",
+          "text": "I'm not surprised. A lot of us were already in favor of her from the beginning.",
+          "meaning": "별로 안 놀랍네. 처음부터 그녀를 지지하는 사람이 많았잖아."
+        }
+      ]
+    },
+    {
+      "id": 10,
+      "title": "날씨나 확률에 대해 말할 때",
+      "description": "",
+      "lines": [
+        {
+          "speaker": "A",
+          "text": "Do you think it'll rain during the picnic?",
+          "meaning": "피크닉 중에 비 올 것 같아?"
+        },
+        {
+          "speaker": "B",
+          "text": "The forecast is in favor of clear skies. We should be fine.",
+          "meaning": "예보가 맑은 날씨 쪽으로 나오고 있어. 괜찮을 거야."
+        }
+      ]
+    }
+  ]
+}
