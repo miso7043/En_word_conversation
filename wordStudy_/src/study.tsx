@@ -35,7 +35,7 @@ export function StudyControls({ settings: s, change, speakers = [], count = 0 }:
         <label className="flex items-center justify-between gap-3">속도 <input aria-label="재생 속도" type="number" min="0.5" max="1.5" step="0.05" value={s.rate} onChange={e => change({ ...s, rate: clamp(+e.target.value, .5, 1.5, .95) })} /></label>
         {!!count && <label className="flex items-center justify-between gap-3">문장 반복 <input type="number" min="1" max="10" value={s.repeat} onChange={e => change({ ...s, repeat: Math.round(clamp(+e.target.value, 1, 10, 1)) })} /></label>}
         {(['hideEnglish', 'hideMeaning', 'wake'] as const).filter(key => count > 0 || key === 'wake').map(key => <label key={key} className="flex items-center gap-2"><input type="checkbox" checked={s[key]} onChange={e => change({ ...s, [key]: e.target.checked })} /> {({ hideEnglish: '영어 가리기', hideMeaning: '해석 가리기', wake: '재생 중 화면 유지' })[key]}</label>)}
-        {!!count && <label className="flex items-center justify-between gap-3">내 역할 <select value={s.role} onChange={e => change({ ...s, role: e.target.value })}><option value="">모두 읽기</option>{speakers.map(speaker => <option key={speaker}>{speaker}</option>)}</select></label>}
+        {!!count && <label className="flex items-center justify-between gap-3">내 역할 <select aria-label="내 역할" value={s.role} onChange={e => change({ ...s, role: e.target.value })}><option value="">모두 읽기</option>{speakers.map(speaker => <option key={speaker}>{speaker}</option>)}</select></label>}
       </div>
     </dialog>
   </div>;

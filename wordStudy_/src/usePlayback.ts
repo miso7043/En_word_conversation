@@ -35,13 +35,18 @@ function assignVoices(lesson: Lesson, voices: SpeechSynthesisVoice[], previous: 
 }
 
 type Mode = 'idle' | 'playing' | 'paused';
+type TurnProgress = { phase: 'speech' | 'extra'; speechMs: number; remainingMs: number };
+type TurnClock = TurnProgress & { startedAt: number; deadline: number; finish: () => void };
+const extraTime = 3000;
 
 export function usePlayback(lesson: Lesson, save: (position: number) => void,
   options: { autoPlay?: boolean; onComplete?: () => void; settings?: Settings } = {}) {
   const settings = useRef(options.settings);
   settings.current = options.settings;
   const repeats = useRef(0);
-  const waiting = useRef(false);
+  const [turnProgress, setTurnProgress] = useState<TurnProgress | null>(null);
+  const turn = useRef<TurnClock | null>(null);
+  const turnTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const synth = window.speechSynthesis;
   const flat = useMemo(() => lesson.conversations.flatMap((dialogue, group) =>
     dialogue.lines.map(line => ({ ...line, group })),
@@ -84,20 +89,15 @@ export function usePlayback(lesson: Lesson, save: (position: number) => void,
       }
       setVoices(eligible);
     }
-    function cancel() {
-      if (pending.current !== null) clearTimeout(pending.current);
-      pending.current = null;
-      active.current = null;
-      synth?.cancel();
-      if (synth?.paused) synth.resume();
-    }
+    function cancel() { changeMode('idle'); cancelSpeech(); }
     refresh();
     synth?.addEventListener('voiceschanged', refresh);
     window.addEventListener('pagehide', cancel);
     return () => {
       synth?.removeEventListener('voiceschanged', refresh);
       window.removeEventListener('pagehide', cancel);
-      cancel();
+      state.current = 'idle';
+      cancelSpeech(false, false);
     };
   }, [synth]);
 
@@ -127,12 +127,39 @@ export function usePlayback(lesson: Lesson, save: (position: number) => void,
     setMessage(label);
   }
 
-  function cancelSpeech() {
+  function cancelSpeech(preserveTurn = false, updateUI = true) {
     if (pending.current !== null) clearTimeout(pending.current);
     pending.current = null;
+    if (turnTimer.current !== null) clearTimeout(turnTimer.current);
+    turnTimer.current = null;
+    if (!preserveTurn) { turn.current = null; if (updateUI) setTurnProgress(null); }
     active.current = null;
     synth?.cancel();
     if (synth?.paused) synth.resume();
+  }
+
+  function publishTurn(clock: TurnClock) {
+    setTurnProgress({ phase: clock.phase, speechMs: clock.speechMs, remainingMs: clock.remainingMs });
+  }
+
+  function tickExtra(clock: TurnClock) {
+    if (turn.current !== clock || state.current !== 'playing') return;
+    clock.remainingMs = Math.max(0, clock.deadline - performance.now());
+    publishTurn(clock);
+    if (clock.remainingMs <= 0) {
+      turnTimer.current = null; turn.current = null; setTurnProgress(null); clock.finish(); return;
+    }
+    turnTimer.current = setTimeout(() => tickExtra(clock), Math.min(50, clock.remainingMs));
+  }
+
+  function finishLine(index: number, assignments: typeof cast) {
+    repeats.current++;
+    let next = index + 1;
+    if (repeats.current < (settings.current?.repeat ?? 1)) next = index;
+    else repeats.current = 0;
+    if (next >= flat.length) { stop('재생이 끝났습니다.'); completion.current?.(); }
+    else if (state.current === 'playing') speak(next, assignments);
+    else move(next);
   }
 
   function speak(index: number, assignments: typeof cast) {
@@ -141,11 +168,7 @@ export function usePlayback(lesson: Lesson, save: (position: number) => void,
       stop('재생이 끝났습니다.');
       return;
     }
-    const config = settings.current;
-    if (config?.role && line.speaker === config.role && !waiting.current) {
-      move(index); waiting.current = true; changeMode('paused'); setMessage('내 차례입니다. 말한 뒤 다음 문장을 누르세요.'); return;
-    }
-    waiting.current = false;
+    const myTurn = !!settings.current?.role && line.speaker === settings.current.role;
     const voice = assignments[line.group].get(line.speaker);
     if (!voice) return;
     move(index);
@@ -154,27 +177,26 @@ export function usePlayback(lesson: Lesson, save: (position: number) => void,
     utterance.voice = voice;
     utterance.lang = voice.lang;
     utterance.rate = settings.current?.rate ?? 0.95;
+    utterance.volume = myTurn ? 0 : 1;
+    const clock: TurnClock | null = myTurn ? { phase: 'speech', speechMs: 0, remainingMs: extraTime, startedAt: performance.now(), deadline: 0, finish: () => finishLine(index, assignments) } : null;
+    turn.current = clock;
+    setTurnProgress(clock ? { phase: 'speech', speechMs: 0, remainingMs: extraTime } : null);
     active.current = utterance;
-    utterance.onend = () => {
+    utterance.onstart = () => { if (active.current === utterance && clock) clock.startedAt = performance.now(); };
+    utterance.onend = event => {
       if (active.current !== utterance) return;
       active.current = null;
-      const config = settings.current;
-      repeats.current++;
-      let next = index + 1;
-      if (repeats.current < (config?.repeat ?? 1)) next = index;
-      else {
-        repeats.current = 0;
-      }
-      if (next >= flat.length) {
-        stop('재생이 끝났습니다.');
-        completion.current?.();
-      }
-      else if (state.current === 'playing') speak(next, assignments);
-      else move(next);
+      if (clock && turn.current === clock) {
+        const elapsed = event?.elapsedTime;
+        clock.speechMs = typeof elapsed === 'number' && Number.isFinite(elapsed) && elapsed > 0
+          ? elapsed * 1000 : Math.max(0, performance.now() - clock.startedAt);
+        clock.phase = 'extra'; clock.deadline = performance.now() + extraTime;
+        tickExtra(clock);
+      } else finishLine(index, assignments);
     };
     utterance.onerror = (event) => {
       if (active.current !== utterance) return;
-      active.current = null;
+      cancelSpeech();
       changeMode('idle');
       console.warn('[영어 대화 연습] 음성 재생 오류:', event.error);
       setMessage('음성 재생 중 오류가 발생했습니다.');
@@ -184,6 +206,7 @@ export function usePlayback(lesson: Lesson, save: (position: number) => void,
       pending.current = null;
       if (active.current !== utterance || state.current !== 'playing') return;
       if (synth.paused) synth.resume();
+      if (clock) clock.startedAt = performance.now();
       synth.speak(utterance);
     }, 120);
   }
@@ -191,7 +214,7 @@ export function usePlayback(lesson: Lesson, save: (position: number) => void,
   function start(index: number) {
     if (!voices.length || !flat[index]) return;
     cancelSpeech();
-    repeats.current = 0; waiting.current = false;
+    repeats.current = 0;
     const assignments = assignVoices(lesson, voices, previous.current);
     previous.current = assignments.map(group => {
       const first = group.values().next().value;
@@ -204,19 +227,22 @@ export function usePlayback(lesson: Lesson, save: (position: number) => void,
 
   function toggle() {
     if (state.current === 'playing') {
+      const extra = turn.current?.phase === 'extra' ? turn.current : null;
+      if (extra) { extra.remainingMs = Math.max(0, extra.deadline - performance.now()); publishTurn(extra); }
       changeMode('paused');
       // Native pause/resume can leave the speech engine stuck after rapid toggles.
       // Keep the sentence position and restart it when playback resumes.
-      cancelSpeech();
+      cancelSpeech(!!extra);
     } else if (state.current === 'paused') {
-      if (waiting.current) { nextLine(); return; }
       changeMode('playing');
-      speak(current.current, cast);
+      const extra = turn.current?.phase === 'extra' ? turn.current : null;
+      if (extra) { extra.deadline = performance.now() + extra.remainingMs; tickExtra(extra); }
+      else speak(current.current, cast);
     } else start(current.current);
   }
 
   function nextLine() {
-    cancelSpeech(); waiting.current = false; repeats.current = 0;
+    cancelSpeech(); repeats.current = 0;
     const next = current.current + 1;
     if (next >= flat.length) { stop('재생이 끝났습니다.'); completion.current?.(); return; }
     if (!cast.length) { start(next); return; }
@@ -228,13 +254,13 @@ export function usePlayback(lesson: Lesson, save: (position: number) => void,
       ? '일부 화자가 같은 목소리를 사용합니다.' : '';
 
   return {
-    cast, mode, position, toggle, stop, nextLine,
+    cast, mode, position, toggle, stop, nextLine, turnProgress,
     canPlay: !!voices.length && !!flat.length,
     playLine: (index: number) => {
       if (state.current !== 'idle' && current.current === index) toggle();
       else start(index);
     },
-    status: mode === 'playing' ? `읽는 중 · ${position + 1} / ${flat.length}`
-      : mode === 'paused' ? (waiting.current ? '내 차례입니다. 말한 뒤 다음 문장을 누르세요.' : '일시정지됨') : message || voiceStatus,
+    status: mode === 'playing' ? turnProgress ? (turnProgress.phase === 'speech' ? '내 차례 · 음소거로 연습 중' : '내 차례 · 추가 3초 연습 중') : `읽는 중 · ${position + 1} / ${flat.length}`
+      : mode === 'paused' ? '일시정지됨' : message || voiceStatus,
   };
 }

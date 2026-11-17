@@ -14,7 +14,7 @@
   <label data-dialogue-only>문장 반복 <input data-setting="repeat" type="number" min="1" max="10"></label>
   <label data-dialogue-only><input data-setting="hideEnglish" type="checkbox"> 영어 가리기</label><label data-dialogue-only><input data-setting="hideMeaning" type="checkbox"> 해석 가리기</label>
   <label><input data-setting="wake" type="checkbox"> 재생 중 화면 유지</label>
-  <label data-dialogue-only>내 역할 <select data-setting="role"><option value="">모두 읽기</option></select></label>
+  <label data-dialogue-only>내 역할 <select aria-label="내 역할" data-setting="role"><option value="">모두 읽기</option></select></label>
   <span data-study-status role="status"></span></div>`;
   document.body.append(panel);
   function settingsButton(controls) {

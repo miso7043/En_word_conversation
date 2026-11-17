@@ -73,9 +73,9 @@ function LessonView({ lesson, save, startSelected, autoPlay, onComplete, selecti
   let offset = 0;
 
   return (
-    <main className="min-w-0 px-4 pb-40 pt-1 sm:px-8 md:px-10 md:pt-10">
+    <main className="lesson-content min-w-0 px-4 pb-40 pt-1 sm:px-8 md:px-10 md:pt-10">
       <div className="mb-6 break-words">
-        <h2 className="mb-4 text-3xl font-bold tracking-tight sm:text-4xl">{lesson.title}</h2>
+        <h2 id="lesson-title" className="mb-4 text-3xl font-bold tracking-tight sm:text-4xl">{lesson.title}</h2>
         <Paragraphs values={lesson.description} />
       </div>
       <section aria-label="음성 제어" className="fixed inset-x-0 bottom-0 z-10 border-t border-edge bg-panel px-4 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] md:sticky md:top-0 md:mb-5 md:rounded-xl md:border md:pb-3">
@@ -88,7 +88,7 @@ function LessonView({ lesson, save, startSelected, autoPlay, onComplete, selecti
           </button>
           <button className="control border border-edge" disabled={player.mode === 'idle' && player.position === 0} onClick={() => {
             player.stop();
-            window.scrollTo(0, 0);
+            requestAnimationFrame(() => document.getElementById('lesson-title')?.scrollIntoView({ block: 'start', behavior: 'instant' }));
           }}>정지</button>
           <div className="flex items-center gap-2">
             <button className="control border border-edge" disabled={!player.canPlay} onClick={player.nextLine}>다음 문장</button>
@@ -123,6 +123,10 @@ function LessonView({ lesson, save, startSelected, autoPlay, onComplete, selecti
                     <div className="min-w-0 break-words py-1">
                       <p lang="en" className="leading-relaxed"><Concealed label="영어 보기" text={line.text} hidden={settings.hideEnglish} phrases={line.keyPhrase} /></p>
                       {line.meaning && <p className="mt-1 text-sm leading-relaxed text-slate-300"><Concealed label="해석 보기" text={line.meaning} hidden={settings.hideMeaning} /></p>}
+                      {player.turnProgress && player.position === position && <div className="mt-3 role-progress">
+                        <progress aria-label="내 역할 연습 진행" max={player.turnProgress.speechMs + 3000} value={player.turnProgress.phase === 'extra' ? player.turnProgress.speechMs + 3000 - player.turnProgress.remainingMs : undefined} />
+                        <p className="mt-1 text-sm text-slate-300">{player.mode === 'paused' ? '일시정지됨' : player.turnProgress.phase === 'speech' ? '내 차례 · 음소거로 연습 중' : `내 차례 · 추가 시간 ${(player.turnProgress.remainingMs / 1000).toFixed(1)}초`}</p>
+                      </div>}
                     </div>
                   </div>
                 );
@@ -421,25 +425,26 @@ function App() {
   }
 
   return (
-    <div className={`mx-auto grid max-w-6xl md:grid-cols-[20rem_minmax(0,1fr)]`}>
-      <aside className="p-4 md:sticky md:top-0 md:flex md:h-dvh md:flex-col md:border-r md:border-edge md:bg-panel md:p-5">
-        <header className="mb-4 flex flex-wrap items-center justify-between gap-2">
-          <h1 className="text-xl font-bold">영어 대화 연습</h1>
-          <label className="text-sm"><span className="sr-only">테마</span><select aria-label="테마" value={settings.theme} onChange={e => changeSettings({ ...settings, theme: e.target.value })}><option value="dark">어둡게</option><option value="light">밝게</option><option value="system">시스템</option></select></label>
-        </header>
-        {administration && <p className="mb-3 text-sm"><a href="/">학습 화면</a></p>}
-        {administration && <section className="mb-3"><h2>자료 관리</h2>{!user ? authEnabled ? <a className="control border" href="/api/auth/login">Google 로그인</a> : <p>Google 인증 설정이 필요합니다.</p> : <><p className="break-all">Google ID: {user.sub}</p><p>{user.admin ? '관리자' : '관리자로 등록되지 않은 계정입니다.'}</p>
-        <button className="control border" onClick={() => { void api('auth/logout', 'POST', {}).then(() => location.reload()); }}>로그아웃</button>
-        {user.admin && <button className="control border" onClick={() => { void api<{ copied: boolean }>('admin/claim-progress', 'POST', {}).then(result => { setStatus(result.copied ? '기존 공동 진도를 복사했습니다.' : '이미 복사한 계정입니다.'); void reload(); }).catch(error => setStatus(error.message)); }}>기존 공동 진도 복사</button>}</>}</section>}
-        <nav aria-label="학습 메뉴" className={`mb-4 flex gap-2 ${page === 'sentences' ? 'md:flex-col' : ''}`}>
+    <div className="mx-auto max-w-6xl">
+      <header className="flex flex-wrap items-center gap-3 p-4">
+        <nav aria-label="학습 메뉴" className="flex gap-2">
           {([['dialogues', '대화 연습'], ['sentences', '문장읽기']] as const).map(([value, label]) => (
             <button key={value} aria-current={page === value ? 'page' : undefined} onClick={() => {
               setAutoPlay(false);
               setPage(value);
+              window.scrollTo(0, 0);
             }}
               className={`control border ${page === value ? 'border-accent bg-sky-950 text-accent' : 'border-edge'}`}>{label}</button>
           ))}
         </nav>
+        <label className="ml-auto text-sm"><span className="sr-only">테마</span><select aria-label="테마" value={settings.theme} onChange={e => changeSettings({ ...settings, theme: e.target.value })}><option value="dark">어둡게</option><option value="light">밝게</option><option value="system">시스템</option></select></label>
+      </header>
+      <div className="grid md:grid-cols-[20rem_minmax(0,1fr)]">
+      <aside className="p-4 md:sticky md:top-0 md:flex md:h-dvh md:flex-col md:border-r md:border-edge md:bg-panel md:p-5">
+        {administration && <p className="mb-3 text-sm"><a href="/">학습 화면</a></p>}
+        {administration && <section className="mb-3"><h2>자료 관리</h2>{!user ? authEnabled ? <a className="control border" href="/api/auth/login">Google 로그인</a> : <p>Google 인증 설정이 필요합니다.</p> : <><p className="break-all">Google ID: {user.sub}</p><p>{user.admin ? '관리자' : '관리자로 등록되지 않은 계정입니다.'}</p>
+        <button className="control border" onClick={() => { void api('auth/logout', 'POST', {}).then(() => location.reload()); }}>로그아웃</button>
+        {user.admin && <button className="control border" onClick={() => { void api<{ copied: boolean }>('admin/claim-progress', 'POST', {}).then(result => { setStatus(result.copied ? '기존 공동 진도를 복사했습니다.' : '이미 복사한 계정입니다.'); void reload(); }).catch(error => setStatus(error.message)); }}>기존 공동 진도 복사</button>}</>}</section>}
         {page === 'dialogues' && !!lessons.length && (
           <>
             <p className="mb-2 text-sm">선택 {checkedIds.size}개</p>
@@ -499,6 +504,7 @@ function App() {
           autoPlay={autoPlay} onComplete={playPreviousLesson}
           save={position => save(selected.id, position)} />
       )}
+      </div>
       </div>
     </div>
   );

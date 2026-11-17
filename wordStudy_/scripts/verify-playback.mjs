@@ -9,6 +9,7 @@ let cursor = 0;
 let effects = [];
 const timers = new Map();
 let timerId = 0;
+let now = 0;
 const spoken = [];
 const voice = { name: 'English', lang: 'en-US', voiceURI: 'english' };
 const synth = {
@@ -23,7 +24,7 @@ const synth = {
   },
   pause() { throw new Error('Native pause must not be used'); },
   resume() { this.paused = false; },
-  speak(utterance) { spoken.push(utterance); },
+  speak(utterance) { spoken.push(utterance); utterance.onstart?.(); },
 };
 const context = vm.createContext({
   console: { info() {}, table() {}, warn() {} },
@@ -31,7 +32,8 @@ const context = vm.createContext({
   document: { getElementById: () => null },
   matchMedia: () => ({ matches: true }),
   SpeechSynthesisUtterance: class { constructor(text) { this.text = text; } },
-  setTimeout(fn) { timers.set(++timerId, fn); return timerId; },
+  performance: { now: () => now },
+  setTimeout(fn, delay = 0) { timers.set(++timerId, { fn, at: now + delay }); return timerId; },
   clearTimeout(id) { timers.delete(id); },
   useRef(initial) { const index = cursor++; return slots[index] ??= { current: initial }; },
   useState(initial) {
@@ -61,12 +63,16 @@ function render() {
   effects = [];
   queued.forEach(fn => fn());
 }
-function flush() {
-  const queued = [...timers.values()];
-  timers.clear();
-  queued.forEach(fn => fn());
-  render();
+function advance(ms) {
+  const target = now + ms;
+  while (true) {
+    const due = [...timers.entries()].filter(([, value]) => value.at <= target).sort((a, b) => a[1].at - b[1].at)[0];
+    if (!due) break;
+    timers.delete(due[0]); now = due[1].at; due[1].fn(); render();
+  }
+  now = target; render();
 }
+function flush() { advance(120); }
 render(); render();
 player.toggle(); render(); flush();
 assert.equal(spoken.length, 1);
@@ -126,9 +132,14 @@ spoken.at(-1).onend();render();flush();assert.equal(spoken.at(-1).text,'Second s
 player.stop();render();
 slots.length=0;spoken.length=0;timers.clear();
 options={settings:{rate:1,repeat:1,role:'A'}};
-render();render();player.toggle();render();flush();assert.equal(player.mode,'paused');assert.equal(spoken.length,0);
-player.nextLine();render();flush();assert.equal(spoken.at(-1).text,'Second sentence.');
+render();render();player.toggle();render();flush();assert.equal(player.mode,'playing');assert.equal(spoken.at(-1).volume,0);assert.equal(player.turnProgress.phase,'speech');
+advance(2000);const silent=spoken.at(-1);silent.onend({elapsedTime:2});render();assert.equal(player.turnProgress.phase,'extra');assert.equal(player.turnProgress.speechMs,2000);
+advance(1000);player.toggle();render();const remaining=player.turnProgress.remainingMs;assert.equal(player.mode,'paused');advance(5000);assert.equal(player.turnProgress.remainingMs,remaining);assert.equal(spoken.length,1);
+player.toggle();render();advance(remaining-1);assert.equal(spoken.length,1);advance(1);assert.equal(player.position,1);flush();assert.equal(spoken.at(-1).text,'Second sentence.');assert.equal(spoken.at(-1).volume,1);assert.equal(player.turnProgress,null);
 player.stop();render();
+// 정지/다음 문장 후 늦게 도착한 음성 종료나 타이머가 다음 재생을 바꾸지 않는다.
+player.playLine(0);render();flush();const canceled=spoken.at(-1);advance(1000);canceled.onend();render();advance(500);player.stop();render();advance(10000);assert.equal(player.mode,'idle');assert.equal(player.turnProgress,null);const afterStop=spoken.length;canceled.onend({elapsedTime:1});render();advance(5000);assert.equal(spoken.length,afterStop);
+player.playLine(0);render();flush();spoken.at(-1).onend({elapsedTime:1});render();player.nextLine();render();flush();assert.equal(spoken.at(-1).text,'Second sentence.');const afterNext=spoken.length;advance(4000);assert.equal(spoken.length,afterNext);player.stop();render();
 slots.length=0;spoken.length=0;timers.clear();
 // 이전 저장 설정에 구간과 피치가 남아 있어도 다시 적용하지 않는다.
 options={settings:{rate:.7,pitch:1.4,repeat:1,role:'',a:0,b:0}};
@@ -136,4 +147,14 @@ render();render();player.toggle();render();flush();
 options={settings:{rate:1.3,repeat:1,role:''}};render();
 spoken.at(-1).onend();render();flush();assert.equal(spoken.at(-1).text,'Second sentence.');assert.equal(spoken.at(-1).rate,1.3);assert.equal(spoken.at(-1).pitch,undefined);
 spoken.at(-1).onend();render();flush();assert.equal(player.mode,'idle');
-console.log('PASS: 속도와 다음 문장 적용·문장 반복·롤플레이·이전 구간/피치 설정 무시·종료');
+console.log('PASS: 속도와 다음 문장 적용·문장 반복·음소거 역할+3초 자동 진행·추가 시간 일시정지·정지/다음 취소·이전 구간/피치 설정 무시·종료');
+
+// 내 역할이 마지막 문장인 경우에도 추가 3초 이후 한 번만 완료된다.
+slots.length=0;spoken.length=0;timers.clear();completed=0;
+options={settings:{rate:1,repeat:1,role:'B'},onComplete:()=>completed++};
+render();render();player.playLine(1);render();flush();const lastRole=spoken.at(-1);assert.equal(lastRole.volume,0);
+player.toggle();render();assert.equal(player.mode,'paused');assert.equal(player.turnProgress,null);
+player.toggle();render();flush();assert.equal(spoken.at(-1).volume,0);assert.equal(spoken.at(-1).text,'Second sentence.');lastRole.onend({elapsedTime:1});render();assert.equal(player.turnProgress.phase,'speech');
+spoken.at(-1).onend({elapsedTime:1});render();advance(2999);assert.equal(completed,0);advance(1);assert.equal(completed,1);assert.equal(player.mode,'idle');advance(5000);assert.equal(completed,1);
+player.playLine(1);render();flush();spoken.at(-1).onerror({error:'synthesis-failed'});render();assert.equal(player.mode,'idle');assert.equal(player.turnProgress,null);advance(5000);assert.equal(completed,1);
+console.log('PASS: 내 역할 음소거 재시작·마지막 문장 자동 완료·음성 오류 취소');
