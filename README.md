@@ -1,75 +1,197 @@
-# English Conversation Practice
+# 영어 대화 연습 · English Conversation Practice
 
-English Conversation Practice is a browser-based listening tool for learners who want to hear English expressions in context. Each lesson is a JSON file containing one or more dialogues, with optional explanations and translations. The app uses browser speech synthesis to read the English dialogue aloud and gives each speaker a voice.
+영어 표현을 대화로 읽고 듣는 개인 학습 도구입니다. **Korean version을 기본으로 만들었습니다.** 기본 화면, 버튼, 상태 안내와 이 README는 한국어이며, 영어 대사를 소리 내어 읽고 한국어 설명·뜻을 함께 볼 수 있습니다. 별도의 영어 UI 전환 기능은 없습니다.
 
-The interface is in Korean, and the included lessons can display Korean explanations and translations. The English dialogue is the part read aloud.
+한 저장소에서 두 가지 버전을 관리합니다.
 
-## Features
+| 구분 | HTML 버전 | Node.js & React 버전 |
+| --- | --- | --- |
+| 위치 | [`htmlVersion/`](htmlVersion/) | [`wordStudy_/`](wordStudy_/) |
+| 구성 | HTML·CSS·JavaScript 단일 페이지 | React·TypeScript·Vite·Tailwind CSS + Node.js·Fastify |
+| 자료 | JSON 폴더 또는 HTML 내장 자료 | PostgreSQL에 저장, JSON 가져오기 |
+| 서버 | 정적 파일 서버 또는 HTML 직접 열기 | 앱 서버와 PostgreSQL 필요 |
+| 학습 위치 | React 버전의 DB 진도 공유 기능 없음 | 서버에 저장하여 기기 간 공유 |
+| 사용 목적 | 설치를 최소화한 가벼운 학습 | 자료·진도 관리와 선택 자료 연속 재생 |
 
-- **Lesson library.** The sidebar uses each JSON file's `title` and sorts lessons newest first. The first lesson opens automatically. Long lists scroll independently above the playback controls on desktop.
-- **Dialogue view.** The main panel displays the lesson explanation, dialogue titles, speaker labels, English lines, and any supplied translations. Each dialogue shows the assigned voice names and locales when voices are available.
-- **Playback controls.** The play icon switches to pause during playback. Pausing preserves the current position. The separate **Stop** button cancels playback, resets it to the first line, and scrolls the page to the top.
-- **Play from a line.** Click a speaker button such as **A** or **B** to jump to that line. Playback continues through the remaining lines of the selected lesson, including subsequent dialogues.
-- **Follow-along reading.** The current line is highlighted and scrolled into view. The progress display counts lines across the selected lesson, and scrolling respects the browser's reduced-motion preference.
-- **Voice rotation.** The app selects from available US, Canadian, UK, and Australian English voices. A speaker keeps the same voice within a dialogue, and the assignment rotates between dialogues when multiple eligible voices are available.
+두 버전 모두 브라우저의 `speechSynthesis`로 음성을 생성합니다. 음성 파일을 서버에서 스트리밍하는 방식이 아니므로 브라우저·운영체제에 설치된 영어 음성에 따라 소리와 사용 가능 여부가 달라집니다.
 
-## Project structure
+## 저장소 구성
 
-| Path | Purpose |
+```text
+.
+├── README.md                 # 두 버전의 한국어 안내
+├── AGENTS.md                 # 작업·검증·커밋 지침
+├── htmlVersion/
+│   ├── conversation.html     # HTML 버전 화면과 재생 로직
+│   └── json/                 # HTML 버전 학습 자료
+├── wordStudy_/
+│   ├── src/                  # React 화면, 재생, 선택 목록
+│   ├── server/               # Fastify API와 PostgreSQL 접근
+│   ├── shared/               # JSON 형식 검증
+│   ├── seed/                 # DB에 최초 등록할 자료
+│   ├── drizzle/              # DB 마이그레이션
+│   ├── scripts/              # 검증 스크립트
+│   ├── Containerfile         # Node 24 기반 다단계 빌드
+│   ├── compose.yaml          # Podman 앱·DB 구성
+│   └── start.sh              # 환경 파일 생성과 빌드·실행
+└── english-study-json.skill  # 학습 JSON 작성용 스킬 자료
+```
+
+`htmlVersion/json/`과 `wordStudy_/seed/`는 별도 자료입니다. 한쪽 파일을 수정해도 다른 쪽이나 실행 중인 DB에 자동으로 동기화되지 않습니다.
+
+## HTML 버전 실행
+
+저장소 루트에서 다음 명령을 실행합니다. Python 3과 영어 음성을 지원하는 브라우저가 필요합니다.
+
+```bash
+cd htmlVersion
+python3 -m http.server 8765 --bind 127.0.0.1
+```
+
+[http://127.0.0.1:8765/conversation.html](http://127.0.0.1:8765/conversation.html)을 엽니다. 서버는 `Ctrl+C`로 종료합니다.
+
+- 서버 모드에서는 `json/`의 디렉터리 목록을 읽어 자료를 불러옵니다. 파일을 추가·수정한 뒤 새로고침하세요.
+- `conversation.html`을 직접 열 수도 있습니다. 이때는 내장 자료를 사용하며, **JSON 폴더 열기**로 원하는 폴더를 지정할 수 있습니다.
+- 대화 목록, 영어 대사와 뜻, 화자별 음성 배정, 문장부터 재생, 일시정지·정지를 제공합니다.
+- **문장읽기**에서는 영어 원문을 붙여넣고 재생하거나 반복할 수 있습니다.
+- 정적 호스팅에서 자동으로 JSON을 탐색하려면 `json/`에 파일 링크가 포함된 디렉터리 목록 또는 `index.html`이 있어야 합니다.
+
+## Node.js & React 버전 실행
+
+Podman, Compose 제공자(예: `podman-compose`), OpenSSL이 필요합니다. 처음 빌드할 때는 컨테이너 이미지와 npm 패키지를 받을 수 있어야 합니다. Docker 설치는 필수 사항이 아닙니다.
+
+```bash
+cd wordStudy_
+sh ./start.sh
+```
+
+실행 스크립트는 `.env`가 없으면 임의의 DB 암호와 기본 포트를 생성하고, 이미지를 빌드한 뒤 앱과 DB 컨테이너를 재생성합니다.
+
+- PC: [http://localhost:43871](http://localhost:43871)
+- 같은 네트워크의 휴대폰: `http://PC의_내부_IP:43871`
+- 앱 컨테이너: `wordStudy_`, DB 컨테이너: `wordstudy-db`
+- 영속 DB 볼륨: `wordstudy-data`
+- PostgreSQL 포트는 호스트에 공개하지 않습니다.
+- `.env`의 `WORDSTUDY_PORT`로 앱 포트를 변경할 수 있습니다. 변경 후 실행 스크립트를 다시 실행하세요.
+
+기존 DB를 사용할 때는 `.env`를 보관하세요. `.env`는 Git에서 제외합니다. PC의 IP는 `ip -4 addr`로 확인할 수 있으며, 휴대폰 접속에는 같은 네트워크와 앱 포트 접근이 필요합니다.
+
+### 자주 사용하는 명령
+
+아래 명령은 `wordStudy_` 폴더에서 실행합니다.
+
+```bash
+# 상태와 로그
+podman compose -p wordstudy ps
+podman compose -p wordstudy logs -f app
+curl -fsS http://localhost:43871/api/health
+
+# 데이터는 유지하면서 중지
+podman compose -p wordstudy stop
+
+# 소스 변경을 빌드하고 앱만 재생성
+podman compose -p wordstudy up -d --build --force-recreate --no-deps app
+
+# Compose 설정 변경 적용
+podman compose -p wordstudy up -d --force-recreate
+```
+
+앱과 DB에는 `restart: always`가 설정되어 있습니다. PC 부팅 후 자동 실행 여부는 호스트의 Podman 서비스 설정에도 달려 있습니다. `restart` 명령만으로는 Compose 설정 변경이나 소스 변경을 반영하지 못합니다. DB 자료를 보존하려면 `down -v`나 볼륨 삭제를 실행하지 마세요.
+
+## React 버전 기능 상세
+
+### 대화 목록과 자료 보기
+
+- 자료는 날짜 내림차순으로 표시하고, 날짜가 같으면 파일 이름 순으로 정렬합니다. 날짜 표시는 서울 시간 기준입니다.
+- 제목을 일반 클릭하면 해당 자료를 엽니다. 모바일에서는 선택 메뉴와 체크 가능한 목록을 사용할 수 있습니다.
+- 자료 설명, 대화 제목과 설명, 화자 A/B 등의 버튼, 영어 대사, 선택적인 한국어 뜻을 표시합니다.
+- PC에서는 좌측 목록과 본문을 나누고, 모바일에서는 세로로 배치합니다. 재생 제어는 PC 상단, 모바일 하단에서 접근할 수 있습니다.
+
+### 재생·일시정지·이어 듣기
+
+- **재생**은 저장된 문장 위치에서 시작하여 현재 자료 안의 나머지 대화를 차례대로 읽습니다.
+- **일시정지** 후 **이어 듣기**를 누르면 현재 문장의 처음부터 다시 읽습니다. 단어 중간 위치부터 재개하는 방식은 아닙니다.
+- **정지**는 음성을 취소하고 현재 자료의 위치를 첫 문장으로 되돌립니다. 자료를 끝까지 재생해도 위치가 초기화됩니다.
+- A/B 등 화자 버튼을 누르면 해당 문장부터 읽습니다. 현재 재생 문장의 버튼은 일시정지·이어 듣기로 동작합니다.
+- 현재 문장을 강조하고 화면 중앙으로 따라 스크롤하며, 전체 문장 수 대비 현재 위치를 표시합니다.
+- 빠른 연속 클릭은 마지막 재생 요청으로 모으고, 취소된 음성의 늦은 이벤트가 새 재생에 영향을 주지 않도록 처리합니다.
+
+### 스페이스바 단축키
+
+대화 재생 중 **스페이스바**를 누르면 일시정지하고, 일시정지 중 다시 누르면 이어 듣습니다. 길게 누를 때는 한 번만 전환합니다.
+
+입력란, 체크박스, 선택 메뉴, 링크, 편집 가능한 영역과 대화상자에서는 기본 키 동작을 유지합니다. Ctrl·Shift·Alt·Meta를 함께 누른 경우에는 재생 단축키로 처리하지 않습니다. 이 단축키는 대화 연습용이며 문장읽기에는 적용되지 않습니다.
+
+### 체크한 자료만 연속 재생
+
+1. 좌측 자료 목록의 체크박스로 재생할 자료를 고릅니다.
+2. **선택 N개 연속 재생 (아래 → 위)**을 체크합니다.
+3. 선택된 자료 중 맨 아래 자료의 첫 문장부터 시작하여 위쪽의 선택 자료로 이동합니다.
+
+자료 안의 문장은 원래 순서대로 읽고, 마지막 선택 자료까지 끝나면 멈춥니다. 체크하지 않은 자료와 문장이 없는 자료는 건너뜁니다. 선택 자료가 없으면 연속 재생을 켤 수 없습니다.
+
+| 조작 | 동작 |
 | --- | --- |
-| `conversation.html` | The app's HTML, CSS, JavaScript, and embedded starter lessons |
-| `json/Dish it out.json` | Dialogues for “Dish it out but can't take it” |
-| `json/inFavorOf.json` | Dialogues for “in favor of” |
-| `json/tally.json` | Dialogues for “tally” |
-| `README.md` | Setup, lesson format, and implementation guide |
+| 체크박스 클릭 | 해당 자료 선택·해제 |
+| 제목 일반 클릭 | 해당 자료 열기 |
+| Ctrl+제목 클릭 | 해당 자료의 선택 추가·해제 |
+| Shift+클릭 | 마지막 기준 위치부터 클릭한 자료까지 범위 선택 |
+| Ctrl+Shift+클릭 | 기존 선택에 해당 범위 추가 |
 
-## Run locally
+Mac에서는 Ctrl 대신 Command도 사용할 수 있습니다. Shift만 사용하면 기존 선택을 해당 범위로 바꿉니다. 연속 재생을 해제하면 현재 자료까지만 읽고 다음 자료로 넘어가지 않습니다. 정지를 누르면 다음 자료로 넘어가지 않고 멈춥니다. 체크 상태는 현재 화면 세션에서 관리하며 새로고침 후에는 초기화됩니다.
 
-A browser with speech synthesis and at least one eligible English voice is required for audio. The app itself uses plain HTML, CSS, and JavaScript. Python 3 is used for the local server option.
+### 영어 음성과 화자 배정
 
-### Load the current JSON folder automatically
+- 대화 연습은 미국·캐나다·영국·호주·인도 영어 음성을 대상으로 합니다.
+- 어린이·효과음 계열 목소리는 이름 기준으로 제외하고, 중복 음성도 제거합니다.
+- 재생을 새로 시작할 때 대화별 화자에게 음성을 무작위 배정하며, 일시정지 후에는 같은 배정을 유지합니다.
+- 음성이 화자 수보다 적으면 일부 화자가 같은 목소리를 사용합니다. 사용할 영어 음성이 없으면 재생 버튼을 비활성화합니다.
+- 배정된 음성은 화면에 표시하고, 사용 가능한 음성 목록은 개발자 콘솔에서도 확인할 수 있습니다.
 
-1. Open a terminal in the folder containing `conversation.html`.
-2. Start the local server.
+### 학습 위치 저장
 
-   ```bash
-   python3 -m http.server 8765 --bind 127.0.0.1
-   ```
+문장 위치를 PostgreSQL에 저장합니다. 다른 기기에서 페이지를 열거나 새로고침하면 저장된 위치를 불러옵니다. 실시간으로 여러 기기의 재생을 동기화하지는 않습니다.
 
-3. Open [the local conversation page](http://127.0.0.1:8765/conversation.html).
-4. Refresh the page after adding, editing, or removing a JSON file. The app reads the server's directory listing and loads the files it finds.
+현재는 개인용으로 모든 기기가 `local` 사용자 하나를 공유합니다. 브라우저를 닫거나 앱 컨테이너를 재생성해도 DB 볼륨이 유지되면 자료와 진도가 남습니다. 다중 사용자 인증은 구현되어 있지 않습니다.
 
-Keep the terminal running while using the page. Press `Ctrl+C` in the terminal to stop the server.
+### JSON 가져오기
 
-### Open the HTML file directly
+- **JSON 파일**: 하나 이상의 JSON 파일을 선택합니다.
+- **JSON 폴더**: 폴더 안의 JSON 자료를 가져옵니다.
+- UTF-8 JSON을 검증하고 파일별로 추가·건너뜀·실패 결과를 처리합니다. 폴더 가져오기는 결과 창에 분류해서 표시합니다.
+- **같은 파일 이름이 이미 있으면 덮어쓰지 않고 건너뜁니다.** 수정한 내용을 다른 자료로 등록하려면 다른 파일 이름을 사용하세요.
+- 서버 시작 시 `seed/` 자료 중 아직 없는 자료만 DB에 등록합니다. 기존 자료·진도는 덮어쓰지 않습니다.
+- 가져오기 UI/API는 `ENABLE_IMPORT=1`일 때 활성화하며, 기본 Compose 구성에서는 켜져 있습니다.
 
-Double-click `conversation.html` to open the three lessons embedded in the file. To load current or additional lessons, use the folder picker in the sidebar and select the `json` folder. Direct file access uses the embedded snapshot until a folder is selected because browser security rules restrict automatic reads of neighboring files from a `file://` page.
+### 문장읽기
 
-## Add a lesson
+별도 **문장읽기** 메뉴에서 영어 문장이나 긴 원문을 붙여넣어 읽을 수 있습니다. 재생·정지·반복 재생을 지원하고, 반복할 때도 사용 가능한 영어 음성 중에서 무작위로 선택합니다. 대화 연습과 달리 영어 전체 지역의 음성을 대상으로 합니다.
 
-Create a UTF-8 file such as `json/make-a-point.json` with this structure.
+입력 원문은 해당 브라우저의 `localStorage`에 저장됩니다. 대화 진도와 달리 DB나 다른 기기에 공유되지 않습니다. 화면에는 현재 음성 이름·언어와 재생 상태를 표시합니다.
+
+## 학습 JSON 형식
+
+두 버전은 다음과 같은 자료 구조를 사용합니다.
 
 ```json
 {
   "title": "Make a point",
-  "date": "2026-11-12T09:00:00+09:00",
-  "description": [
-    "To make a point is to express an idea or argument clearly."
-  ],
+  "date": "2026-11-17T09:00:00+09:00",
+  "description": ["의견이나 요점을 분명하게 말할 때 쓰는 표현입니다."],
   "conversations": [
     {
-      "id": 1,
-      "title": "During a team meeting",
-      "description": "Two colleagues discuss a proposed schedule.",
+      "title": "회의에서 의견 말하기",
+      "description": "두 동료가 일정에 관해 이야기합니다.",
       "lines": [
         {
           "speaker": "A",
           "text": "I'd like to make a point about the schedule.",
-          "meaning": "I'd like to draw attention to something about the schedule."
+          "meaning": "일정에 관해 한 가지 말씀드리고 싶어요."
         },
         {
           "speaker": "B",
-          "text": "Go ahead. What are you concerned about?"
+          "text": "Go ahead. What are you concerned about?",
+          "meaning": "말씀하세요. 어떤 점이 걱정되시나요?"
         }
       ]
     }
@@ -77,52 +199,46 @@ Create a UTF-8 file such as `json/make-a-point.json` with this structure.
 }
 ```
 
-| Field | Required | Behavior |
-| --- | --- | --- |
-| `title` | Yes | String shown in the lesson list and at the top of the lesson |
-| `date` | No | Parseable date used to sort lessons. Use an ISO 8601 timestamp for consistent ordering across devices. |
-| Lesson or dialogue `description` | No | String or array of strings rendered as separate paragraphs |
-| `conversations` | Yes | Array of dialogues, shown in the order supplied |
-| Dialogue `title` and `id` | No | The title takes priority. Without a title, the app displays a dialogue label using its ID or position. |
-| Dialogue `lines` | Yes | Array of lines in reading order |
-| Line `speaker` and `text` | Yes | String values used for the speaker button and the spoken English line |
-| Line `meaning` | No | Translation or gloss shown below the line |
+필수 항목은 자료의 `title`, `conversations`, 각 대화의 `lines`, 각 문장의 `speaker`·`text`입니다. `description`은 문자열 또는 문자열 배열이고, `meaning`은 선택 항목입니다. 날짜는 ISO 8601 형식을 권장합니다. React 버전에서 날짜가 없거나 해석되지 않으면 파일 수정 시각을 사용합니다. 뜻과 설명은 화면에 표시하며 음성은 영어 `text`를 읽습니다.
 
-Use the same speaker label each time a character speaks within a dialogue. When `date` is omitted, sorting uses the server's `Last-Modified` header, the selected file's modification time, or the saved timestamp for an embedded lesson. Equal dates are sorted by filename. Displayed dates use Seoul time.
+## 개발과 검증
 
-## How the code works
+React 버전은 Node.js 24 이상을 기준으로 합니다. 주요 파일은 다음과 같습니다.
 
-### Loading and rendering
+| 파일 | 역할 |
+| --- | --- |
+| `wordStudy_/src/main.tsx` | 화면, 자료 선택, 단축키, 연속 재생 연결 |
+| `wordStudy_/src/usePlayback.ts` | 화자 음성 배정과 재생 상태 |
+| `wordStudy_/src/playlist.ts` | Ctrl·Shift 선택과 역순 재생 목록 |
+| `wordStudy_/shared/lesson.ts` | JSON 검증과 변환 |
+| `wordStudy_/server/index.ts` | API, 마이그레이션, 초기 자료 등록, 정적 파일 제공 |
+| `wordStudy_/server/store.ts` | 자료와 진도의 DB 저장·조회 |
+| `wordStudy_/server/schema.ts`, `wordStudy_/drizzle/` | DB 스키마와 마이그레이션 |
 
-- `loadFromServer()` requests `./json/`, parses the HTML directory listing with `DOMParser`, and keeps unique links to JSON files directly inside that directory. It fetches those files with cache revalidation.
-- Direct file mode passes the embedded lessons to the same loader. The folder picker uses the browser's file input and reads the selected JSON files with `File.text()`.
-- `readDocument()` checks the required fields and resolves the sorting timestamp. `loadDocuments()` uses `Promise.allSettled()` so a malformed file can be reported by name while valid files still load. A version counter prevents a slower earlier load from overwriting a newer selection.
-- `showDocument()` builds the lesson with DOM elements and `textContent`, so JSON strings render as text. It keeps both the dialogue groups used for voice assignment and a flat list used for sequential playback. Speaker buttons store their corresponding position in the flat list.
-- CSS Grid places the lesson list beside the main content on desktop. The sidebar uses a scrollable list row with the controls in a separate row below it. On narrow screens, the sidebar stacks above the lesson.
+로컬 Node 환경에서 다음 검증을 실행할 수 있습니다.
 
-### Voice assignment
+```bash
+cd wordStudy_
+npm ci
+npm run build
+node scripts/verify-playback.mjs
+node scripts/verify-playlist.mjs
+```
 
-- `refreshVoices()` reads the voice list through `speechSynthesis.getVoices()` and listens for the browser's `voiceschanged` event. Voice updates are applied while playback is idle.
-- The app filters for `en-US`, `en-CA`, `en-GB`, and `en-AU`, removes duplicates, and interleaves voices from the available regions. Child and novelty voices are filtered by name. The name filter is approximate, and the available voices depend on the device and browser.
-- `assignVoices()` takes speakers in their first-appearance order and gives each a voice from the rotating list. The starting position advances with each dialogue across lessons. If a dialogue has more speakers than eligible voices, assignments wrap and some speakers share a voice. Audio controls are disabled when no eligible voice is available.
+`npm run build`는 TypeScript 검사 후 Vite 프로덕션 번들을 생성합니다. 재생 검증은 모의 음성 엔진을 사용하므로 실제 기기에서 소리가 나는지까지 보장하지는 않습니다.
 
-### Playback
+DB/API 통합 검증은 실행 중인 앱 컨테이너에서 별도 임시 DB를 만들고 종료 시 정리합니다. 테스트 DB 생성 권한이 필요합니다.
 
-- Playback uses three states, `idle`, `playing`, and `paused`. `updateControls()` synchronizes the play or pause icon, accessible label, and button availability with those states.
-- `speakCurrent()` creates one `SpeechSynthesisUtterance` per line, applies the assigned voice and locale, and sets the speech rate to `0.95`. The utterance's `end` event advances to the next line. Its `error` event resets playback and shows an error message.
-- `startOrResume()` resumes an existing paused utterance or starts reading from the current index. Clicking a speaker button first cancels current playback and then starts at that line.
-- `resetPlayback()` clears the active utterance and highlight, restores the first-line position, and refreshes the controls. Utterance callbacks check that they still belong to the active utterance so canceled audio cannot advance a newer playback session.
+```bash
+podman exec -i wordStudy_ node --input-type=module < scripts/verify-api.mjs
+```
 
-## Hosting and troubleshooting
+화면 개발은 `npm run dev`로 Vite를 실행합니다. `/api`는 `http://127.0.0.1:43871`로 프록시하므로 별도의 실행 중인 백엔드가 필요합니다. 백엔드를 직접 실행하려면 `DATABASE_URL`을 설정하고, 필요에 따라 `SERVE_WEB=0`으로 정적 파일 제공을 끈 뒤 `npm start`를 사용하세요.
 
-- **Hosting on a static site.** Publish `conversation.html` and the `json/` folder together. Automatic discovery requires `./json/` to return an HTML page with links to the JSON files. If your host does not generate directory listings, supply a `json/index.html` containing those links and keep it up to date. This also applies to a GitHub Pages deployment.
-- **New files are missing.** In local server mode, refresh the page and check that the file is directly inside `json/`. In direct file mode, select the folder again to load its current contents.
-- **A JSON file fails to load.** Run `python3 -m json.tool "json/your-file.json"` to check the syntax, then confirm that `title`, `conversations`, `lines`, `speaker`, and `text` are present at the appropriate levels. JSON does not permit trailing commas.
-- **The play button is disabled.** Check that the lesson has dialogue lines and that your browser exposes a voice in one of the four supported English locales.
+## 배포와 문제 해결
 
-## References
-
-- [Python documentation for the local HTTP server](https://docs.python.org/3/library/http.server.html)
-- [MDN documentation for browser speech synthesis](https://developer.mozilla.org/en-US/docs/Web/API/SpeechSynthesis)
-- [MDN explanation of local file URL restrictions](https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/CORS/Errors/CORSRequestNotHttp)
-- [GitHub Pages overview](https://docs.github.com/en/pages/getting-started-with-github-pages/what-is-github-pages)
+- React 버전은 정적 파일만 올리는 GitHub Pages에서 전체 실행할 수 없습니다. Node.js 앱과 PostgreSQL을 함께 운영해야 합니다. 관리형 DB를 쓰면 `DATABASE_URL`로 연결합니다.
+- 현재 인증이 없는 개인용 구성입니다. 여러 사용자에게 공개하려면 인증과 사용자별 진도 처리가 필요합니다. 공개 배포에서 가져오기를 끄려면 `ENABLE_IMPORT`를 설정하지 않습니다.
+- 새 기능이 안 보이면 브라우저에서 `Ctrl+Shift+R`로 새로고침하세요. 소스를 바꿨다면 컨테이너도 재빌드해야 합니다.
+- 재생이 안 되면 브라우저/OS의 영어 음성 설치 상태와 화면·개발자 콘솔의 오류를 확인하세요.
+- 휴대폰에서 접속이 안 되면 PC IP, 같은 네트워크 여부, 방화벽과 공유기 기기 간 통신 설정을 확인하세요.
