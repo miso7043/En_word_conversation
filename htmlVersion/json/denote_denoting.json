@@ -1,0 +1,180 @@
+{
+  "title": "denote / denoting",
+  "description": [
+    "동사 denote와 그 현재분사형 denoting 모두 '~을 나타내다, 의미하다, 표시하다'라는 뜻을 가지며, 주로 기호·단어·현상의 구체적이고 직접적인 의미를 설명할 때 쓰입니다.",
+    "1. denote (동사 원형/시제 변화): 문장의 본동사로 쓰여 주어(기호, 단어, 현상 등)가 무엇을 뜻하는지 직접 서술합니다.",
+    "2. denoting (현재분사): 명사 뒤에서 '~을 나타내는 [명사]' 형태로 명사를 수식하거나, 분사구문·진행형에서 쓰입니다. 특히 사전 정의나 학술적·기술적 설명에서 매우 자주 등장합니다."
+  ],
+  "conversations": [
+    {
+      "id": 1,
+      "title": "[denote] 교통 신호나 기호의 뜻을 설명할 때",
+      "description": "본동사로 쓰여 특정 색이나 기호가 나타내는 직접적인 의미를 전달할 때",
+      "lines": [
+        {
+          "speaker": "A",
+          "text": "What does a flashing yellow light at an intersection mean?",
+          "meaning": "교차로에서 노란불이 깜빡이는 건 무슨 뜻인가요?"
+        },
+        {
+          "speaker": "B",
+          "text": "It denotes caution, meaning you should slow down and proceed carefully.",
+          "meaning": "주의를 나타내는데, 속도를 줄이고 조심해서 진행해야 한다는 뜻이에요."
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "title": "[denote] 수학이나 과학 기호의 의미를 알려줄 때",
+      "description": "공식이나 표기법에서 특정 문자가 무엇을 가리키는지 설명할 때",
+      "lines": [
+        {
+          "speaker": "A",
+          "text": "In this physics equation, what does the letter 'c' stand for?",
+          "meaning": "이 물리 방정식에서 문자 'c'는 무엇을 뜻하나요?"
+        },
+        {
+          "speaker": "B",
+          "text": "Here, 'c' denotes the speed of light in a vacuum.",
+          "meaning": "여기서 'c'는 진공 상태에서의 빛의 속도를 나타냅니다."
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "title": "[denote] 단어의 사전적(직시적) 의미를 설명할 때",
+      "description": "함축적 뉘앙스(connote)와 대비되는 명확한 지시적 의미를 말할 때",
+      "lines": [
+        {
+          "speaker": "A",
+          "text": "Is there a difference between the words 'house' and 'home'?",
+          "meaning": "'house'와 'home'이라는 단어 사이에 차이가 있나요?"
+        },
+        {
+          "speaker": "B",
+          "text": "Yes. Both denote a place where someone lives, but 'home' carries much more emotional warmth.",
+          "meaning": "네. 둘 다 누군가 사는 장소를 나타내지만, 'home'은 훨씬 더 감정적인 따뜻함을 담고 있어요."
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "title": "[denote] 지도나 차트의 범례를 읽을 때",
+      "description": "지도상의 표시나 그래프의 선이 무엇을 의미하는지 설명할 때",
+      "lines": [
+        {
+          "speaker": "A",
+          "text": "What do the dotted blue lines on this trail map represent?",
+          "meaning": "이 등산로 지도에 있는 파란색 점선들은 무엇을 나타내나요?"
+        },
+        {
+          "speaker": "B",
+          "text": "They denote seasonal streams that may dry up in the summer.",
+          "meaning": "여름에는 마를 수 있는 계절성 하천을 표시합니다."
+        }
+      ]
+    },
+    {
+      "id": 5,
+      "title": "[denote] 특정 행동이나 태도가 나타내는 바를 말할 때",
+      "description": "겉으로 드러난 행동이 어떤 감정이나 상태를 뜻하는지 서술할 때",
+      "lines": [
+        {
+          "speaker": "A",
+          "text": "Why did she cross her arms and look away during the meeting?",
+          "meaning": "회의 중에 그녀가 왜 팔짱을 끼고 시선을 돌렸을까요?"
+        },
+        {
+          "speaker": "B",
+          "text": "In body language, that usually denotes defensiveness or disagreement.",
+          "meaning": "바디 랭귀지에서 그건 보통 방어적인 태도나 반대를 나타냅니다."
+        }
+      ]
+    },
+    {
+      "id": 6,
+      "title": "[denoting] 사전적 정의나 용어의 뜻을 풀이할 때",
+      "description": "사전이나 교과서처럼 명사 뒤에서 '~을 나타내는'으로 수식할 때",
+      "lines": [
+        {
+          "speaker": "A",
+          "text": "What is the exact definition of the word 'prelude'?",
+          "meaning": "'prelude(전주곡/서막)'라는 단어의 정확한 정의가 뭐야?"
+        },
+        {
+          "speaker": "B",
+          "text": "It’s a noun denoting an action or event preceding something more important.",
+          "meaning": "더 중요한 무언가에 앞서 일어나는 행동이나 사건을 나타내는 명사야."
+        }
+      ]
+    },
+    {
+      "id": 7,
+      "title": "[denoting] 코드나 문서의 주석·규칙을 설명할 때",
+      "description": "특정 접두사나 기호가 붙은 항목의 성격을 수식어로 설명할 때",
+      "lines": [
+        {
+          "speaker": "A",
+          "text": "Why do some variables in this script start with an underscore?",
+          "meaning": "이 스크립트의 일부 변수들은 왜 밑줄(_)로 시작하나요?"
+        },
+        {
+          "speaker": "B",
+          "text": "It’s a naming convention denoting internal variables that shouldn't be accessed directly.",
+          "meaning": "직접 접근해서는 안 되는 내부 변수를 나타내는 명명 규칙입니다."
+        }
+      ]
+    },
+    {
+      "id": 8,
+      "title": "[denoting] 등급이나 상태를 나타내는 라벨을 설명할 때",
+      "description": "제품이나 문서에 찍힌 표시의 역할을 뒤에서 꾸며줄 때",
+      "lines": [
+        {
+          "speaker": "A",
+          "text": "What is that small red stamp on the top corner of the contract?",
+          "meaning": "계약서 오른쪽 위 모서리에 찍힌 저 작은 빨간 도장은 뭐예요?"
+        },
+        {
+          "speaker": "B",
+          "text": "That’s an official mark denoting that the document has been verified.",
+          "meaning": "그 문서가 검증되었음을 나타내는 공식 표시입니다."
+        }
+      ]
+    },
+    {
+      "id": 9,
+      "title": "[denoting] 계기판이나 화면의 경고 표시를 설명할 때",
+      "description": "아이콘이나 불빛이 무엇을 알리는지 수식어구로 표현할 때",
+      "lines": [
+        {
+          "speaker": "A",
+          "text": "A strange icon just popped up on my car’s dashboard.",
+          "meaning": "방금 내 차 계기판에 이상한 아이콘이 떴어."
+        },
+        {
+          "speaker": "B",
+          "text": "Let me see. Oh, that’s just a symbol denoting low tire pressure.",
+          "meaning": "어디 봐. 아, 그건 그냥 타이어 공기압이 낮다는 걸 나타내는 기호야."
+        }
+      ]
+    },
+    {
+      "id": 10,
+      "title": "[denoting] 악보나 음악 기호의 의미를 설명할 때",
+      "description": "악보에 적힌 이탈리어 지시어나 기호의 역할을 설명할 때",
+      "lines": [
+        {
+          "speaker": "A",
+          "text": "What does the 'pp' written below the staff mean in this score?",
+          "meaning": "이 악보에서 오선지 아래에 적힌 'pp'는 무슨 뜻인가요?"
+        },
+        {
+          "speaker": "B",
+          "text": "It stands for 'pianissimo,' a musical term denoting that the passage should be played very softly.",
+          "meaning": "'피아니시모'의 약자로, 해당 부분을 매우 여리게 연주해야 함을 나타내는 음악 용어입니다."
+        }
+      ]
+    }
+  ]
+}

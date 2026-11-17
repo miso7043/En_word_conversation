@@ -1,0 +1,121 @@
+{
+  "title": "you are in for a treat",
+  "description": [
+    "\"너 진짜 좋은 걸 경험하게 될 거야\", \"곧 즐거운 일이 있을 거야\"라는 뜻을 가진 표현입니다.",
+    "맛있는 음식, 좋은 영화, 특별한 경험 등을 앞두고 있을 때 상대방에게 기대감을 주는 말로 사용합니다.",
+    "긍정적이고 즐거운 일이 곧 다가온다는 뉘앙스를 담고 있습니다.",
+    "예: \"If you've never tried this, you are in for a treat.\" (이걸 한 번도 안 먹어봤다면, 진짜 맛있는 걸 경험하게 될 거야.)"
+  ],
+  "conversations": [
+    {
+      "id": 1,
+      "title": "맛있는 음식을 추천할 때",
+      "description": "",
+      "lines": [
+        {
+          "speaker": "A",
+          "text": "Have you ever tried authentic Korean fried chicken?",
+          "meaning": "정통 한국식 치킨 먹어본 적 있어?"
+        },
+        {
+          "speaker": "B",
+          "text": "No, never.",
+          "meaning": "아니, 한 번도 없어."
+        },
+        {
+          "speaker": "A",
+          "text": "Then you are in for a treat. Let’s go to that place near the station.",
+          "meaning": "그럼 진짜 맛있는 걸 경험하게 될 거야. 역 근처에 있는 그 가게 가자."
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "title": "직접 만든 디저트를 대접할 때",
+      "description": "",
+      "lines": [
+        {
+          "speaker": "A",
+          "text": "I made my grandmother’s apple pie for dessert.",
+          "meaning": "디저트로 할머니가 알려준 애플파이 만들었어."
+        },
+        {
+          "speaker": "B",
+          "text": "Oh really?",
+          "meaning": "오, 진짜?"
+        },
+        {
+          "speaker": "A",
+          "text": "Yeah. Trust me, you are in for a treat.",
+          "meaning": "응. 믿어봐, 진짜 맛있을 거야."
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "title": "좋은 영화를 추천할 때",
+      "description": "",
+      "lines": [
+        {
+          "speaker": "A",
+          "text": "We’re watching the original version of that movie tonight, not the remake.",
+          "meaning": "오늘 밤에 그 영화 리메이크 말고 원작을 볼 거야."
+        },
+        {
+          "speaker": "B",
+          "text": "Is it that good?",
+          "meaning": "그렇게 좋아?"
+        },
+        {
+          "speaker": "A",
+          "text": "You are in for a treat. It’s way better than the new one.",
+          "meaning": "진짜 좋은 걸 보게 될 거야. 새 버전보다 훨씬 나아."
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "title": "특별한 레스토랑을 예약했을 때",
+      "description": "",
+      "lines": [
+        {
+          "speaker": "A",
+          "text": "I finally booked the rooftop restaurant for our anniversary.",
+          "meaning": "우리 기념일 위해서 옥상 레스토랑 드디어 예약했어."
+        },
+        {
+          "speaker": "B",
+          "text": "The one with the city view?",
+          "meaning": "그 도시 야경 보이는 곳?"
+        },
+        {
+          "speaker": "A",
+          "text": "Yes. You are in for a treat tonight.",
+          "meaning": "응. 오늘 밤 진짜 좋은 경험을 하게 될 거야."
+        }
+      ]
+    },
+    {
+      "id": 5,
+      "title": "숨은 맛집을 데려갈 때",
+      "description": "",
+      "lines": [
+        {
+          "speaker": "A",
+          "text": "Tomorrow I’m taking you to that tiny ramen shop I told you about.",
+          "meaning": "내일 내가 말했던 그 작은 라멘집 데려갈게."
+        },
+        {
+          "speaker": "B",
+          "text": "The one with the long line?",
+          "meaning": "그 줄 길게 서는 곳?"
+        },
+        {
+          "speaker": "A",
+          "text": "Exactly. You are in for a treat.",
+          "meaning": "맞아. 진짜 맛있는 걸 경험하게 될 거야."
+        }
+      ]
+    }
+  ]
+}

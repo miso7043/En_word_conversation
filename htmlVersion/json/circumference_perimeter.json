@@ -1,0 +1,180 @@
+{
+  "title": "circumference / perimeter",
+  "description": [
+    "두 단어 모두 '둘레'라는 뜻을 가지지만, 도형이나 공간의 형태와 쓰이는 맥락에 따라 명확히 구분됩니다.",
+    "1. circumference: 원, 구, 타원 등 '둥근 물체나 원형의 바깥 테두리 길이'를 뜻합니다. 지구 둘레, 원주율 계산, 허리·머리둘레 등을 말할 때 주로 씁니다.",
+    "2. perimeter: 사각형, 삼각형, 다각형이나 건물·부지·군사 기지 등 '직선이나 경계선으로 둘러싸인 구역의 바깥 둘레(외곽 경계선)'를 뜻합니다."
+  ],
+  "conversations": [
+    {
+      "id": 1,
+      "title": "[circumference] 수학 시간에 원의 둘레를 계산할 때",
+      "description": "원주(원의 둘레) 공식을 설명하거나 질문할 때",
+      "lines": [
+        {
+          "speaker": "A",
+          "text": "How do you calculate the circumference of a circle?",
+          "meaning": "원의 둘레(원주)는 어떻게 계산하나요?"
+        },
+        {
+          "speaker": "B",
+          "text": "You just multiply the diameter by pi, which is roughly 3.14.",
+          "meaning": "지름에 파이(약 3.14)를 곱하기만 하면 돼요."
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "title": "[circumference] 지구의 둘레에 대해 이야기할 때",
+      "description": "구(sphere) 형태의 행성이나 큰 둥근 물체의 둘레를 말할 때",
+      "lines": [
+        {
+          "speaker": "A",
+          "text": "Do you know the exact circumference of the Earth?",
+          "meaning": "지구의 정확한 둘레가 얼마인지 알아?"
+        },
+        {
+          "speaker": "B",
+          "text": "It’s about 40,075 kilometers around the equator.",
+          "meaning": "적도를 기준으로 약 40,075킬로미터야."
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "title": "[circumference] 옷을 맞추기 위해 신체 치수를 잴 때",
+      "description": "허리, 가슴, 머리 등 둥글게 감싸 재는 신체 둘레를 말할 때",
+      "lines": [
+        {
+          "speaker": "A",
+          "text": "I want to order this hat online, but I’m not sure about the size.",
+          "meaning": "이 모자를 온라인으로 주문하고 싶은데, 사이즈를 잘 모르겠어."
+        },
+        {
+          "speaker": "B",
+          "text": "Use a soft tape measure to check the circumference of your head first.",
+          "meaning": "먼저 줄자로 네 머리둘레부터 재 봐."
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "title": "[circumference] 거대한 나무의 굵기를 측정할 때",
+      "description": "원통형에 가까운 나무 기둥의 둘레를 나타낼 때",
+      "lines": [
+        {
+          "speaker": "A",
+          "text": "Look at the size of that ancient oak tree!",
+          "meaning": "저 오래된 참나무 크기 좀 봐!"
+        },
+        {
+          "speaker": "B",
+          "text": "It’s massive. Its trunk has a circumference of over six meters.",
+          "meaning": "엄청나네. 나무 기둥 둘레가 6미터가 넘겠어."
+        }
+      ]
+    },
+    {
+      "id": 5,
+      "title": "[circumference] 호수 주변을 한 바퀴 달릴 때",
+      "description": "둥근 형태의 호수나 공원 외곽 길이를 말할 때",
+      "lines": [
+        {
+          "speaker": "A",
+          "text": "How long does it take to jog all the way around the lake?",
+          "meaning": "호수 주변을 완전히 한 바퀴 조깅하는 데 얼마나 걸려?"
+        },
+        {
+          "speaker": "B",
+          "text": "The lake’s circumference is about five kilometers, so roughly thirty minutes.",
+          "meaning": "호수 둘레가 약 5킬로미터니까 대략 30분 정도 걸려."
+        }
+      ]
+    },
+    {
+      "id": 6,
+      "title": "[perimeter] 다각형의 둘레를 구하는 수학 문제에서",
+      "description": "직사각형, 정사각형 등 각진 도형의 네 변의 합을 구할 때",
+      "lines": [
+        {
+          "speaker": "A",
+          "text": "What’s the perimeter of a rectangle that is 5 meters wide and 10 meters long?",
+          "meaning": "가로 5미터, 세로 10미터인 직사각형의 둘레는 얼마인가요?"
+        },
+        {
+          "speaker": "B",
+          "text": "You add up all four sides, so the perimeter is 30 meters.",
+          "meaning": "네 변을 모두 더하면 되니까 둘레는 30미터입니다."
+        }
+      ]
+    },
+    {
+      "id": 7,
+      "title": "[perimeter] 마당이나 부지 경계에 울타리를 칠 때",
+      "description": "땅이나 사유지의 바깥 경계선 전체를 나타낼 때",
+      "lines": [
+        {
+          "speaker": "A",
+          "text": "We need to keep the deer out of our vegetable garden.",
+          "meaning": "사슴들이 우리 텃밭에 못 들어오게 막아야 해."
+        },
+        {
+          "speaker": "B",
+          "text": "Let’s build a wooden fence around the entire perimeter of the yard.",
+          "meaning": "마당 전체 둘레(경계)를 따라 나무 울타리를 세우자."
+        }
+      ]
+    },
+    {
+      "id": 8,
+      "title": "[perimeter] 보안이나 경비 구역의 외곽을 순찰할 때",
+      "description": "건물, 공항, 군사 기지 등의 외곽 경계선(방어선)을 의미할 때",
+      "lines": [
+        {
+          "speaker": "A",
+          "text": "Did the security guards notice anything unusual last night?",
+          "meaning": "어젯밤에 경비원들이 특이한 점을 발견했나요?"
+        },
+        {
+          "speaker": "B",
+          "text": "No, they patrolled the outer perimeter every hour and everything was secure.",
+          "meaning": "아니요, 매시간 외곽 경계선을 순찰했는데 모든 게 안전했습니다."
+        }
+      ]
+    },
+    {
+      "id": 9,
+      "title": "[perimeter] 사건 현장에 폴리스 라인을 설치할 때",
+      "description": "특정 구역의 출입을 통제하기 위해 바깥 테두리를 설정할 때",
+      "lines": [
+        {
+          "speaker": "A",
+          "text": "Reporters are trying to get closer to the building.",
+          "meaning": "기자들이 건물 쪽으로 더 가까이 다가오려고 하고 있어요."
+        },
+        {
+          "speaker": "B",
+          "text": "Tell the officers to secure the perimeter and keep everyone back.",
+          "meaning": "경찰관들에게 외곽 통제선을 확보하고 모두 뒤로 물러나게 하라고 전해."
+        }
+      ]
+    },
+    {
+      "id": 10,
+      "title": "[perimeter] 공항 활주로나 캠퍼스 외곽 도로를 말할 때",
+      "description": "넓은 시설 부지의 가장자리를 따라 난 길이나 경계를 나타낼 때",
+      "lines": [
+        {
+          "speaker": "A",
+          "text": "Where should I park my car during the conference?",
+          "meaning": "컨퍼런스 동안 차를 어디에 주차해야 하나요?"
+        },
+        {
+          "speaker": "B",
+          "text": "There are several visitor lots located along the campus perimeter.",
+          "meaning": "캠퍼스 외곽 경계를 따라 방문객 주차장이 여러 곳 있습니다."
+        }
+      ]
+    }
+  ]
+}

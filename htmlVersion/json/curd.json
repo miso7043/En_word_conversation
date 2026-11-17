@@ -1,0 +1,181 @@
+{
+  "title": "curd",
+  "description": [
+    "명사로 \"응유(우유가 엉겨 뭉친 덩어리)\" 또는 \"커드(치즈를 만들 때 우유를 응고시켜 만든 고체 덩어리)\"라는 뜻입니다.",
+    "치즈 제조 과정에서 맑은 액체인 유청(whey)과 분리된 부드럽고 탱탱한 흰색 치즈 덩어리(cheese curds)를 가리킬 때 주로 사용하며, 레몬 커드(lemon curd)처럼 과일·달걀·버터를 졸여 만든 걸쭉한 스프레드(잼류)를 뜻하기도 합니다.",
+    "유청을 뜻하는 'whey'와 자주 짝을 이루어 'curds and whey'라는 표현으로 쓰이며, 덩어리진 형태를 강조할 때는 복수형(curds)으로 자주 사용됩니다.",
+    "예: \"Fresh cheese curds make a squeaking sound when you bite into them.\" (신선한 치즈 커드는 한입 베어 물 때 뽀드득거리는 소리가 난다.)"
+  ],
+  "conversations": [
+    {
+      "id": 1,
+      "title": "캐나다 전통 음식 푸틴(Poutine)을 설명할 때",
+      "description": "",
+      "lines": [
+        {
+          "speaker": "A",
+          "text": "Can I just use shredded mozzarella to make poutine at home?",
+          "meaning": "집에서 푸틴을 만들 때 그냥 슈레드 모짜렐라 치즈를 써도 돼?"
+        },
+        {
+          "speaker": "B",
+          "text": "Technically yes, but real poutine requires fresh cheese curds for that authentic texture.",
+          "meaning": "엄밀히 말하면 가능하지만, 진짜 푸틴 특유의 식감을 내려면 신선한 치즈 커드가 필수야."
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "title": "치즈 커드의 신선도를 이야기할 때",
+      "description": "",
+      "lines": [
+        {
+          "speaker": "A",
+          "text": "Why did these cheese curds just squeak against my teeth?",
+          "meaning": "이 치즈 커드 왜 씹을 때 이에서 뽀드득 소리가 나지?"
+        },
+        {
+          "speaker": "B",
+          "text": "That squeak is actually a sign that the curds are super fresh!",
+          "meaning": "그 뽀드득거리는 소리가 바로 치즈 커드가 엄청 신선하다는 증거야!"
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "title": "수제 치즈를 만드는 과정을 설명할 때",
+      "description": "",
+      "lines": [
+        {
+          "speaker": "A",
+          "text": "What’s the next step after adding rennet to the warm milk?",
+          "meaning": "따뜻한 우유에 응유효소를 넣은 다음 단계는 뭐야?"
+        },
+        {
+          "speaker": "B",
+          "text": "Once the milk solidifies, we cut the curd into small cubes to drain the liquid.",
+          "meaning": "우유가 굳으면 액체를 빼내기 위해 커드를 작은 정육면체 모양으로 자를 거야."
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "title": "우유가 상해서 엉겼을 때",
+      "description": "",
+      "lines": [
+        {
+          "speaker": "A",
+          "text": "Is this milk still good to drink?",
+          "meaning": "이 우유 아직 마셔도 괜찮은 거야?"
+        },
+        {
+          "speaker": "B",
+          "text": "No, throw it out. It’s gone sour and formed lumps of curd.",
+          "meaning": "아니, 버려. 상해서 응유 덩어리가 졌어."
+        }
+      ]
+    },
+    {
+      "id": 5,
+      "title": "베이킹에 쓰이는 레몬 커드를 이야기할 때",
+      "description": "",
+      "lines": [
+        {
+          "speaker": "A",
+          "text": "What’s the tangy yellow filling inside these tarts?",
+          "meaning": "이 타르트 안에 들어 있는 새콤한 노란색 필링이 뭐야?"
+        },
+        {
+          "speaker": "B",
+          "text": "It’s homemade lemon curd. I love spreading it on scones too.",
+          "meaning": "수제 레몬 커드야. 나는 스콘에 발라 먹는 것도 정말 좋아해."
+        }
+      ]
+    },
+    {
+      "id": 6,
+      "title": "식료품점에서 재료를 찾을 때",
+      "description": "",
+      "lines": [
+        {
+          "speaker": "A",
+          "text": "Excuse me, where can I find cheddar cheese curds in this store?",
+          "meaning": "실례합니다, 이 매장에서 체다 치즈 커드는 어디서 찾을 수 있나요?"
+        },
+        {
+          "speaker": "B",
+          "text": "They’re in the specialty dairy aisle, right next to the artisanal cheeses.",
+          "meaning": "수제 치즈 바로 옆에 있는 특수 유제품 코너에 있습니다."
+        }
+      ]
+    },
+    {
+      "id": 7,
+      "title": "두부(bean curd)를 영어로 표현할 때",
+      "description": "",
+      "lines": [
+        {
+          "speaker": "A",
+          "text": "What is 'bean curd' on this menu? I’ve never heard of it.",
+          "meaning": "이 메뉴에 있는 'bean curd'가 뭐야? 한 번도 못 들어봤어."
+        },
+        {
+          "speaker": "B",
+          "text": "It’s just another English term for tofu, since it’s made by curdling soy milk.",
+          "meaning": "두유를 응고시켜 만들기 때문에 두부를 부르는 또 다른 영어 표현일 뿐이야."
+        }
+      ]
+    },
+    {
+      "id": 8,
+      "title": "유청(whey)과 커드의 차이를 설명할 때",
+      "description": "",
+      "lines": [
+        {
+          "speaker": "A",
+          "text": "I know whey protein comes from milk, so what is curd then?",
+          "meaning": "유청 단백질이 우유에서 나온다는 건 아는데, 그럼 커드는 뭐야?"
+        },
+        {
+          "speaker": "B",
+          "text": "When milk separates, the liquid part is whey and the solid part is curd.",
+          "meaning": "우유가 분리될 때 액체 부분이 유청이고, 고체 덩어리 부분이 커드야."
+        }
+      ]
+    },
+    {
+      "id": 9,
+      "title": "미국 위스콘신 지역의 튀긴 치즈 커드 요리를 소개할 때",
+      "description": "",
+      "lines": [
+        {
+          "speaker": "A",
+          "text": "What should I order as an appetizer at a pub in Wisconsin?",
+          "meaning": "위스콘신 펍에서 애피타이저로 뭘 주문하는 게 좋을까?"
+        },
+        {
+          "speaker": "B",
+          "text": "Definitely deep-fried cheese curds with ranch dressing on the side.",
+          "meaning": "무조건 랜치 드레싱을 곁들인 튀긴 치즈 커드를 시켜야지."
+        }
+      ]
+    },
+    {
+      "id": 10,
+      "title": "요리 중 소스가 엉겨 붙지 않게 조언할 때",
+      "description": "",
+      "lines": [
+        {
+          "speaker": "A",
+          "text": "Should I boil the cream sauce over high heat?",
+          "meaning": "크림 소스를 센 불에서 팔팔 끓여야 할까?"
+        },
+        {
+          "speaker": "B",
+          "text": "No, keep it on low heat, or the dairy will split and turn into curds.",
+          "meaning": "아니, 약불로 유지해. 안 그러면 유제품이 분리되면서 몽글몽글하게 엉겨 버려."
+        }
+      ]
+    }
+  ]
+}

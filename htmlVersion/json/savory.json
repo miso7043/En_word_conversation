@@ -1,0 +1,181 @@
+{
+  "title": "savory",
+  "description": [
+    "\"맛이 짜고 짭조름한\", \"향긋하고 맛있는\", \"(음식이) 달지 않고 담백하면서 감칠맛 나는\"이라는 뜻을 가진 형용사입니다.",
+    "단것(sweet)이나 신맛(sour)과 대비되어, 고기나 찌개, 치즈 등에서 느껴지는 감칠맛 나고 짭조름하거나 풍미 있는 맛을 표현할 때 사용합니다.",
+    "요리나 음식 맛을 묘사할 뿐만 아니라, 향신료나 허브 향이 은은하게 퍼지는 향긋하고 기분 좋은 풍미를 나타낼 때도 쓰입니다.",
+    "예: \"I prefer savory snacks like pretzels over sweet cookies.\" (나는 달콤한 쿠키보다 프레첼 같은 짭조름한 간식을 더 좋아해.)"
+  ],
+  "conversations": [
+    {
+      "id": 1,
+      "title": "간식을 고를 때 취향을 말할 때",
+      "description": "",
+      "lines": [
+        {
+          "speaker": "A",
+          "text": "Do you want some donuts or potato chips?",
+          "meaning": "도넛 좀 먹을래, 아니면 감자칩 먹을래?"
+        },
+        {
+          "speaker": "B",
+          "text": "I’ll go with the potato chips. I usually prefer savory snacks over sweet ones.",
+          "meaning": "감자칩으로 할래. 난 보통 단것보다 짭조름한 간식을 더 좋아하거든."
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "title": "아침 식사 메뉴를 고를 때",
+      "description": "",
+      "lines": [
+        {
+          "speaker": "A",
+          "text": "Should we order pancakes or an omelet with bacon for breakfast?",
+          "meaning": "아침으로 팬케이크를 시킬까, 아니면 베이컨 곁들인 오믈렛을 시킬까?"
+        },
+        {
+          "speaker": "B",
+          "text": "Let’s get the omelet. I’m craving something savory this morning.",
+          "meaning": "오믈렛으로 하자. 오늘 아침엔 뭔가 짭조름하고 든든한 게 당기네."
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "title": "빵집에서 메뉴를 추천받을 때",
+      "description": "",
+      "lines": [
+        {
+          "speaker": "A",
+          "text": "Are all the pastries here sweet?",
+          "meaning": "여기 페이스트리는 다 단가요?"
+        },
+        {
+          "speaker": "B",
+          "text": "Not all of them. We also have savory options like cheese and herb scones.",
+          "meaning": "전부는 아니에요. 치즈와 허브가 들어간 짭조름한 스콘 같은 식사 대용 빵도 있어요."
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "title": "음식 맛을 평가할 때",
+      "description": "",
+      "lines": [
+        {
+          "speaker": "A",
+          "text": "How do you like the mushroom soup?",
+          "meaning": "버섯 스프 맛이 어때?"
+        },
+        {
+          "speaker": "B",
+          "text": "It’s amazing. It has a rich and savory flavor with lots of garlic.",
+          "meaning": "정말 맛있어. 마늘이 많이 들어가서 진하고 풍미가 깊어."
+        }
+      ]
+    },
+    {
+      "id": 5,
+      "title": "디저트와 식사의 차이를 말할 때",
+      "description": "",
+      "lines": [
+        {
+          "speaker": "A",
+          "text": "I’m so full from the cake, but I still want something else.",
+          "meaning": "케이크를 먹었더니 너무 배부른데, 그래도 뭔가 다른 게 또 당기네."
+        },
+        {
+          "speaker": "B",
+          "text": "That’s normal. After eating something sweet, people often want a savory bite.",
+          "meaning": "당연하지. 단 걸 먹고 나면 보통 짭조름한 게 당기기 마련이거든."
+        }
+      ]
+    },
+    {
+      "id": 6,
+      "title": "요리 레시피를 설명할 때",
+      "description": "",
+      "lines": [
+        {
+          "speaker": "A",
+          "text": "What makes this stew taste so deep and complex?",
+          "meaning": "이 스튜가 이렇게 깊고 복합적인 맛이 나는 비결이 뭐야?"
+        },
+        {
+          "speaker": "B",
+          "text": "We slow-cooked onions and soy sauce to build a savory base.",
+          "meaning": "양파와 간장을 뭉근하게 끓여서 감칠맛 나는 베이스를 만들었거든."
+        }
+      ]
+    },
+    {
+      "id": 7,
+      "title": "피자 메뉴를 고를 때",
+      "description": "",
+      "lines": [
+        {
+          "speaker": "A",
+          "text": "Should we get a dessert pizza or a regular one?",
+          "meaning": "디저트 피자로 시킬까, 아니면 일반 피자로 시킬까?"
+        },
+        {
+          "speaker": "B",
+          "text": "Let’s stick to savory toppings like pepperoni and mushrooms.",
+          "meaning": "페퍼로니랑 버섯 같은 짭조름한 토핑이 올라간 걸로 하자."
+        }
+      ]
+    },
+    {
+      "id": 8,
+      "title": "와인과 안주 페어링을 할 때",
+      "description": "",
+      "lines": [
+        {
+          "speaker": "A",
+          "text": "Does this dry white wine go well with fruit?",
+          "meaning": "이 드라이한 화이트 와인은 과일이랑 잘 어울려?"
+        },
+        {
+          "speaker": "B",
+          "text": "Actually, it pairs better with savory cheeses and nuts.",
+          "meaning": "실은 과일보다는 짭조름한 치즈나 견과류랑 더 잘 어울려."
+        }
+      ]
+    },
+    {
+      "id": 9,
+      "title": "요리 방송을 보며 이야기할 때",
+      "description": "",
+      "lines": [
+        {
+          "speaker": "A",
+          "text": "Look at how the chef is searing those mushrooms in butter.",
+          "meaning": "저 셰프가 버터에 버섯 굽는 것 좀 봐봐."
+        },
+        {
+          "speaker": "B",
+          "text": "Oh, that must release such a warm and savory aroma.",
+          "meaning": "와, 저러면 정말 따뜻하고 향긋한 풍미가 우러나오겠다."
+        }
+      ]
+    },
+    {
+      "id": 10,
+      "title": "파티 메뉴를 준비할 때",
+      "description": "",
+      "lines": [
+        {
+          "speaker": "A",
+          "text": "We have plenty of cookies and chocolates for the party.",
+          "meaning": "파티용 쿠키랑 초콜릿은 아주 넉넉해."
+        },
+        {
+          "speaker": "B",
+          "text": "Great, but we also need to prepare some savory finger foods.",
+          "meaning": "좋아, 하지만 짭조름한 핑거푸드 종류도 좀 준비해야 해."
+        }
+      ]
+    }
+  ]
+}

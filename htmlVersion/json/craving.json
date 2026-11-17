@@ -1,0 +1,186 @@
+{
+  "title": "I'm craving something",
+  "description": [
+    "\"뭔가 ~한 게 몹시 먹고 싶어\", \"~가 엄청 당겨\"라는 뜻을 가진 구어체 표현입니다.",
+    "단순히 배가 고픈 것이 아니라 특정 맛(단 것, 짠 것, 매운 것 등)이나 음식, 혹은 어떤 활동이 강렬하게 간절히 생각날 때 사용합니다.",
+    "'something + 형용사' 어순을 취해 'I'm craving something sweet/spicy/salty'처럼 뒤에 형용사를 붙여 원하는 느낌을 구체화하는 패턴으로 매우 자주 쓰입니다.",
+    "예: \"I'm craving something spicy tonight, like tteokbokki.\" (오늘 밤엔 떡볶이처럼 뭔가 매운 게 엄청 당기네.)"
+  ],
+  "conversations": [
+    {
+      "id": 1,
+      "title": "매운 음식이 당길 때",
+      "description": "",
+      "lines": [
+        {
+          "speaker": "A",
+          "text": "What do you want to have for dinner tonight?",
+          "meaning": "오늘 저녁으로 뭐 먹고 싶어?"
+        },
+        {
+          "speaker": "B",
+          "text": "I’m craving something spicy. How about Korean food?",
+          "meaning": "뭔가 매운 게 엄청 당겨. 한식 어때?"
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "title": "식후에 디저트가 생각날 때",
+      "description": "",
+      "lines": [
+        {
+          "speaker": "A",
+          "text": "That pasta was really filling, wasn't it?",
+          "meaning": "아까 파스타 진짜 배부르지 않았어?"
+        },
+        {
+          "speaker": "B",
+          "text": "Yeah, I'm full, but I’m craving something sweet now.",
+          "meaning": "응, 배부르긴 한데 지금 뭔가 달달한 게 몹시 당기네."
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "title": "밤늦게 야식이 당길 때",
+      "description": "",
+      "lines": [
+        {
+          "speaker": "A",
+          "text": "Why are you looking through the fridge at midnight?",
+          "meaning": "밤 12시에 왜 냉장고를 뒤지고 있어?"
+        },
+        {
+          "speaker": "B",
+          "text": "I’m craving something crunchy and salty while watching this movie.",
+          "meaning": "이 영화 보면서 뭔가 바삭하고 짭조름한 게 너무 먹고 싶어서."
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "title": "추운 날 따뜻한 국물이 생각날 때",
+      "description": "",
+      "lines": [
+        {
+          "speaker": "A",
+          "text": "It’s freezing outside today.",
+          "meaning": "오늘 밖이 엄청 춥네."
+        },
+        {
+          "speaker": "B",
+          "text": "I know. I’m craving something warm and comforting, like chicken soup.",
+          "meaning": "그러게. 치킨 수프처럼 뭔가 따뜻하고 속이 편안해지는 게 당겨."
+        }
+      ]
+    },
+    {
+      "id": 5,
+      "title": "시원한 음료나 음식이 당길 때",
+      "description": "",
+      "lines": [
+        {
+          "speaker": "A",
+          "text": "We’ve been walking in this heat for over an hour.",
+          "meaning": "이 더위에 한 시간 넘게 걸었잖아."
+        },
+        {
+          "speaker": "B",
+          "text": "Let’s stop by a cafe. I’m craving something icy and refreshing.",
+          "meaning": "카페에 좀 들르자. 뭔가 얼음 동동 띄운 시원하고 상쾌한 게 간절해."
+        },
+        {
+          "speaker": "C",
+          "text": "Same here. An iced lemonade sounds amazing right now.",
+          "meaning": "나도 그래. 지금 아이스 레모네이드 마시면 딱이겠다."
+        }
+      ]
+    },
+    {
+      "id": 6,
+      "title": "점심 메뉴를 고민하며 가벼운 음식을 찾을 때",
+      "description": "",
+      "lines": [
+        {
+          "speaker": "A",
+          "text": "Do you want to grab burgers for lunch?",
+          "meaning": "점심으로 햄버거 먹을래?"
+        },
+        {
+          "speaker": "B",
+          "text": "Actually, I’m craving something light and healthy today, maybe a salad.",
+          "meaning": "사실 오늘은 샐러드처럼 뭔가 가볍고 건강한 게 당기네."
+        }
+      ]
+    },
+    {
+      "id": 7,
+      "title": "이색적인 음식이 먹고 싶을 때",
+      "description": "",
+      "lines": [
+        {
+          "speaker": "A",
+          "text": "We always order from the same three places.",
+          "meaning": "우리 맨날 똑같은 세 군데에서만 시켜 먹잖아."
+        },
+        {
+          "speaker": "B",
+          "text": "True. Tonight I’m craving something different, like Thai or Mexican.",
+          "meaning": "맞아. 오늘 밤엔 태국 음식이나 멕시코 음식처럼 뭔가 색다른 게 당겨."
+        }
+      ]
+    },
+    {
+      "id": 8,
+      "title": "스트레스를 받아 기름진 음식이 당길 때",
+      "description": "",
+      "lines": [
+        {
+          "speaker": "A",
+          "text": "You look exhausted. Rough day at work?",
+          "meaning": "완전 지쳐 보인다. 오늘 회사에서 힘든 일 있었어?"
+        },
+        {
+          "speaker": "B",
+          "text": "The worst. Honestly, I’m craving something greasy like fried chicken.",
+          "meaning": "최악이었어. 솔직히 프라이드치킨처럼 뭔가 기름진 게 엄청 당긴다."
+        }
+      ]
+    },
+    {
+      "id": 9,
+      "title": "과일처럼 상큼한 것이 먹고 싶을 때",
+      "description": "",
+      "lines": [
+        {
+          "speaker": "A",
+          "text": "Should I pick up some snacks on my way home?",
+          "meaning": "집에 가는 길에 간식 좀 사 갈까?"
+        },
+        {
+          "speaker": "B",
+          "text": "Yes, please! I’m craving something juicy and sour, like oranges or strawberries.",
+          "meaning": "응, 부탁해! 오렌지나 딸기처럼 뭔가 과즙 많고 새콤한 게 몹시 먹고 싶어."
+        }
+      ]
+    },
+    {
+      "id": 10,
+      "title": "음식이 아닌 새로운 자극이나 휴식이 간절할 때",
+      "description": "",
+      "lines": [
+        {
+          "speaker": "A",
+          "text": "You’ve been staring at your laptop all weekend.",
+          "meaning": "주말 내내 노트북만 쳐다보고 있네."
+        },
+        {
+          "speaker": "B",
+          "text": "I know. I’m craving something exciting, so let’s go for a spontaneous drive.",
+          "meaning": "알아. 뭔가 신나는 게 간절하니까 우리 즉흥 드라이브나 하러 가자."
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,181 @@
+{
+  "title": "fluffy",
+  "description": [
+    "\"폭신폭신한\", \"보들보들한\", \"구름 같은\"이라는 뜻의 표현입니다.",
+    "동물의 털이나 솜, 이불, 혹은 수플레 팬케이크처럼 부드럽고 가볍게 부푼 상태를 나타낼 때 사용합니다.",
+    "\"soft\"보다 훨씬 더 몽글몽글하고 볼륨감이 살아 있는 느낌을 줍니다.",
+    "예: \"The cat has a very fluffy tail.\" (그 고양이는 아주 폭신폭신한 꼬리를 가지고 있다.)"
+  ],
+  "conversations": [
+    {
+      "id": 1,
+      "title": "반려동물을 묘사할 때",
+      "description": "",
+      "lines": [
+        {
+          "speaker": "A",
+          "text": "Your new kitten is so adorable!",
+          "meaning": "새로 데려온 새끼 고양이 정말 귀여워!"
+        },
+        {
+          "speaker": "B",
+          "text": "Thanks! He’s like a tiny, fluffy ball of fur.",
+          "meaning": "고마워! 작고 폭신폭신한 털 뭉치 같아."
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "title": "음식을 이야기할 때",
+      "description": "",
+      "lines": [
+        {
+          "speaker": "A",
+          "text": "How are these pancakes so thick?",
+          "meaning": "이 팬케이크들 어떻게 이렇게 두툼하지?"
+        },
+        {
+          "speaker": "B",
+          "text": "They’re made with whipped egg whites, so they turn out super fluffy.",
+          "meaning": "휘핑한 달걀 흰자로 만들어서 엄청 폭신폭신하게 나와."
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "title": "침구류나 옷을 고를 때",
+      "description": "",
+      "lines": [
+        {
+          "speaker": "A",
+          "text": "I need to buy a new blanket for winter.",
+          "meaning": "겨울용 새 담요를 사야겠어."
+        },
+        {
+          "speaker": "B",
+          "text": "You should get this one. It’s incredibly soft and fluffy.",
+          "meaning": "이거 사봐. 엄청 부드럽고 폭신폭신해."
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "title": "케이크나 빵의 식감을 말할 때",
+      "description": "",
+      "lines": [
+        {
+          "speaker": "A",
+          "text": "Did you bake this sponge cake yourself?",
+          "meaning": "이 스펀지케이크 직접 구운 거야?"
+        },
+        {
+          "speaker": "B",
+          "text": "Yes! I wanted it to be light and fluffy like a cloud.",
+          "meaning": "응! 구름처럼 가볍고 폭신폭신하게 만들고 싶었거든."
+        }
+      ]
+    },
+    {
+      "id": 5,
+      "title": "수건을 고를 때",
+      "description": "",
+      "lines": [
+        {
+          "speaker": "A",
+          "text": "Why do hotel towels always feel so nice?",
+          "meaning": "호텔 수건은 왜 항상 느낌이 이렇게 좋지?"
+        },
+        {
+          "speaker": "B",
+          "text": "They use high-quality cotton to keep them thick and fluffy.",
+          "meaning": "두툼하고 폭신폭신함을 유지하려고 좋은 면을 쓰거든."
+        }
+      ]
+    },
+    {
+      "id": 6,
+      "title": "구름 모양을 묘사할 때",
+      "description": "",
+      "lines": [
+        {
+          "speaker": "A",
+          "text": "Look at the sky today. The weather is so nice.",
+          "meaning": "오늘 하늘 좀 봐. 날씨 정말 좋다."
+        },
+        {
+          "speaker": "B",
+          "text": "Yeah, those white, fluffy clouds look like cotton candy.",
+          "meaning": "응, 저 하얗고 폭신폭신한 구름들이 솜사탕 같아."
+        }
+      ]
+    },
+    {
+      "id": 7,
+      "title": "겨울 옷차림을 이야기할 때",
+      "description": "",
+      "lines": [
+        {
+          "speaker": "A",
+          "text": "Is that fleece jacket warm?",
+          "meaning": "그 후리스 자켓 따뜻해?"
+        },
+        {
+          "speaker": "B",
+          "text": "Extremely warm. The inner lining is super fluffy.",
+          "meaning": "엄청 따뜻해. 안감도 엄청 폭신폭신하거든."
+        }
+      ]
+    },
+    {
+      "id": 8,
+      "title": "인형을 고를 때",
+      "description": "",
+      "lines": [
+        {
+          "speaker": "A",
+          "text": "Which teddy bear should I get for my niece?",
+          "meaning": "조카한테 줄 테디베어 어떤 걸로 살까?"
+        },
+        {
+          "speaker": "B",
+          "text": "Get the one with the fluffiest fur. Kids love hugging soft toys.",
+          "meaning": "가장 털이 폭신폭신한 걸로 해. 애들은 부드러운 장난감 안고 자는 거 좋아해."
+        }
+      ]
+    },
+    {
+      "id": 9,
+      "title": "머리 스타일을 이야기할 때",
+      "description": "",
+      "lines": [
+        {
+          "speaker": "A",
+          "text": "Your hair looks very voluminous today.",
+          "meaning": "너 오늘 머리숱이 엄청 풍성해 보인다."
+        },
+        {
+          "speaker": "B",
+          "text": "I used a new shampoo, and now my hair is all fluffy.",
+          "meaning": "새 샴푸를 썼더니 머리가 몽글몽글하게 볼륨이 살았어."
+        }
+      ]
+    },
+    {
+      "id": 10,
+      "title": "책의 가벼운 내용을 말할 때",
+      "description": "",
+      "lines": [
+        {
+          "speaker": "A",
+          "text": "What kind of book are you reading for the flight?",
+          "meaning": "비행기에서 읽으려고 어떤 책 읽고 있어?"
+        },
+        {
+          "speaker": "B",
+          "text": "Just something light and fluffy—nothing too serious.",
+          "meaning": "그냥 가볍고 부담 없는 내용이야—너무 진지하지 않은 걸로."
+        }
+      ]
+    }
+  ]
+}

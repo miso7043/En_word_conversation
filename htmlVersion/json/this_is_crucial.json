@@ -1,0 +1,191 @@
+{
+  "title": "this is crucial",
+  "description": [
+    "\"이게 정말 중요한데\", \"이게 핵심인데\", \"이 부분이 결정적인데\"라는 뜻을 가진 강조 표현입니다.",
+    "설명이나 지시사항을 말할 때, 빠지면 안 되는 가장 핵심적인 조건이나 주의사항을 덧붙이기 직전에 삽입하여 듣는 사람의 주의를 집중시킵니다.",
+    "단어 'crucial'은 '중대한, 결정적인(extremely important)'이라는 뜻으로, 단순한 중요함을 넘어 전체 성패를 가를 만큼 필수적이라는 강한 뉘앙스를 담고 있습니다.",
+    "예: \"Mix the ingredients well, and this is crucial, don't overbake it.\" (재료들을 잘 섞어주고, 이게 정말 중요한데, 너무 오래 굽지 마.)"
+  ],
+  "conversations": [
+    {
+      "id": 1,
+      "title": "요리나 레시피의 핵심 포인트를 설명할 때",
+      "description": "",
+      "lines": [
+        {
+          "speaker": "A",
+          "text": "Should I use salted or unsalted butter for this cookie recipe?",
+          "meaning": "이 쿠키 레시피에는 가염 버터를 써야 해, 무염 버터를 써야 해?"
+        },
+        {
+          "speaker": "B",
+          "text": "Use unsalted butter, and this is crucial, make sure it’s at room temperature before you start.",
+          "meaning": "무염 버터를 써. 그리고 이게 정말 중요한데, 시작하기 전에 꼭 상온에 두어서 말랑하게 만들어야 해."
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "title": "업무 인수인계나 보고서 제출을 지시할 때",
+      "description": "",
+      "lines": [
+        {
+          "speaker": "A",
+          "text": "Is there anything specific I need to watch out for when sending the report?",
+          "meaning": "보고서를 보낼 때 특별히 주의해야 할 점이라도 있나요?"
+        },
+        {
+          "speaker": "B",
+          "text": "Double-check all the figures, and this is crucial, send it to the client before 3 PM.",
+          "meaning": "모든 수치를 다시 한번 확인하고, 이게 핵심인데, 오후 3시 전까지는 고객사에게 꼭 보내야 해요."
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "title": "운동 자세를 교정해 줄 때",
+      "description": "",
+      "lines": [
+        {
+          "speaker": "A",
+          "text": "My lower back hurts whenever I do squats.",
+          "meaning": "스쿼트를 할 때마다 허리 아래쪽이 아파요."
+        },
+        {
+          "speaker": "B",
+          "text": "Keep your chest up, and this is crucial, don’t let your knees go past your toes.",
+          "meaning": "가슴을 펴고, 이게 정말 중요한 건데, 무릎이 발끝 앞으로 나가지 않게 하세요."
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "title": "취업 면접 조언을 해줄 때",
+      "description": "",
+      "lines": [
+        {
+          "speaker": "A",
+          "text": "I’m so nervous about my job interview tomorrow. Any advice?",
+          "meaning": "내일 취업 면접 때문에 너무 긴장돼. 조언 좀 해줄래?"
+        },
+        {
+          "speaker": "B",
+          "text": "Research the company well, and this is crucial, stay calm even if you get a tough question.",
+          "meaning": "회사에 대해 잘 조사해 가고, 가장 중요한 건데, 어려운 질문을 받더라도 침착함을 유지해."
+        },
+        {
+          "speaker": "C",
+          "text": "Also, make sure to prepare a few good questions for them.",
+          "meaning": "그리고 면접관에게 할 좋은 질문 몇 가지도 꼭 준비해 가."
+        }
+      ]
+    },
+    {
+      "id": 5,
+      "title": "해외여행 준비사항을 챙길 때",
+      "description": "",
+      "lines": [
+        {
+          "speaker": "A",
+          "text": "We’re flying to Paris next month! What should we book first?",
+          "meaning": "우리 다음 달에 파리로 날아가! 뭘 제일 먼저 예약해야 할까?"
+        },
+        {
+          "speaker": "B",
+          "text": "Book the flight and hotel, and this is crucial, reserve tickets for the Louvre Museum in advance.",
+          "meaning": "항공권이랑 호텔을 예약하고, 이건 꼭 해야 하는 건데, 루브르 박물관 입장권도 미리 예매해 둬."
+        }
+      ]
+    },
+    {
+      "id": 6,
+      "title": "전자기기 수리나 세팅 방법을 알려줄 때",
+      "description": "",
+      "lines": [
+        {
+          "speaker": "A",
+          "text": "How do I update the firmware on this device?",
+          "meaning": "이 기기의 펌웨어는 어떻게 업데이트하나요?"
+        },
+        {
+          "speaker": "B",
+          "text": "Connect it to your computer, and this is crucial, do not unplug the cable until the screen turns green.",
+          "meaning": "컴퓨터에 연결하고, 이게 정말 중요한데, 화면이 초록색으로 바뀔 때까지 절대 케이블을 뽑지 마세요."
+        }
+      ]
+    },
+    {
+      "id": 7,
+      "title": "계약서 작성 시 주의사항을 당부할 때",
+      "description": "",
+      "lines": [
+        {
+          "speaker": "A",
+          "text": "I’m signing the lease agreement for my new apartment tomorrow.",
+          "meaning": "내일 새 아파트 임대차 계약서에 서명할 예정이야."
+        },
+        {
+          "speaker": "B",
+          "text": "Read every clause carefully, and this is crucial, check the terms about breaking the lease early.",
+          "meaning": "모든 조항을 꼼꼼히 읽어보고, 이게 핵심인데, 중도 해지에 관한 조건을 꼭 확인해 봐."
+        }
+      ]
+    },
+    {
+      "id": 8,
+      "title": "식물 키우는 요령을 공유할 때",
+      "description": "",
+      "lines": [
+        {
+          "speaker": "A",
+          "text": "I keep killing my indoor plants. What am I doing wrong?",
+          "meaning": "집에서 키우는 식물들을 자꾸 죽게 만드네. 내가 뭘 잘못하고 있는 걸까?"
+        },
+        {
+          "speaker": "B",
+          "text": "Give them plenty of indirect light, and this is crucial, let the soil dry out completely before watering again.",
+          "meaning": "간접광을 충분히 쬐어주고, 이게 정말 중요한 건데, 다시 물을 주기 전에 흙이 완전히 마르게 두어야 해."
+        }
+      ]
+    },
+    {
+      "id": 9,
+      "title": "프레젠테이션 발표 팁을 줄 때",
+      "description": "",
+      "lines": [
+        {
+          "speaker": "A",
+          "text": "My presentation slides look a bit boring right now.",
+          "meaning": "지금 내 발표 슬라이드가 좀 지루해 보여."
+        },
+        {
+          "speaker": "B",
+          "text": "Add some visuals, and this is crucial, keep the text on each slide to a minimum.",
+          "meaning": "시각 자료를 좀 넣고, 이게 핵심인데, 각 슬라이드의 텍스트는 최소한으로 줄여."
+        },
+        {
+          "speaker": "C",
+          "text": "Yeah, people won't listen if they're busy reading.",
+          "meaning": "맞아, 사람들이 글 읽느라 바쁘면 발표를 안 듣게 되거든."
+        }
+      ]
+    },
+    {
+      "id": 10,
+      "title": "건강 검진 전 주의사항을 안내할 때",
+      "description": "",
+      "lines": [
+        {
+          "speaker": "A",
+          "text": "Is there anything I need to do before my blood test tomorrow morning?",
+          "meaning": "내일 아침 혈액 검사 전에 제가 해야 할 일이 있나요?"
+        },
+        {
+          "speaker": "B",
+          "text": "Get a good night’s sleep, and this is crucial, fast for at least eight hours beforehand.",
+          "meaning": "푹 주무시고, 이게 정말 중요한데, 검사 전 최소 8시간 동안은 금식하셔야 합니다."
+        }
+      ]
+    }
+  ]
+}

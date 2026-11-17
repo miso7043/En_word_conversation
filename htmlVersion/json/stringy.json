@@ -1,0 +1,181 @@
+{
+  "title": "stringy",
+  "description": [
+    "\"실처럼 가늘고 긴\", \"질긴 섬유질이 많은\", \"끈적하게 늘어지는\"이라는 뜻의 형용사입니다.",
+    "고기나 채소의 질긴 식감, 치즈처럼 길게 늘어지는 음식, 힘없이 가늘고 엉킨 머리카락, 마르고 힘줄이 드러난 몸을 묘사할 때 사용합니다.",
+    "string(끈, 실)에서 나온 말로, 대체로 \"질기다\", \"볼품없이 가늘다\"처럼 다소 부정적인 느낌이 있지만, 치즈에는 \"쭉 늘어나서 맛있다\"는 긍정적 의미로도 쓰입니다.",
+    "예: \"The steak was tough and stringy.\" (그 스테이크는 질기고 힘줄이 많았다.)"
+  ],
+  "conversations": [
+    {
+      "id": 1,
+      "title": "고기가 질길 때",
+      "description": "",
+      "lines": [
+        {
+          "speaker": "A",
+          "text": "How’s the steak?",
+          "meaning": "스테이크 어때?"
+        },
+        {
+          "speaker": "B",
+          "text": "Honestly, it’s a bit stringy. I keep chewing the same bite.",
+          "meaning": "솔직히 좀 질겨. 같은 한 입을 계속 씹고 있어."
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "title": "피자 치즈가 쭉 늘어날 때",
+      "description": "",
+      "lines": [
+        {
+          "speaker": "A",
+          "text": "Look at this pizza! The cheese goes on forever.",
+          "meaning": "이 피자 좀 봐! 치즈가 끝도 없이 늘어나."
+        },
+        {
+          "speaker": "B",
+          "text": "I love it when the cheese gets all stringy like that.",
+          "meaning": "치즈가 저렇게 쭉쭉 늘어날 때가 제일 좋아."
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "title": "머리 상태가 안 좋을 때",
+      "description": "",
+      "lines": [
+        {
+          "speaker": "A",
+          "text": "Are you okay? You look tired.",
+          "meaning": "괜찮아? 피곤해 보여."
+        },
+        {
+          "speaker": "B",
+          "text": "I haven’t washed my hair in three days. It’s so stringy.",
+          "meaning": "사흘째 머리를 못 감았어. 완전 떡지고 가늘게 엉켰어."
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "title": "채소가 섬유질이 많을 때",
+      "description": "",
+      "lines": [
+        {
+          "speaker": "A",
+          "text": "Do you want some of this celery?",
+          "meaning": "이 셀러리 좀 먹을래?"
+        },
+        {
+          "speaker": "B",
+          "text": "No, thanks. It’s too stringy for me.",
+          "meaning": "아니, 괜찮아. 나한테는 너무 질겨."
+        }
+      ]
+    },
+    {
+      "id": 5,
+      "title": "마른 체격을 묘사할 때",
+      "description": "",
+      "lines": [
+        {
+          "speaker": "A",
+          "text": "Who’s the new guy on the basketball team?",
+          "meaning": "농구팀에 새로 온 사람 누구야?"
+        },
+        {
+          "speaker": "B",
+          "text": "That stringy kid in the back? He’s surprisingly fast.",
+          "meaning": "뒤에 있는 저 비쩍 마른 애? 의외로 엄청 빨라."
+        }
+      ]
+    },
+    {
+      "id": 6,
+      "title": "요리 실수를 말할 때",
+      "description": "",
+      "lines": [
+        {
+          "speaker": "A",
+          "text": "Why is your pulled pork so chewy?",
+          "meaning": "네 풀드 포크는 왜 이렇게 쫄깃해?"
+        },
+        {
+          "speaker": "B",
+          "text": "I took it off the heat too early, so it turned out stringy.",
+          "meaning": "불에서 너무 일찍 내렸더니 질기고 푸석하게 나왔어."
+        }
+      ]
+    },
+    {
+      "id": 7,
+      "title": "과일 상태를 말할 때",
+      "description": "",
+      "lines": [
+        {
+          "speaker": "A",
+          "text": "Is this mango ripe?",
+          "meaning": "이 망고 익었어?"
+        },
+        {
+          "speaker": "B",
+          "text": "Not really. The flesh is stringy and kind of bitter.",
+          "meaning": "별로. 과육이 섬유질투성이고 좀 써."
+        }
+      ]
+    },
+    {
+      "id": 8,
+      "title": "식당 후기를 이야기할 때",
+      "description": "",
+      "lines": [
+        {
+          "speaker": "A",
+          "text": "Did you read the reviews for that new diner?",
+          "meaning": "새로 생긴 식당 후기 봤어?"
+        },
+        {
+          "speaker": "B",
+          "text": "Yeah, a lot of people said the chicken was dry and stringy.",
+          "meaning": "응, 닭고기가 퍽퍽하고 질기다는 사람이 많더라."
+        }
+      ]
+    },
+    {
+      "id": 9,
+      "title": "몸이 말랐다는 말을 들었을 때",
+      "description": "",
+      "lines": [
+        {
+          "speaker": "A",
+          "text": "You’ve lost a lot of weight lately.",
+          "meaning": "너 요즘 살 많이 빠졌더라."
+        },
+        {
+          "speaker": "B",
+          "text": "I know. My arms look so stringy now. I need to eat more.",
+          "meaning": "알아. 팔이 너무 앙상해 보여. 더 먹어야겠어."
+        }
+      ]
+    },
+    {
+      "id": 10,
+      "title": "음료나 소스의 질감을 말할 때",
+      "description": "",
+      "lines": [
+        {
+          "speaker": "A",
+          "text": "What’s wrong with the sauce?",
+          "meaning": "소스가 왜 그래?"
+        },
+        {
+          "speaker": "B",
+          "text": "It turned stringy after I added too much cornstarch.",
+          "meaning": "옥수수 전분을 너무 많이 넣었더니 끈적하게 늘어져."
+        }
+      ]
+    }
+  ]
+}

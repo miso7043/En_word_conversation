@@ -1,0 +1,181 @@
+{
+  "title": "be in for a treat",
+  "description": [
+    "\"정말 좋은 경험을 하게 될 것이다\", \"기대해도 좋다\", \"횡재했다\"라는 뜻의 관용 표현입니다.",
+    "상대방에게 앞으로 맛있는 음식, 재미있는 볼거리, 또는 아주 기분 좋고 특별한 경험이 기다리고 있음을 알려줄 때 사용합니다.",
+    "단순히 '좋다'는 수준을 넘어, 특별한 선물이나 대접(treat)을 받는 것처럼 기분 좋은 기대감을 불어넣는 뉘앙스가 있습니다.",
+    "예: \"If you've never seen this movie before, you are in for a treat.\" (이 영화를 한 번도 본 적이 없다면, 정말 기대해도 좋을 거야.)"
+  ],
+  "conversations": [
+    {
+      "id": 1,
+      "title": "맛집이나 특별한 음식을 소개할 때",
+      "description": "",
+      "lines": [
+        {
+          "speaker": "A",
+          "text": "I’ve never tried authentic Korean BBQ before.",
+          "meaning": "정통 한국식 바비큐는 한 번도 안 먹어봤어."
+        },
+        {
+          "speaker": "B",
+          "text": "Really? Then you’re in for a treat tonight!",
+          "meaning": "정말? 그럼 오늘 밤 완전 기대해도 좋아!"
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "title": "좋은 영화나 드라마를 추천할 때",
+      "description": "",
+      "lines": [
+        {
+          "speaker": "A",
+          "text": "I’m finally starting that sci-fi series you recommended.",
+          "meaning": "네가 추천해 준 그 SF 시리즈 드디어 시작하려고."
+        },
+        {
+          "speaker": "B",
+          "text": "Oh, you’re in for a treat. The plot twists are amazing.",
+          "meaning": "오, 기대해도 좋아. 반전이 엄청나거든."
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "title": "여행지나 명소를 처음 방문하는 친구에게",
+      "description": "",
+      "lines": [
+        {
+          "speaker": "A",
+          "text": "This is my first time visiting Jeju Island.",
+          "meaning": "제주도 방문은 이번이 처음이야."
+        },
+        {
+          "speaker": "B",
+          "text": "You’re in for a treat. The coastal scenery is breathtaking.",
+          "meaning": "정말 좋은 경험하게 될 거야. 해안 풍경이 숨 막히게 아름답거든."
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "title": "공연이나 콘서트를 보러 갈 때",
+      "description": "",
+      "lines": [
+        {
+          "speaker": "A",
+          "text": "Have you ever seen this band perform live?",
+          "meaning": "이 밴드 라이브 공연 본 적 있어?"
+        },
+        {
+          "speaker": "B",
+          "text": "Twice! And trust me, you’re in for a real treat.",
+          "meaning": "두 번이나! 내 말 믿어, 오늘 진짜 끝내주는 공연 보게 될 거야."
+        }
+      ]
+    },
+    {
+      "id": 5,
+      "title": "직접 만든 디저트나 요리를 내놓을 때",
+      "description": "",
+      "lines": [
+        {
+          "speaker": "A",
+          "text": "Something smells incredible in the kitchen!",
+          "meaning": "부엌에서 엄청 맛있는 냄새가 나는데!"
+        },
+        {
+          "speaker": "B",
+          "text": "I just baked fresh chocolate chip cookies. You’re in for a treat!",
+          "meaning": "방금 갓 구운 초코칩 쿠키를 만들었어. 맛있게 먹을 준비해!"
+        }
+      ]
+    },
+    {
+      "id": 6,
+      "title": "재미있는 책을 빌려줄 때",
+      "description": "",
+      "lines": [
+        {
+          "speaker": "A",
+          "text": "Is this mystery novel really as good as people say?",
+          "meaning": "이 추리 소설 사람들 말처럼 그렇게 재미있어?"
+        },
+        {
+          "speaker": "B",
+          "text": "Definitely. Once you start reading, you’re in for a treat.",
+          "meaning": "확실해. 읽기 시작하면 푹 빠져서 즐겁게 보게 될 거야."
+        }
+      ]
+    },
+    {
+      "id": 7,
+      "title": "행사나 파티의 깜짝 이벤트를 예고할 때",
+      "description": "",
+      "lines": [
+        {
+          "speaker": "A",
+          "text": "What do you have planned for tonight’s welcome party?",
+          "meaning": "오늘 밤 환영 파티에 무슨 계획이라도 있어?"
+        },
+        {
+          "speaker": "B",
+          "text": "I can’t spoil the surprise, but everyone is in for a treat.",
+          "meaning": "깜짝 이벤트라 미리 말할 순 없지만, 다들 엄청 좋아할 거야."
+        }
+      ]
+    },
+    {
+      "id": 8,
+      "title": "새로운 게임이나 앱을 소개할 때",
+      "description": "",
+      "lines": [
+        {
+          "speaker": "A",
+          "text": "I just downloaded the new update for the game.",
+          "meaning": "방금 그 게임 새 업데이트 다운로드했어."
+        },
+        {
+          "speaker": "B",
+          "text": "You’re in for a treat. The new graphics and quests are awesome.",
+          "meaning": "기대해도 좋아. 새 그래픽이랑 퀘스트가 엄청나거든."
+        }
+      ]
+    },
+    {
+      "id": 9,
+      "title": "훌륭한 강연이나 수업을 앞두고 있을 때",
+      "description": "",
+      "lines": [
+        {
+          "speaker": "A",
+          "text": "I heard Professor Kim is giving a guest lecture today.",
+          "meaning": "오늘 김 교수님이 특강을 하신다고 들었어."
+        },
+        {
+          "speaker": "B",
+          "text": "Oh, you’re in for a treat. He’s the most engaging speaker I know.",
+          "meaning": "오, 기대해도 좋을 거야. 내가 아는 분 중에 가장 흡입력 있는 강연자시거든."
+        }
+      ]
+    },
+    {
+      "id": 10,
+      "title": "특별한 와인이나 커피를 대접할 때",
+      "description": "",
+      "lines": [
+        {
+          "speaker": "A",
+          "text": "What kind of coffee beans are you using today?",
+          "meaning": "오늘 어떤 원두 쓰는 거야?"
+        },
+        {
+          "speaker": "B",
+          "text": "A rare single-origin batch from Ethiopia. You’re in for a treat.",
+          "meaning": "에티오피아산 희귀 싱글 오리진 원두야. 향과 맛이 끝내줄 거야."
+        }
+      ]
+    }
+  ]
+}

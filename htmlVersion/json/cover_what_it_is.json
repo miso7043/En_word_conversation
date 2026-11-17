@@ -1,0 +1,181 @@
+{
+  "title": "cover what it is",
+  "description": [
+    "\"그것이 무엇인지 다루다(설명하다)\"라는 뜻의 표현입니다.",
+    "동사 'cover'는 '덮다'라는 기본 의미 외에 발표, 수업, 회의, 방송 등에서 특정 주제나 내용을 '다루다', '설명하다', '포함하다'라는 뜻으로 매우 자주 쓰입니다.",
+    "뒤에 간접의문문 'what it is'(그것이 무엇인지)가 목적어로 와서, 청중이나 상대방에게 어떤 개념이나 대상의 정의와 핵심을 안내할 때 유용합니다.",
+    "예: \"Today, we're gonna cover what it is and how it works.\" (오늘 우리는 그것이 무엇인지, 그리고 어떻게 작동하는지 다룰 것입니다.)"
+  ],
+  "conversations": [
+    {
+      "id": 1,
+      "title": "프레젠테이션이나 발표를 시작할 때",
+      "description": "",
+      "lines": [
+        {
+          "speaker": "A",
+          "text": "What is the main focus of today’s presentation?",
+          "meaning": "오늘 발표의 주요 초점이 무엇인가요?"
+        },
+        {
+          "speaker": "B",
+          "text": "First, we’re gonna cover what it is, and then look at its benefits.",
+          "meaning": "먼저 그것이 무엇인지 다루고, 그다음에 이점을 살펴볼 예정입니다."
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "title": "새로운 업무 툴이나 시스템을 교육할 때",
+      "description": "",
+      "lines": [
+        {
+          "speaker": "A",
+          "text": "I’m completely unfamiliar with this new CRM software.",
+          "meaning": "저는 이 새로운 CRM 소프트웨어가 전혀 익숙하지 않아요."
+        },
+        {
+          "speaker": "B",
+          "text": "Don’t worry. In this session, we’ll cover what it is and how to use it.",
+          "meaning": "걱정 마세요. 이번 세션에서 그게 무엇이고 어떻게 사용하는지 다 다룰 거예요."
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "title": "팟캐스트나 유튜브 영상 오프닝에서",
+      "description": "",
+      "lines": [
+        {
+          "speaker": "A",
+          "text": "A lot of listeners have been asking about blockchain lately.",
+          "meaning": "최근 많은 청취자분이 블록체인에 대해 질문해 주셨어요."
+        },
+        {
+          "speaker": "B",
+          "text": "Right. So today, we’re gonna cover what it is in simple terms.",
+          "meaning": "맞아요. 그래서 오늘은 알기 쉬운 용어로 그것이 무엇인지 다뤄볼 겁니다."
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "title": "수업이나 강의 목차를 안내할 때",
+      "description": "",
+      "lines": [
+        {
+          "speaker": "A",
+          "text": "Will this course explain the basics of machine learning?",
+          "meaning": "이 강의에서 머신러닝의 기초도 설명해 주나요?"
+        },
+        {
+          "speaker": "B",
+          "text": "Yes, the first module will cover what it is from scratch.",
+          "meaning": "네, 첫 번째 모듈에서 처음부터 그것이 무엇인지 다룰 것입니다."
+        }
+      ]
+    },
+    {
+      "id": 5,
+      "title": "보고서나 기획안의 구성을 논의할 때",
+      "description": "",
+      "lines": [
+        {
+          "speaker": "A",
+          "text": "How should we structure the introduction of the proposal?",
+          "meaning": "제안서 서론을 어떻게 구성하는 게 좋을까요?"
+        },
+        {
+          "speaker": "B",
+          "text": "Let’s make sure we cover what it is before diving into the budget.",
+          "meaning": "예산으로 넘어가기 전에 먼저 그것이 무엇인지 명확히 다루도록 하죠."
+        }
+      ]
+    },
+    {
+      "id": 6,
+      "title": "낯선 문화나 음식을 소개하는 자리에서",
+      "description": "",
+      "lines": [
+        {
+          "speaker": "A",
+          "text": "Many people outside Korea haven’t heard of this traditional dish.",
+          "meaning": "한국 밖의 많은 사람들은 이 전통 음식에 대해 들어본 적이 없어요."
+        },
+        {
+          "speaker": "B",
+          "text": "That’s why this article will cover what it is and its history.",
+          "meaning": "그래서 이번 기사에서 그것이 무엇인지와 그 역사를 다룰 예정입니다."
+        }
+      ]
+    },
+    {
+      "id": 7,
+      "title": "팀 회의에서 새로운 정책을 설명할 때",
+      "description": "",
+      "lines": [
+        {
+          "speaker": "A",
+          "text": "Everyone is confused about the new remote work policy.",
+          "meaning": "다들 새로운 원격 근무 정책에 대해 헷갈려 하고 있어요."
+        },
+        {
+          "speaker": "B",
+          "text": "I know. In tomorrow’s meeting, I’m gonna cover what it is in detail.",
+          "meaning": "알아요. 내일 회의에서 그것이 무엇인지 자세히 다룰 거예요."
+        }
+      ]
+    },
+    {
+      "id": 8,
+      "title": "스터디 그룹에서 주제를 나눌 때",
+      "description": "",
+      "lines": [
+        {
+          "speaker": "A",
+          "text": "Which part of the chapter are you preparing for Friday?",
+          "meaning": "금요일 스터디 때 챕터의 어느 부분을 준비할 거야?"
+        },
+        {
+          "speaker": "B",
+          "text": "I’ll cover what it is, and you can explain the real-world examples.",
+          "meaning": "내가 그게 무엇인지 개념을 다룰 테니, 네가 실제 사례를 설명해 줘."
+        }
+      ]
+    },
+    {
+      "id": 9,
+      "title": "고객에게 신제품을 브리핑할 때",
+      "description": "",
+      "lines": [
+        {
+          "speaker": "A",
+          "text": "Could you give us a quick overview of your new service?",
+          "meaning": "새 서비스에 대해 간략하게 개요를 설명해 주실 수 있나요?"
+        },
+        {
+          "speaker": "B",
+          "text": "Of course. Today we’re gonna cover what it is and why your team needs it.",
+          "meaning": "물론입니다. 오늘 그것이 무엇이고 왜 귀사의 팀에 필요한지 다뤄보겠습니다."
+        }
+      ]
+    },
+    {
+      "id": 10,
+      "title": "온보딩 교육에서 회사 용어를 알려줄 때",
+      "description": "",
+      "lines": [
+        {
+          "speaker": "A",
+          "text": "I keep hearing the term 'OKR' around the office.",
+          "meaning": "사무실에서 'OKR'이라는 용어를 계속 듣게 되네요."
+        },
+        {
+          "speaker": "B",
+          "text": "We’ll cover what it is during this afternoon’s orientation.",
+          "meaning": "오늘 오후 오리엔테이션 시간에 그것이 무엇인지 다룰 예정입니다."
+        }
+      ]
+    }
+  ]
+}

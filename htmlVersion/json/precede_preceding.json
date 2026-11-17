@@ -1,0 +1,180 @@
+{
+  "title": "precede / preceding",
+  "description": [
+    "동사 precede(철자 주의: preceed가 아니라 precede)와 그 현재분사/형용사형 preceding 모두 시간, 순서, 위치상 '~보다 앞서다, 선행하다'라는 뜻을 가집니다.",
+    "1. precede (동사): 문장의 본동사로 쓰여 'A가 B보다 먼저 일어나다(앞서다)'라는 선후 관계를 직접 서술합니다.",
+    "2. preceding (형용사/현재분사): 명사 앞이나 뒤에서 '직전의, 앞선, ~에 선행하는'이라는 의미로 명사를 수식하며, 글·시간·사건의 순서를 가리킬 때 매우 자주 쓰입니다."
+  ],
+  "conversations": [
+    {
+      "id": 1,
+      "title": "[precede] 폭풍이나 날씨 변화의 전조를 말할 때",
+      "description": "본동사로 쓰여 어떤 현상이 본 사건보다 먼저 발생함을 나타낼 때",
+      "lines": [
+        {
+          "speaker": "A",
+          "text": "The wind suddenly picked up and the sky turned dark.",
+          "meaning": "바람이 갑자기 거세지고 하늘이 어두워졌어."
+        },
+        {
+          "speaker": "B",
+          "text": "Yes, a sharp drop in temperature usually precedes a heavy storm.",
+          "meaning": "응, 급격한 기온 하강은 보통 큰 폭풍에 앞서 나타나지."
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "title": "[precede] 행사나 본 공연 전 식전 순서를 설명할 때",
+      "description": "일정상 A가 B보다 먼저 진행된다고 안내할 때",
+      "lines": [
+        {
+          "speaker": "A",
+          "text": "What time does the keynote speech actually begin?",
+          "meaning": "기조연설은 실제로 몇 시에 시작하나요?"
+        },
+        {
+          "speaker": "B",
+          "text": "At 10 AM, and a brief welcome reception will precede the main event.",
+          "meaning": "오전 10시에 시작하고, 본 행사에 앞서 간단한 환영 리셉션이 먼저 있을 예정입니다."
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "title": "[precede] 직책이나 서열의 선후 관계를 말할 때",
+      "description": "이전 임기나 전임자가 현재 인물보다 앞섰음을 표현할 때",
+      "lines": [
+        {
+          "speaker": "A",
+          "text": "Who was the manager of this department before Sarah took over?",
+          "meaning": "사라가 맡기 전에 이 부서 매니저가 누구였죠?"
+        },
+        {
+          "speaker": "B",
+          "text": "David preceded her in that role for nearly five years.",
+          "meaning": "데이비드가 그녀에 앞서 그 직책을 거의 5년 동안 맡았었습니다."
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "title": "[precede] 명성이나 소문이 본인보다 먼저 퍼졌을 때",
+      "description": "'Your reputation precedes you' 관용 표현으로 상대를 반길 때",
+      "lines": [
+        {
+          "speaker": "A",
+          "text": "It’s a pleasure to finally meet you in person.",
+          "meaning": "드디어 직접 뵙게 되어 영광입니다."
+        },
+        {
+          "speaker": "B",
+          "text": "The pleasure is mine. Your reputation certainly precedes you!",
+          "meaning": "저야말로 영광입니다. 명성은 익히 들어 잘 알고 있었습니다! (명성이 당신보다 먼저 도착했네요!)"
+        }
+      ]
+    },
+    {
+      "id": 5,
+      "title": "[precede] 문법이나 철자 규칙에서 글자의 순서를 설명할 때",
+      "description": "특정 알파벳이나 단어가 다른 요소 앞에 위치함을 설명할 때",
+      "lines": [
+        {
+          "speaker": "A",
+          "text": "I always get confused about how to spell 'receive.'",
+          "meaning": "나는 'receive' 철자를 어떻게 쓰는지 항상 헷갈려."
+        },
+        {
+          "speaker": "B",
+          "text": "Just remember the rule: 'I' precedes 'E' except after 'C.'",
+          "meaning": "이 규칙만 기억해: 'C' 뒤를 제외하면 'I'가 'E'보다 앞에 온다."
+        }
+      ]
+    },
+    {
+      "id": 6,
+      "title": "[preceding] 책이나 보고서의 바로 앞 장(페이지)을 가리킬 때",
+      "description": "형용사로 명사 앞에 쓰여 '직전의, 앞선'을 나타낼 때",
+      "lines": [
+        {
+          "speaker": "A",
+          "text": "I’m having trouble understanding the chart on page 42.",
+          "meaning": "42페이지에 있는 도표를 이해하기가 좀 어렵네요."
+        },
+        {
+          "speaker": "B",
+          "text": "Take a look at the preceding page; it explains all the variables used in the chart.",
+          "meaning": "바로 앞 페이지를 한번 보세요. 도표에 사용된 모든 변수가 설명되어 있습니다."
+        }
+      ]
+    },
+    {
+      "id": 7,
+      "title": "[preceding] 사건 발생 직전의 며칠·몇 달을 언급할 때",
+      "description": "기준 시점보다 바로 앞선 기간을 나타낼 때",
+      "lines": [
+        {
+          "speaker": "A",
+          "text": "Did the patient show any symptoms before being admitted to the hospital?",
+          "meaning": "환자가 입원하기 전에 어떤 증상을 보였나요?"
+        },
+        {
+          "speaker": "B",
+          "text": "He reported feeling unusually tired during the preceding week.",
+          "meaning": "그는 입원 직전 일주일 동안 유난히 피곤함을 느꼈다고 말했습니다."
+        }
+      ]
+    },
+    {
+      "id": 8,
+      "title": "[preceding] 더 중요한 본론에 앞서 준비하는 단계를 설명할 때",
+      "description": "명사 뒤에서 후치수식하여 '~에 선행하는'으로 풀이할 때",
+      "lines": [
+        {
+          "speaker": "A",
+          "text": "Why do we need to spend two weeks just on data cleaning?",
+          "meaning": "왜 데이터 정제에만 2주를 써야 하나요?"
+        },
+        {
+          "speaker": "B",
+          "text": "It’s a necessary step preceding the actual machine learning training.",
+          "meaning": "실제 머신러닝 학습에 선행하는 필수적인 단계이기 때문입니다."
+        }
+      ]
+    },
+    {
+      "id": 9,
+      "title": "[preceding] 전년도와 실적을 비교할 때",
+      "description": "비즈니스·경제 문맥에서 '직전 연도(the preceding year)'를 말할 때",
+      "lines": [
+        {
+          "speaker": "A",
+          "text": "How did our export volume perform this year?",
+          "meaning": "올해 우리 수출 물량 실적은 어땠나요?"
+        },
+        {
+          "speaker": "B",
+          "text": "It increased by 15 percent compared to the preceding year.",
+          "meaning": "직전 연도와 비교해 15퍼센트 증가했습니다."
+        }
+      ]
+    },
+    {
+      "id": 10,
+      "title": "[preceding] 발표나 발언의 앞선 내용을 요약할 때",
+      "description": "방금 전 언급된 문장이나 논점을 지칭할 때",
+      "lines": [
+        {
+          "speaker": "A",
+          "text": "Could you briefly summarize what we’ve agreed on so far?",
+          "meaning": "지금까지 우리가 합의한 내용을 간략히 요약해 주실 수 있나요?"
+        },
+        {
+          "speaker": "B",
+          "text": "Sure, all the points made in the preceding discussion will be included in the final draft.",
+          "meaning": "물론이죠, 앞선 논의에서 제기된 모든 사항이 최종 초안에 포함될 것입니다."
+        }
+      ]
+    }
+  ]
+}

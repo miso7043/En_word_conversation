@@ -1,0 +1,186 @@
+{
+  "title": "foot the bill",
+  "description": [
+    "\"~의 비용을 지불하다\", \"계산서를 내다\", \"비용을 부담하다\"라는 뜻의 표현입니다.",
+    "특히 다른 사람 대신 또는 전체 비용을 자신이 책임지고 낼 때 자주 사용합니다.",
+    "\"pay the bill\"보다 조금 더 구어적이고 관용적인 느낌을 줍니다.",
+    "예: \"I'll foot the bill for dinner tonight.\" (오늘 저녁은 내가 계산할게.)"
+  ],
+  "conversations": [
+    {
+      "id": 1,
+      "title": "저녁 식사 후 계산할 때",
+      "description": "",
+      "lines": [
+        {
+          "speaker": "A",
+          "text": "The food was great. Shall we split the bill?",
+          "meaning": "음식이 정말 좋았어. 계산 나눠 낼까?"
+        },
+        {
+          "speaker": "B",
+          "text": "No need. I’ll foot the bill this time. You treated me last month.",
+          "meaning": "아니야. 이번엔 내가 낼게. 지난달에 네가 사줬잖아."
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "title": "회사 출장 비용을 이야기할 때",
+      "description": "",
+      "lines": [
+        {
+          "speaker": "A",
+          "text": "Who’s covering the hotel and flights for the conference?",
+          "meaning": "컨퍼런스 호텔이랑 항공비는 누가 내?"
+        },
+        {
+          "speaker": "B",
+          "text": "The company will foot the bill for everything related to the trip.",
+          "meaning": "출장 관련 비용은 전부 회사에서 부담할 거야."
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "title": "친구 생일 파티 비용을 논의할 때",
+      "description": "",
+      "lines": [
+        {
+          "speaker": "A",
+          "text": "The venue and cake are going to be expensive.",
+          "meaning": "장소랑 케이크 비용이 꽤 들 것 같아."
+        },
+        {
+          "speaker": "B",
+          "text": "Don’t worry. I’ll foot the bill for the whole party. It’s her 30th birthday.",
+          "meaning": "걱정 마. 파티 비용은 내가 다 낼게. 서른 번째 생일이잖아."
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "title": "의료비를 언급할 때",
+      "description": "",
+      "lines": [
+        {
+          "speaker": "A",
+          "text": "How much was the surgery in the end?",
+          "meaning": "결국 수술비가 얼마 나왔어?"
+        },
+        {
+          "speaker": "B",
+          "text": "It was a lot, but my insurance footed most of the bill.",
+          "meaning": "많긴 했는데, 보험이 대부분을 부담해 줬어."
+        }
+      ]
+    },
+    {
+      "id": 5,
+      "title": "데이트 비용을 이야기할 때",
+      "description": "",
+      "lines": [
+        {
+          "speaker": "A",
+          "text": "You always insist on paying when we go out.",
+          "meaning": "우리 나갈 때마다 항상 네가 계산하려고 하네."
+        },
+        {
+          "speaker": "B",
+          "text": "I like to foot the bill on the first few dates. It just feels right to me.",
+          "meaning": "처음 몇 번은 내가 내는 게 좋아. 나한테는 그게 자연스러워."
+        }
+      ]
+    },
+    {
+      "id": 6,
+      "title": "팀 회식 비용을 정할 때",
+      "description": "",
+      "lines": [
+        {
+          "speaker": "A",
+          "text": "Should we all chip in for the team dinner?",
+          "meaning": "팀 저녁 회식 비용은 다 같이 낼까?"
+        },
+        {
+          "speaker": "B",
+          "text": "The manager said he’ll foot the bill as a thank-you for the successful project.",
+          "meaning": "팀장님이 프로젝트 성공 감사 표시로 자기가 내겠다고 했어."
+        }
+      ]
+    },
+    {
+      "id": 7,
+      "title": "수리 비용을 부담할 때",
+      "description": "",
+      "lines": [
+        {
+          "speaker": "A",
+          "text": "The car needs a new transmission. It’s going to cost a fortune.",
+          "meaning": "차 변속기를 갈아야 해. 비용이 엄청날 거야."
+        },
+        {
+          "speaker": "B",
+          "text": "Since it broke while I was borrowing it, I’ll foot the bill.",
+          "meaning": "내가 빌려 쓰는 동안 고장 났으니까 내가 수리비 낼게."
+        }
+      ]
+    },
+    {
+      "id": 8,
+      "title": "결혼식 비용을 이야기할 때",
+      "description": "",
+      "lines": [
+        {
+          "speaker": "A",
+          "text": "Weddings these days are so expensive.",
+          "meaning": "요즘 결혼식 비용이 정말 만만치 않네."
+        },
+        {
+          "speaker": "B",
+          "text": "Her parents offered to foot the bill for the reception and the honeymoon.",
+          "meaning": "신부 부모님이 피로연이랑 신혼여행 비용을 내 주시겠다고 하셨어."
+        }
+      ]
+    },
+    {
+      "id": 9,
+      "title": "그룹 여행 경비를 나눌 때",
+      "description": "",
+      "lines": [
+        {
+          "speaker": "A",
+          "text": "Who’s paying for the Airbnb and the rental car?",
+          "meaning": "에어비앤비랑 렌트카 비용은 누가 내?"
+        },
+        {
+          "speaker": "B",
+          "text": "I’ll foot the bill for those two, and you guys can cover the food and activities.",
+          "meaning": "그 두 가지는 내가 낼게. 너희는 식비랑 액티비티 비용 맡아."
+        },
+        {
+          "speaker": "C",
+          "text": "Sounds fair.",
+          "meaning": "공평하네."
+        }
+      ]
+    },
+    {
+      "id": 10,
+      "title": "실수로 인한 손해를 배상할 때",
+      "description": "",
+      "lines": [
+        {
+          "speaker": "A",
+          "text": "I’m really sorry I broke your laptop.",
+          "meaning": "노트북 망가뜨려서 정말 미안해."
+        },
+        {
+          "speaker": "B",
+          "text": "It’s okay. Just foot the bill for the repairs and we’re good.",
+          "meaning": "괜찮아. 수리비만 내 주면 됐어."
+        }
+      ]
+    }
+  ]
+}

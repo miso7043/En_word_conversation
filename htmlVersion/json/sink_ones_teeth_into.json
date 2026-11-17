@@ -1,0 +1,181 @@
+{
+  "title": "sink one's teeth into",
+  "description": [
+    "\"본격적으로 덤벼들다\", \"열심히 파고들다\", \"제대로 손을 대다\"라는 뜻의 관용 표현입니다.",
+    "어떤 일, 프로젝트, 문제 등에 진심으로 관심을 갖고 적극적으로, 깊이 있게 매달리기 시작할 때 사용합니다.",
+    "단순히 시작하는 것이 아니라, 열정과 에너지를 쏟아부으며 집중하는 뉘앙스가 있습니다.",
+    "예: \"She's finally found a project she can really sink her teeth into.\" (그녀는 드디어 제대로 파고들 수 있는 프로젝트를 찾았다.)"
+  ],
+  "conversations": [
+    {
+      "id": 1,
+      "title": "새로운 프로젝트에 대해 이야기할 때",
+      "description": "",
+      "lines": [
+        {
+          "speaker": "A",
+          "text": "How’s the new marketing campaign going?",
+          "meaning": "새 마케팅 캠페인은 어떻게 되어 가?"
+        },
+        {
+          "speaker": "B",
+          "text": "Really well. I’ve finally got something I can sink my teeth into.",
+          "meaning": "정말 잘 되고 있어. 드디어 제대로 파고들 수 있는 일을 찾았어."
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "title": "업무가 지루할 때 새로운 도전을 원할 때",
+      "description": "",
+      "lines": [
+        {
+          "speaker": "A",
+          "text": "You’ve seemed bored at work lately.",
+          "meaning": "요즘 일하면서 좀 지루해 보이더라."
+        },
+        {
+          "speaker": "B",
+          "text": "Yeah. I need a real challenge I can sink my teeth into.",
+          "meaning": "응. 제대로 덤벼들 수 있는 진짜 도전적인 일이 필요해."
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "title": "취미나 공부 주제를 찾을 때",
+      "description": "",
+      "lines": [
+        {
+          "speaker": "A",
+          "text": "Have you decided what to study next?",
+          "meaning": "다음에 뭘 공부할지 정했어?"
+        },
+        {
+          "speaker": "B",
+          "text": "I’m thinking about data science. It looks like something I can really sink my teeth into.",
+          "meaning": "데이터 사이언스를 생각해 보고 있어. 제대로 파고들 만한 것 같거든."
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "title": "어려운 문제에 본격적으로 착수할 때",
+      "description": "",
+      "lines": [
+        {
+          "speaker": "A",
+          "text": "The bug report looks complicated. Are you sure you want to handle it?",
+          "meaning": "버그 리포트가 복잡해 보이네. 네가 처리할 자신 있어?"
+        },
+        {
+          "speaker": "B",
+          "text": "Absolutely. I’ve been waiting for a tough problem I can sink my teeth into.",
+          "meaning": "당연하지. 제대로 덤벼들 수 있는 어려운 문제를 기다리고 있었어."
+        }
+      ]
+    },
+    {
+      "id": 5,
+      "title": "새로운 역할을 맡게 되었을 때",
+      "description": "",
+      "lines": [
+        {
+          "speaker": "A",
+          "text": "Congratulations on the promotion! How do you feel?",
+          "meaning": "승진 축하해! 기분 어때?"
+        },
+        {
+          "speaker": "B",
+          "text": "Excited. This is exactly the kind of responsibility I’ve wanted to sink my teeth into.",
+          "meaning": "설레. 내가 제대로 파고들고 싶었던 바로 그런 책임이야."
+        }
+      ]
+    },
+    {
+      "id": 6,
+      "title": "책이나 연구 주제를 고를 때",
+      "description": "",
+      "lines": [
+        {
+          "speaker": "A",
+          "text": "What are you reading these days?",
+          "meaning": "요즘 무슨 책 읽고 있어?"
+        },
+        {
+          "speaker": "B",
+          "text": "A thick book on behavioral economics. It’s something I can really sink my teeth into.",
+          "meaning": "행동경제학에 관한 두꺼운 책. 제대로 파고들 만한 내용이야."
+        }
+      ]
+    },
+    {
+      "id": 7,
+      "title": "팀원이 일에 적극적으로 나설 때",
+      "description": "",
+      "lines": [
+        {
+          "speaker": "A",
+          "text": "Did you see how focused she was in the meeting?",
+          "meaning": "회의에서 그녀가 얼마나 집중했는지 봤어?"
+        },
+        {
+          "speaker": "B",
+          "text": "Yeah. Once she finds a project she likes, she really sinks her teeth into it.",
+          "meaning": "응. 마음에 드는 프로젝트를 찾으면 진짜 제대로 덤벼들더라."
+        }
+      ]
+    },
+    {
+      "id": 8,
+      "title": "창업이나 새로운 사업을 시작할 때",
+      "description": "",
+      "lines": [
+        {
+          "speaker": "A",
+          "text": "Are you nervous about launching the startup?",
+          "meaning": "스타트업 시작하는 거 긴장돼?"
+        },
+        {
+          "speaker": "B",
+          "text": "A little, but I’m ready. This is the kind of work I’ve always wanted to sink my teeth into.",
+          "meaning": "조금은. 하지만 준비됐어. 내가 항상 제대로 파고들고 싶었던 일이야."
+        }
+      ]
+    },
+    {
+      "id": 9,
+      "title": "복잡한 법률/계약 문서를 다룰 때",
+      "description": "",
+      "lines": [
+        {
+          "speaker": "A",
+          "text": "This contract is full of complicated clauses.",
+          "meaning": "이 계약서 조항이 엄청 복잡하네."
+        },
+        {
+          "speaker": "B",
+          "text": "Good. I like documents I can sink my teeth into and really analyze.",
+          "meaning": "좋아. 제대로 파고들어서 분석할 수 있는 문서가 마음에 들어."
+        }
+      ]
+    },
+    {
+      "id": 10,
+      "title": "취미 활동에 깊이 빠져들 때",
+      "description": "",
+      "lines": [
+        {
+          "speaker": "A",
+          "text": "You’ve been practicing the guitar every night.",
+          "meaning": "요즘 매일 밤 기타 연습하네."
+        },
+        {
+          "speaker": "B",
+          "text": "Yeah. Once I find something interesting, I tend to sink my teeth into it completely.",
+          "meaning": "응. 재미있는 걸 찾으면 완전히 빠져들어서 파고드는 편이야."
+        }
+      ]
+    }
+  ]
+}

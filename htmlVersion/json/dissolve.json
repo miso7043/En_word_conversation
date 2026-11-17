@@ -1,0 +1,101 @@
+{
+  "title": "dissolve",
+  "description": [
+    "\"녹이다\", \"해산하다\", \"사라지다\"라는 뜻의 동사입니다.",
+    "고체를 액체에 녹이거나, 조직·감정을 없애거나 해체할 때 쓰입니다.",
+    "화학·요리 맥락에서는 물리적 용해, 비즈니스·정치에서는 해산, 감정에서는 긴장이나 갈등이 풀리는 뉘앙스로 자주 쓰입니다.",
+    "예: \"Sugar dissolves quickly in hot water.\" (설탕은 뜨거운 물에 빨리 녹아요.)"
+  ],
+  "conversations": [
+    {
+      "id": 1,
+      "title": "차에 설탕을 녹일 때",
+      "description": "",
+      "lines": [
+        { "speaker": "A", "text": "Is the sugar gone yet?", "meaning": "설탕 다 녹았어?" },
+        { "speaker": "B", "text": "Almost. Just give it a few more seconds to dissolve completely.", "meaning": "거의. 완전히 녹을 때까지 조금만 더 기다려." }
+      ]
+    },
+    {
+      "id": 2,
+      "title": "스타트업을 정리할 때",
+      "description": "",
+      "lines": [
+        { "speaker": "A", "text": "What happened to their company?", "meaning": "그 회사 어떻게 됐어?" },
+        { "speaker": "B", "text": "They decided to dissolve it last month after running out of funding.", "meaning": "자금이 떨어져서 지난달에 해산하기로 했대." }
+      ]
+    },
+    {
+      "id": 3,
+      "title": "긴장이 풀릴 때",
+      "description": "",
+      "lines": [
+        { "speaker": "A", "text": "You look much more relaxed now.", "meaning": "지금 훨씬 편안해 보여." },
+        { "speaker": "B", "text": "Yeah, once we started talking everything just dissolved.", "meaning": "응, 이야기 시작하니까 모든 긴장이 그냥 사라지더라." }
+      ]
+    },
+    {
+      "id": 4,
+      "title": "약을 물에 타서 먹을 때",
+      "description": "",
+      "lines": [
+        { "speaker": "A", "text": "How should I take this powder?", "meaning": "이 가루약은 어떻게 먹어야 해?" },
+        { "speaker": "B", "text": "Just dissolve it in a glass of water and drink it all at once.", "meaning": "물에 녹여서 한 번에 다 마시면 돼." }
+      ]
+    },
+    {
+      "id": 5,
+      "title": "의회를 해산할 때",
+      "description": "",
+      "lines": [
+        { "speaker": "A", "text": "Did you hear the news?", "meaning": "뉴스 들었어?" },
+        { "speaker": "B", "text": "The prime minister is going to dissolve parliament next week.", "meaning": "총리가 다음 주에 의회를 해산할 거래." }
+      ]
+    },
+    {
+      "id": 6,
+      "title": "문제가 자연스럽게 없어질 때",
+      "description": "",
+      "lines": [
+        { "speaker": "A", "text": "Should we bring this up again at the meeting?", "meaning": "이 문제를 회의에서 다시 꺼내야 할까?" },
+        { "speaker": "B", "text": "I wouldn’t. It’ll probably dissolve on its own if we just wait.", "meaning": "안 그래도 될 것 같아. 그냥 기다리면 알아서 사라질 거야." }
+      ]
+    },
+    {
+      "id": 7,
+      "title": "소금이 물에 녹는 실험",
+      "description": "",
+      "lines": [
+        { "speaker": "A", "text": "What happens when you stir it?", "meaning": "저으면 어떻게 돼?" },
+        { "speaker": "B", "text": "The salt dissolves and the water becomes clear again.", "meaning": "소금이 녹아서 물이 다시 투명해져." }
+      ]
+    },
+    {
+      "id": 8,
+      "title": "파트너십을 끝낼 때",
+      "description": "",
+      "lines": [
+        { "speaker": "A", "text": "Are you two still working together?", "meaning": "너희 둘 아직도 같이 일해?" },
+        { "speaker": "B", "text": "No, we dissolved the partnership after the project ended.", "meaning": "아니, 프로젝트 끝나고 파트너십을 해체했어." }
+      ]
+    },
+    {
+      "id": 9,
+      "title": "분노가 가라앉을 때",
+      "description": "",
+      "lines": [
+        { "speaker": "A", "text": "He was really angry earlier.", "meaning": "아까 진짜 화나 있었어." },
+        { "speaker": "B", "text": "I know, but his anger dissolved pretty quickly once he heard the full story.", "meaning": "알아. 근데 전체 이야기를 듣고 나니까 화가 금방 풀리더라." }
+      ]
+    },
+    {
+      "id": 10,
+      "title": "캡슐 약을 녹여서 먹을 때",
+      "description": "",
+      "lines": [
+        { "speaker": "A", "text": "I can’t swallow the whole capsule.", "meaning": "캡슐을 통째로 못 삼키겠어." },
+        { "speaker": "B", "text": "You can open it and dissolve the powder in juice if that’s easier.", "meaning": "열어 가지고 가루를 주스에 녹여 먹어도 돼. 그게 더 쉽다면." }
+      ]
+    }
+  ]
+}

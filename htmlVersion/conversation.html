@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>영어 대화 연습</title>
+<title>영어 공부</title>
 <style>
   :root { color-scheme: dark; font-family: Inter, system-ui, sans-serif; background: #101923; color: #f0f5f7; }
   * { box-sizing: border-box; }
@@ -31,9 +31,10 @@
   nav button[aria-current="true"] { border-color: #86e2cf; color: #a1efdf; background: #1d3e41; }
   nav small { display: block; margin-top: 4px; }
   small, .muted, .meaning, #load-status, #speech-status { color: #b4c6d1; }
-  .file-label { display: inline-block; margin-top: 20px; font-size: .87rem; }
+  .file-label { display: inline-block; margin-bottom: 10px; font-size: .87rem; }
   .file-label input { position: absolute; width: 1px; height: 1px; opacity: 0; }
-  #load-status { font-size: .86rem; line-height: 1.6; }
+  #load-status { margin: 0 0 10px; font-size: .86rem; line-height: 1.6; }
+  #load-status:empty { display: none; }
   main { padding: 0 clamp(14px, 4vw, 42px) 42px; min-width: 0; }
   .player { padding-top: 14px; margin-top: 10px; border-top: 1px solid #385263; text-align: center; }
   .controls { display: flex; justify-content: center; flex-wrap: wrap; gap: 8px; }
@@ -58,18 +59,36 @@
     aside { position: static; height: auto; max-height: 60dvh; padding: 18px 14px; border-right: 0; border-bottom: 1px solid #2c3d4b; }
     aside h1 { margin-bottom: 12px; }
   }
+  .study-tabs { display: flex; gap: 8px; max-width: 1105px; margin: 0 auto; padding: 10px 14px; }
+  .study-tabs button { min-height: 44px; }
+  .study-tabs [aria-selected="true"] { border-color: #86e2cf; color: #a1efdf; background: #1d3e41; }
+  #dialogue-panel[hidden], #reader-panel[hidden] { display: none; }
+  #reader-panel { max-width: 1105px; margin: 0 auto; }
+  #reader-panel label[for="reader-text"] { display: block; margin-bottom: 8px; }
+  #reader-text { display: block; width: 100%; min-height: clamp(16rem, 48vh, 32rem); padding: 12px; resize: vertical; font: inherit; color: inherit; background: #15222e; border: 1px solid #526777; border-radius: 9px; }
+  #reader-text:focus-visible { outline: 2px solid #86e2cf; outline-offset: 3px; }
+  #reader-panel .controls { justify-content: flex-start; margin-top: 12px; }
+  .reader-repeat { display: inline-flex; align-items: center; gap: 6px; padding-inline: 8px; cursor: pointer; }
+  #reader-panel button { min-height: 44px; }
+  #reader-play { color: #102721; background: #86e2cf; }
+  #reader-play:hover:not(:disabled) { background: #a1efdf; }
+  #reader-status { color: #b4c6d1; overflow-wrap: anywhere; }
 </style>
 </head>
 <body>
-<div class="layout">
+<div class="study-tabs" role="tablist" aria-label="영어 학습 방식">
+  <button type="button" role="tab" id="dialogue-tab" aria-selected="true" aria-controls="dialogue-panel">대화 연습</button>
+  <button type="button" role="tab" id="reader-tab" aria-selected="false" aria-controls="reader-panel" tabindex="-1">문장 읽기</button>
+</div>
+<div class="layout" id="dialogue-panel" role="tabpanel" aria-labelledby="dialogue-tab">
   <aside>
     <h1>영어 대화 연습</h1>
     <div class="lesson-list">
       <nav id="lessons" aria-label="대화 목록"></nav>
+    </div>
+    <section class="player" aria-label="대화 및 음성 제어">
       <label class="file-label">JSON 폴더 열기 <input id="folder" type="file" webkitdirectory multiple></label>
       <p id="load-status" role="status"></p>
-    </div>
-    <section class="player" aria-label="음성 재생">
       <div class="controls">
         <button id="play" type="button" aria-label="재생" title="재생" disabled></button>
         <button id="stop" type="button" disabled>정지</button>
@@ -82,6 +101,7 @@
   </main>
 </div>
 <script>
+  const lessonList = document.querySelector('.lesson-list');
   const lessons = document.querySelector('#lessons');
   const content = document.querySelector('#content');
   const folder = document.querySelector('#folder');
@@ -90,7 +110,7 @@
   const play = document.querySelector('#play');
   const stop = document.querySelector('#stop');
   const synth = window.speechSynthesis;
-  const locales = new Set(['en-us', 'en-ca', 'en-gb', 'en-au']);
+  const locales = new Set(['en-us', 'en-ca', 'en-gb', 'en-au', 'en-in']);
   const childVoice = /\b(?:child(?:ren)?|kid(?:s)?|junior|teen(?:ager)?|boy|girl|zippy|bahh|boing|bubbles|jester|good news|bad news|superstar)\b/i;
   const dateFormat = new Intl.DateTimeFormat('ko-KR', { timeZone: 'Asia/Seoul', dateStyle: 'medium', timeStyle: 'short' });
   let documents = [];
@@ -98,6 +118,7 @@
   let cards = [];
   let lines = [];
   let voices = [];
+  let lastVoiceReport;
   let current = 0;
   let state = 'idle';
   let utterance = null;
@@ -117,13 +138,35 @@
     }
   }
 
+  function shuffle(items) {
+    for (let index = items.length - 1; index > 0; index--) {
+      const other = Math.floor(Math.random() * (index + 1));
+      [items[index], items[other]] = [items[other], items[index]];
+    }
+    return items;
+  }
+
   function assignVoices() {
-    // Continue the rotation across both topics so adjacent dialogues get different assignments.
-    const preceding = documents.slice(0, documents.indexOf(selected))
-      .reduce((count, item) => count + item.data.conversations.length, 0);
-    cards.forEach(({ speakers, cast, entries }, index) => {
-      const mapping = new Map(speakers.map((speaker, position) => [
-        speaker, voices.length ? voices[(preceding + index + position) % voices.length] : undefined
+    const groups = new Map([...locales].map(locale => [locale, []]));
+    for (const voice of voices) groups.get(voiceLocale(voice)).push(voice);
+    const regions = [...groups.values()].filter(region => region.length);
+
+    for (const card of cards) {
+      const { speakers, cast, entries } = card;
+      const queues = regions.map(region => shuffle([...region]));
+      const pool = [];
+      // Sample one voice per region before using a second from any region.
+      while (queues.some(queue => queue.length)) {
+        for (const queue of shuffle(queues)) {
+          if (queue.length) pool.push(queue.pop());
+        }
+      }
+      const previous = card.lastFirstVoice;
+      if (pool.length > 1 && voiceKey(pool[0]) === previous) {
+        [pool[0], pool[1]] = [pool[1], pool[0]];
+      }
+      const mapping = new Map(speakers.map((speaker, index) => [
+        speaker, pool.length ? pool[index % pool.length] : undefined
       ]));
       for (const entry of entries) entry.voice = mapping.get(entry.speaker);
       const assignments = speakers.map(speaker => {
@@ -131,7 +174,7 @@
         return voice && `${speaker} · ${voice.name} (${voice.lang})`;
       });
       cast.textContent = voices.length ? assignments.join(' / ') : '';
-    });
+    }
   }
 
   function updateControls() {
@@ -141,38 +184,56 @@
     play.setAttribute('data-playing', String(playing));
     play.setAttribute('aria-label', action);
     play.title = action;
-    for (const line of lines) line.button.disabled = !line.voice;
+    lines.forEach((line, index) => {
+      const active = state !== 'idle' && current === index;
+      const lineAction = active ? action : '이 대사부터 재생';
+      line.button.disabled = !line.voice;
+      line.button.setAttribute('aria-label', `${line.speaker} · ${line.lineNumber}번째 대사 · ${lineAction}`);
+      line.button.title = lineAction;
+    });
     stop.disabled = state === 'idle';
   }
 
   function voiceStatus() {
     if (!synth) return '이 브라우저는 음성 재생을 지원하지 않습니다.';
-    if (!voices.length) return '사용 가능한 미국·캐나다·영국·호주 영어 음성이 없습니다.';
+    if (!voices.length) return '사용 가능한 미국·캐나다·영국·호주·인도 영어 음성이 없습니다.';
     if (cards.some(card => card.speakers.length > voices.length)) {
       return '사용 가능한 영어 음성이 부족해 일부 화자가 같은 목소리를 사용합니다.';
     }
     return '';
   }
 
+  function voiceLocale(voice) {
+    try {
+      const locale = new Intl.Locale(voice.lang.replaceAll('_', '-'));
+      return `${locale.language}-${locale.region || ''}`.toLowerCase();
+    } catch {
+      return '';
+    }
+  }
+
+  function voiceKey(voice) {
+    return `${voiceLocale(voice)}:${voice.voiceURI || voice.name}`;
+  }
+
   function refreshVoices() {
-    if (state !== 'idle') return;
-    const groups = new Map([...locales].map(locale => [locale, []]));
     const seen = new Set();
+    const eligibleVoices = [];
     for (const voice of synth?.getVoices() || []) {
-      const locale = voice.lang.toLowerCase().replaceAll('_', '-');
-      const key = voice.voiceURI || `${voice.name}:${locale}`;
-      if (!groups.has(locale) || childVoice.test(voice.name) || seen.has(key)) continue;
-      groups.get(locale).push(voice);
+      const key = voiceKey(voice);
+      if (!locales.has(voiceLocale(voice)) || childVoice.test(voice.name) || seen.has(key)) continue;
+      eligibleVoices.push(voice);
       seen.add(key);
     }
-    // Interleave regions to avoid exhausting all voices from one region first.
-    const regions = [...groups.values()];
-    voices = [];
-    for (let index = 0; index < Math.max(...regions.map(region => region.length)); index++) {
-      for (const region of regions) {
-        if (region[index]) voices.push(region[index]);
-      }
+    const report = eligibleVoices.map(({ name, lang }) => ({ name, lang }));
+    const signature = JSON.stringify(report);
+    if (signature !== lastVoiceReport) {
+      lastVoiceReport = signature;
+      console.info(`[영어 대화 연습] 재생 가능 음성 ${report.length}개`);
+      if (report.length) console.table(report);
     }
+    if (state !== 'idle') return;
+    voices = eligibleVoices;
     assignVoices();
     updateControls();
     speechStatus.textContent = voiceStatus();
@@ -197,6 +258,7 @@
       resetPlayback('재생이 끝났습니다.');
       return;
     }
+    updateControls();
     const entry = lines[current];
     entry.element.classList.add('reading');
     entry.element.scrollIntoView({
@@ -215,6 +277,7 @@
       entry.element.classList.remove('reading');
       current++;
       if (state === 'playing') speakCurrent();
+      else updateControls();
     };
     next.onerror = () => {
       if (utterance === next) resetPlayback('음성 재생 중 오류가 발생했습니다.');
@@ -223,6 +286,13 @@
   }
 
   function startOrResume() {
+    if (state === 'idle') {
+      assignVoices();
+      for (const card of cards) {
+        const firstVoice = card.entries[0]?.voice;
+        if (firstVoice) card.lastFirstVoice = voiceKey(firstVoice);
+      }
+    }
     state = 'playing';
     updateControls();
     if (utterance) {
@@ -233,7 +303,7 @@
       speakCurrent();
     }
   }
-  play.addEventListener('click', () => {
+  function togglePlayback() {
     if (state !== 'playing') {
       startOrResume();
       return;
@@ -242,7 +312,8 @@
     synth.pause();
     updateControls();
     speechStatus.textContent = '일시정지됨';
-  });
+  }
+  play.addEventListener('click', togglePlayback);
   stop.addEventListener('click', () => {
     resetPlayback('재생을 정지했습니다.');
     window.scrollTo(0, 0);
@@ -270,9 +341,12 @@
         const element = add(article, 'div', null, 'line');
         const button = add(element, 'button', line.speaker, 'speaker');
         button.type = 'button';
-        button.setAttribute('aria-label', `${line.speaker} · ${lineIndex + 1}번째 대사부터 재생`);
         const position = lines.length + lineIndex;
         button.addEventListener('click', () => {
+          if (state !== 'idle' && current === position) {
+            togglePlayback();
+            return;
+          }
           resetPlayback();
           if (button.disabled) return;
           current = position;
@@ -281,7 +355,7 @@
         const dialogue = add(element, 'div');
         add(dialogue, 'span', line.text).lang = 'en';
         if (line.meaning) add(dialogue, 'span', line.meaning, 'meaning');
-        return { element, button, text: line.text, speaker: line.speaker };
+        return { element, button, text: line.text, speaker: line.speaker, lineNumber: lineIndex + 1 };
       });
       const speakers = [...new Set(entries.map(entry => entry.speaker))];
       cards.push({ cast, entries, speakers });
@@ -317,6 +391,7 @@
         item.button.addEventListener('click', () => showDocument(item));
       }
       showDocument(documents[0]);
+      lessonList.scrollTop = 0;
     }
     loadStatus.textContent = failed.length ? `불러오지 못한 파일: ${failed.join(', ')}` : '';
     if (!loaded.length) {
@@ -826,6 +901,137 @@
     loadFromServer();
   }
   refreshVoices();
+</script>
+<main id="reader-panel" role="tabpanel" aria-labelledby="reader-tab" hidden>
+    <h2>영어 문장 읽기</h2>
+    <label for="reader-text">영어 문장</label>
+    <textarea id="reader-text" lang="en" spellcheck="false"></textarea>
+    <div class="controls">
+      <button id="reader-play" type="button" disabled>▶ 재생</button>
+      <button id="reader-stop" type="button" disabled>정지</button>
+      <label class="reader-repeat"><input id="reader-repeat" type="checkbox"> 반복 재생</label>
+    </div>
+    <p id="reader-status" role="status"></p>
+</main>
+<script>
+  {
+    const input = document.querySelector('#reader-text');
+    const play = document.querySelector('#reader-play');
+    const stop = document.querySelector('#reader-stop');
+    const status = document.querySelector('#reader-status');
+    const repeat = document.querySelector('#reader-repeat');
+    const synth = window.speechSynthesis;
+    let active = null;
+    let previousVoice = '';
+
+    const voiceKey = voice => voice.voiceURI || `${voice.name}:${voice.lang}`;
+
+    function englishVoices() {
+      const voices = new Map();
+      for (const voice of synth?.getVoices() ?? []) {
+        if (/^en(?:[-_]|$)/i.test(voice.lang)) voices.set(voiceKey(voice), voice);
+      }
+      return [...voices.values()];
+    }
+
+    function refresh() {
+      const count = englishVoices().length;
+      play.disabled = !count || !input.value.trim();
+      if (active) return;
+      status.textContent = !synth ? '이 브라우저는 음성 재생을 지원하지 않습니다.'
+        : count ? `사용 가능한 영어 목소리 ${count}개 · 재생할 때 무작위로 선택합니다.`
+        : '사용 가능한 영어 목소리가 아직 없습니다.';
+    }
+
+    function cancel() {
+      if (active) {
+        active = null;
+        synth.cancel();
+      }
+      stop.disabled = true;
+    }
+
+    function speakText(text, voices) {
+      const alternatives = voices.filter(voice => voiceKey(voice) !== previousVoice);
+      const pool = alternatives.length ? alternatives : voices;
+      const voice = pool[Math.floor(Math.random() * pool.length)];
+      previousVoice = voiceKey(voice);
+
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.voice = voice;
+      utterance.lang = voice.lang.replaceAll('_', '-');
+      utterance.rate = 0.95;
+      active = utterance;
+      stop.disabled = false;
+      const label = `${voice.name} (${voice.lang})`;
+      status.textContent = `재생 중 · ${label}`;
+
+      function finish(message) {
+        if (active !== utterance) return;
+        active = null;
+        stop.disabled = true;
+        status.textContent = `${message} · ${label}`;
+      }
+
+      utterance.onend = () => {
+        if (active !== utterance) return;
+        if (repeat.checked) speakText(text, voices);
+        else finish('재생 완료');
+      };
+      utterance.onerror = () => finish('음성 재생 중 오류가 발생했습니다');
+      synth.speak(utterance);
+    }
+
+    play.addEventListener('click', () => {
+      const text = input.value.trim();
+      const voices = englishVoices();
+      if (!text || !voices.length) {
+        refresh();
+        return;
+      }
+      cancel();
+      speakText(text, voices);
+    });
+
+    stop.addEventListener('click', () => {
+      cancel();
+      status.textContent = '재생을 정지했습니다.';
+    });
+    input.addEventListener('input', refresh);
+    synth?.addEventListener('voiceschanged', refresh);
+    window.addEventListener('pagehide', cancel);
+
+    const tabs = [...document.querySelectorAll('.study-tabs [role="tab"]')];
+    let selectedTab = tabs[0];
+    function selectTab(tab) {
+      if (tab === selectedTab) return;
+      if (selectedTab === tabs[0] && state !== 'idle') resetPlayback();
+      if (selectedTab === tabs[1]) {
+        cancel();
+        refresh();
+      }
+      selectedTab = tab;
+      for (const item of tabs) {
+        const selected = item === tab;
+        item.setAttribute('aria-selected', String(selected));
+        item.tabIndex = selected ? 0 : -1;
+        document.getElementById(item.getAttribute('aria-controls')).hidden = !selected;
+      }
+      window.scrollTo(0, 0);
+    }
+
+    for (const [index, tab] of tabs.entries()) {
+      tab.addEventListener('click', () => selectTab(tab));
+      tab.addEventListener('keydown', event => {
+        const nextIndex = { ArrowLeft: 1 - index, ArrowRight: 1 - index, Home: 0, End: 1 }[event.key];
+        if (nextIndex === undefined) return;
+        event.preventDefault();
+        selectTab(tabs[nextIndex]);
+        tabs[nextIndex].focus();
+      });
+    }
+    refresh();
+  }
 </script>
 </body>
 </html>
