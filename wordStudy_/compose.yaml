@@ -21,13 +21,34 @@ services:
       dockerfile: Containerfile
     environment:
       DATABASE_URL: postgresql://wordstudy:${WORDSTUDY_DB_PASSWORD:?Run ./start.sh first}@db:5432/wordstudy
-      ENABLE_IMPORT: "1"
+      ENABLE_IMPORT: ${ENABLE_IMPORT:-0}
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-}
+      SESSION_SECRET: ${SESSION_SECRET:-}
+      PUBLIC_ORIGIN: ${PUBLIC_ORIGIN:-http://localhost:43871}
+      TTS_URL: ${TTS_URL:-}
+      TTS_MODEL_REVISION: ${TTS_MODEL_REVISION:-piper-1.3.0-ljspeech-medium-e9ab671f2a0e50a701b34361136ba3e6a3a9eb0c}
+      AUDIO_CACHE: /app/audio-cache
+    volumes:
+      - ./config:/app/config:ro
+      - audio:/app/audio-cache
     depends_on:
       db:
         condition: service_healthy
     ports:
       - "${WORDSTUDY_PORT:-43871}:43871"
     restart: always
+  tts:
+    profiles: ["tts"]
+    build:
+      context: ./tts
+      dockerfile: Containerfile
+    volumes:
+      - ./models:/models:ro
+      - audio:/cache
+    restart: always
 volumes:
+  audio:
+    name: wordstudy-audio
   data:
     name: wordstudy-data

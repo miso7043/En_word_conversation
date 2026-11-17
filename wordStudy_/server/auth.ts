@@ -49,7 +49,7 @@ export async function verifyGoogleToken(token: string, nonce: string) {
   if (parts.length !== 3) throw new Error('토큰 형식 오류');
   const header = JSON.parse(Buffer.from(parts[0], 'base64url').toString());
   if (header.alg !== 'RS256' || typeof header.kid !== 'string') throw new Error('서명 알고리즘 오류');
-  if (!keys || keys.expires < Date.now()) {
+  if (!keys || keys.expires < Date.now() || !keys.values.some(key => key.kid === header.kid)) {
     const response = await fetch('https://www.googleapis.com/oauth2/v3/certs', { signal: AbortSignal.timeout(10000) });
     if (!response.ok) throw new Error('Google 공개키 조회 실패');
     keys = { values: (await response.json() as { keys: Array<JsonWebKey & { kid?: string }> }).keys, expires: Date.now() + 3600000 };

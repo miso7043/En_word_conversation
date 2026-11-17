@@ -1,0 +1,12 @@
+.git
+.env
+.env.*
+node_modules
+dist
+models
+audio-cache
+config/access.json
+__pycache__
+*.pyc
+*.key
+*.pem

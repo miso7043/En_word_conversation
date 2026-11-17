@@ -3,6 +3,7 @@ WORKDIR /app
 COPY package.json package-lock.json ./
 RUN npm ci --no-audit --no-fund
 COPY tsconfig.json vite.config.ts index.html ./
+COPY public ./public
 COPY src ./src
 COPY server ./server
 COPY shared ./shared
@@ -18,6 +19,7 @@ COPY server ./server
 COPY shared ./shared
 COPY drizzle ./drizzle
 COPY seed ./seed
+RUN mkdir /app/audio-cache && chown node:node /app/audio-cache
 USER node
 EXPOSE 43871
 CMD ["node", "--experimental-transform-types", "server/index.ts"]
