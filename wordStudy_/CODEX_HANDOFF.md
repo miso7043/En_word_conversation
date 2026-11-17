@@ -1,5 +1,7 @@
 # VS Code Codex 작업 인계 · wordStudy_
 
+> 이 문서는 2026-11-14 당시의 기록입니다. 현재 인증·재생·검증 방법은 [운영 안내](README.md)와 [최신 검증 기록](../docs/verification.md)을 따릅니다.
+
 ## 후속 진행 결과 (2026-11-14)
 
 - 실제 PC에서 Podman 5.7.0 / podman-compose 1.5.0 실행을 확인했다. 제한된 실행 환경에서는 Podman·Snap Node가 막혀 실제 PC 권한으로 명령을 실행했다.

@@ -1,78 +1,93 @@
-# 영어 대화 연습 · wordStudy_
+# React 서버 버전 운영 안내
 
-한국어 UI를 기본으로 만든 Node.js & React 버전입니다. 기존 HTML 버전의 학습 자료를 React + TypeScript로 옮겼습니다. 자세한 두 버전 비교와 최신 기능 사용법은 [루트 README](../README.md)를 참고하세요. Tailwind CSS가 화면을 구성하고, Fastify가 화면과 API를 같은 포트에서 제공합니다. 대화와 학습 위치는 PostgreSQL에 저장합니다.
+Node 24·React·Fastify·PostgreSQL 17 버전입니다. 서버 없이 쓰는 `../htmlVersion/`과 실행 방식이 다릅니다. 학습 UI와 JSON 형식은 [루트 README](../README.md)를 참조하세요.
 
-## Podman에서 시작하기
+## 시작·중지
 
-Podman, Compose 제공자(`podman-compose` 또는 Docker Compose), OpenSSL, 이미지와 npm 패키지를 처음 받을 수 있는 인터넷 연결이 필요합니다.
-
-```sh
-./start.sh
+```bash
+sh ./start.sh
+podman compose -p wordstudy ps
+podman compose -p wordstudy logs -f app
+curl -fsS http://localhost:43871/api/health
+# 자료·진도·음성 볼륨을 보존하며 중지
+podman compose -p wordstudy stop
 ```
 
-첫 실행 시 `.env`에 무작위 DB 암호를 만들고, 앱 `wordStudy_`와 DB `wordstudy-db`를 시작합니다. DB 볼륨 이름은 `wordstudy-data`입니다. 기존 DB를 계속 사용할 때는 처음 만든 `.env`를 보관하세요.
+기존 `.env`의 DB 암호를 보존하세요. `start.sh`는 앱·DB 컨테이너를 재생성하고 마이그레이션을 적용하며 `wordstudy-data` 볼륨을 삭제하지 않습니다. `down -v`는 사용하지 마세요. DB 포트와 TTS 포트는 호스트에 공개하지 않습니다.
 
-- PC에서는 [http://localhost:43871](http://localhost:43871)을 엽니다.
-- 같은 와이파이의 휴대폰에서는 `http://PC의_내부_IP:43871`로 접속합니다. PC의 내부 IP는 `ip -4 addr`에서 확인할 수 있습니다.
-- 포트가 이미 사용 중이면 `.env`의 `WORDSTUDY_PORT`를 빈 포트로 바꾸고 `./start.sh`를 다시 실행합니다.
-- 시작 상태는 `podman compose -p wordstudy logs -f app` 또는 `curl -f http://localhost:43871/api/health`로 확인합니다.
-- 중지하려면 `podman compose -p wordstudy stop`을 실행합니다. 다시 시작하거나 화면을 수정한 뒤 빌드하려면 `./start.sh`를 실행합니다.
-- PC에서는 열리고 휴대폰에서 접속이 안 되면 PC 방화벽의 앱 포트와 공유기의 기기 간 통신 설정을 확인합니다.
+## Google 로그인 설정
 
-## 실행 검증 기록 (2026-11-14)
+1. Google Cloud에서 OAuth 웹 애플리케이션 클라이언트를 만들고 필요한 테스트 사용자·동의 화면 설정을 완료합니다.
+2. 리디렉션 URI를 정확히 `http://localhost:43871/api/auth/callback`으로 등록합니다. 운영은 `https://학습도메인/api/auth/callback`을 사용합니다.
+3. 기존 `.env`에 다음 키를 추가합니다. 실제 값은 `.env.example`에 기록하지 않습니다.
 
-실제 PC의 Podman 5.7.0, podman-compose 1.5.0에서 Node 24 이미지로 실행했습니다. `package-lock.json`과 `npm ci`를 사용한 타입 검사 및 Vite 빌드를 통과했습니다.
-
-- PC: [http://localhost:43871](http://localhost:43871)
-- 같은 와이파이의 휴대폰: [http://192.168.0.2:43871](http://192.168.0.2:43871) (PC의 IP가 바뀌면 새 IP 사용)
-- DB 연결과 두 주소의 상태 API 응답을 확인했습니다. DB 포트는 호스트에 공개하지 않습니다.
-- 별도 임시 DB에서 초기 자료 22개·대화 222개·문장 430개, JSON 가져오기·동일 이름 교체·잘못된 입력 거부, 진도 저장·서버 재시작 후 보존을 검증했습니다.
-- 앱과 DB 컨테이너를 재생성한 뒤 전체 자료·진도 응답이 이전과 일치했고, HTML·JS·CSS가 정상 제공되는 것을 확인했습니다. 영속 볼륨은 보존했습니다.
-- 브라우저 제어 서비스에 연결할 수 없어 화면 선택, 원문·뜻 표시, 문장부터 재생, 일시정지·재개, 정지, 현재 문장 강조는 수동 확인이 남아 있습니다. 실제 휴대폰 접속과 TTS 음성도 아직 확인하지 않았습니다.
-
-API 검증을 다시 실행하려면 프로젝트 폴더에서 다음 명령을 사용합니다. 검증 전용 DB를 만들고 종료 시 삭제하며 실제 학습 DB는 변경하지 않습니다. DB 계정에 테스트 DB 생성 권한이 필요합니다.
-
-```sh
-podman exec -i wordStudy_ node --input-type=module < scripts/verify-api.mjs
+```dotenv
+GOOGLE_CLIENT_ID=발급받은_클라이언트_ID
+GOOGLE_CLIENT_SECRET=발급받은_클라이언트_비밀값
+PUBLIC_ORIGIN=http://localhost:43871
 ```
 
-## 자료와 재생
+`SESSION_SECRET`은 `start.sh`가 없을 때 32바이트 무작위 값으로 생성합니다. 직접 실행한다면 32자 이상을 설정합니다. 값 변경 시 기존 로그인 세션은 무효가 됩니다. 세션은 7일, 로그인 진행 요청은 10분 동안 유효합니다.
 
-상단 학습 메뉴의 **문장읽기**를 선택한 뒤 영어 문장을 붙여넣고 **▶ 재생**을 누르면 바로 읽습니다. HTML 버전처럼 영어 목소리를 무작위로 선택하며 정지와 반복 재생을 지원합니다. 입력 원문은 해당 브라우저에 저장됩니다. 문장읽기에서는 좌측 메뉴를 좁게 표시하고 JSON 가져오기는 대화 연습에서만 표시합니다.
+4. `sh ./start.sh` 후 `/administration`에서 Google 로그인하고 화면에 표시되는 **Google ID**를 확인합니다.
+5. `config/access.example.json`을 `config/access.json`으로 복사하고 해당 ID를 등록합니다.
 
-첫 실행 시 `seed/`의 JSON을 자동으로 저장합니다. 새 자료는 앱의 **JSON 파일** 또는 **JSON 폴더** 버튼으로 가져옵니다. 같은 파일 이름이 이미 있으면 덮어쓰지 않고 건너뛰며 기존 학습 위치도 유지합니다. 수정본을 별도 자료로 추가하려면 다른 파일 이름을 사용하세요. 파일마다 처리하며 형식이 잘못된 파일은 화면에 표시합니다.
+```json
+{"adminGoogleIds": ["실제_Google_sub"]}
+```
 
-화자 버튼을 누르면 해당 문장부터 이어서 읽습니다. 재생할 때 브라우저가 제공하는 미국·캐나다·영국·호주·인도 영어 음성 중에서 대화별로 화자의 목소리를 정합니다. 페이지를 열거나 새로고침할 때 안내 alert를 표시하지 않습니다. 개발자 콘솔에서 사용 가능한 음성의 이름과 언어를 확인할 수 있습니다. PC와 휴대폰에 설치된 음성이 다르면 배정도 달라집니다.
+6. `sh ./start.sh`를 다시 실행합니다. 인증 설정·config가 있을 때만 `ENABLE_IMPORT=1`을 전달합니다. 첫 로그인 계정이 자동 관리자가 되지는 않습니다. config는 요청 때 다시 읽으므로 관리자 제외는 즉시 반영됩니다.
 
-학습 위치는 기기 간 공유됩니다. 다른 기기에서 이어 들을 때 페이지를 열거나 새로고침하세요. 정지하거나 끝까지 들으면 해당 자료의 위치가 첫 문장으로 돌아갑니다.
+설정이 빠지면 공개 학습은 실행되지만 가져오기는 막힙니다. Compose를 직접 실행할 때 기본 `ENABLE_IMPORT=0`이며, 필요한 경우 명시적으로 `ENABLE_IMPORT=1`을 설정해야 합니다. 환경 변수를 1로 해도 관리자 세션·CSRF 검사를 생략하지 않습니다.
 
-## 화면과 API 수정
+모바일에서 로그인할 때 `localhost`는 휴대폰 자신을 가리킵니다. HTTPS 운영 도메인·Google 리디렉션 URI·`PUBLIC_ORIGIN`을 일치시키고 HTTPS 리버스 프록시를 사용하세요. `PUBLIC_ORIGIN`은 경로·끝 슬래시 없이 지정합니다. 쿠키는 HttpOnly·SameSite=Lax이며 HTTPS 주소에서는 Secure가 붙습니다. Google 로그인에는 인터넷이 필요합니다.
 
-| 파일 | 수정할 내용 |
-| --- | --- |
-| `src/main.tsx` | 화면 구성과 Tailwind 클래스 |
-| `src/style.css` | 색상, 폰트, 공통 버튼 스타일 |
-| `src/usePlayback.ts` | 음성 배정과 재생 동작 |
-| `shared/lesson.ts` | 기존 JSON 검증과 변환 |
-| `server/index.ts` | Fastify API 및 시작 설정 |
-| `server/schema.ts`, `drizzle/` | PostgreSQL 스키마와 마이그레이션 |
+## 선택적 로컬 TTS
 
-## 이후 웹 배포
+Piper 1.3.0을 별도 컨테이너에서 실행합니다. GPU는 필요하지 않습니다. 최초 이미지·모델 다운로드에는 인터넷과 디스크 여유 공간이 필요합니다.
 
-앱 이미지에 관리형 PostgreSQL 연결 문자열을 `DATABASE_URL`로 전달합니다. 호스팅 환경이 제공하는 `PORT`를 사용할 수 있고 기본값은 43871입니다. HTTPS는 호스팅 쪽에서 적용합니다. 로컬 기록은 `pg_dump`와 `pg_restore`로 이전할 수 있습니다.
+```bash
+python3 scripts/download-model.py
+```
 
-현재는 개인용이라 접속한 기기들이 `local` 사용자 하나를 공유합니다. 다중 사용자용으로 공개할 때는 인증을 추가하고 서버에서 확인한 사용자 ID를 진도 조회와 저장에 사용하세요. 웹 배포에서는 가져오기 API를 비활성화하려면 `ENABLE_IMPORT`를 설정하지 않습니다.
+모델·설정·모델 카드가 `models/`에 저장됩니다. 고정 리비전과 SHA-256을 검사하며 Git에서는 제외합니다. 출처·라이선스는 [권리 안내](../THIRD_PARTY_NOTICES.md)를 확인하세요.
 
-## 선택 자료 연속 재생과 단축키
+`.env`에 다음 값을 추가하고 실행합니다.
 
-좌측 목록의 체크박스로 재생할 자료를 선택한 다음 **재생**을 누릅니다. 여러 자료를 선택하면 별도의 체크박스 없이 자동으로 연속 재생합니다. 선택된 자료 중 맨 아래부터 위쪽으로 읽고, 자료 내부 문장 순서는 유지합니다. 모두 끝나면 멈추며 목록의 체크를 모두 해제하면 현재 자료까지만 재생합니다. 선택 자료가 하나면 그 자료만 읽고, 선택이 없으면 현재 열린 자료를 재생합니다. 자료 선택은 새로고침하면 초기화됩니다.
+```dotenv
+TTS_URL=http://tts:8080
+TTS_MODEL_REVISION=piper-1.3.0-ljspeech-medium-e9ab671f2a0e50a701b34361136ba3e6a3a9eb0c
+```
 
-- 제목 일반 클릭: 자료 열기
-- 체크박스 또는 Ctrl+제목 클릭: 개별 선택·해제
-- Shift+클릭: 마지막 기준 위치부터 범위 선택
-- Ctrl+Shift+클릭: 기존 선택에 범위 추가
-- 재생·일시정지 중 스페이스바: 일시정지·이어 듣기 전환
+```bash
+sh ./start.sh
+# 직접 Compose를 사용한다면
+podman compose -p wordstudy --profile tts up -d --build
+```
 
-일시정지 후 이어 듣기는 현재 문장의 처음부터 읽습니다. 입력란·체크박스에서는 스페이스바의 기본 동작을 유지하며, 문장읽기에는 이 단축키를 적용하지 않습니다.
+`start.sh`는 위 TTS_URL일 때 `tts` 프로필도 시작합니다. 모델 파일을 교체하면 `TTS_MODEL_REVISION`을 변경하세요. 문장 캐시에는 실제 모델·설정 파일의 해시도 반영합니다.
 
-Node.js 24 이상에서 `node scripts/verify-playback.mjs`와 `node scripts/verify-playlist.mjs`로 모의 음성 엔진 기반 재생과 자료 선택을 검증할 수 있습니다. 실제 브라우저 음성 출력은 별도 확인이 필요합니다.
+관리자는 학습 목록을 체크하고 속도·피치·반복 설정 후 **생성 오디오 → 선택 자료 음성 생성·재시도**를 누릅니다. 순차 작업 큐가 대기·생성 중·완료·실패 상태를 저장합니다. 동일 요청은 기존 결과를 재사용하고 실패한 요청은 다시 시도합니다. 재시작 때 중단된 작업은 대기열에 복구합니다.
+
+한 번에 자료 100개, 반복 후 문장 2000개, 총 텍스트 10만 자까지 생성합니다. 파일은 `wordstudy-audio` 볼륨에 남습니다. 자동 삭제는 하지 않으므로 장기간 사용 시 볼륨 용량을 확인하세요. 일반 사용자는 완료 오디오를 재생·내보내기 할 수 있지만 생성은 관리자만 가능합니다.
+
+## 개발
+
+```bash
+npm ci
+npm run build
+npm run verify
+```
+
+Vite 개발 서버는 `/api`를 43871 백엔드로 프록시합니다. Google 인증·CSRF·쿠키를 함께 확인하려면 빌드 결과를 백엔드에서 제공하는 같은 origin으로 접속하세요. 백엔드 직접 실행 시 `DATABASE_URL`을 설정하고 `npm start`를 사용합니다. DB 없이 프런트 화면만 확인하려면 저장소 루트에서 `python3 wordStudy_/scripts/browser-preview.py`를 실행합니다. 이 서버는 seed fixture와 인증 꺼짐 응답만 제공하며 운영 서버가 아닙니다.
+
+### 추가 인터페이스
+
+- `GET /api/auth/session`, `GET /api/auth/login`, `GET /api/auth/callback`, `POST /api/auth/logout`
+- `POST /api/import`: `name`, `modified`, `data`, 선택 `policy: update|skip`; 결과 `added|updated|unchanged|skipped`
+- `PUT /api/progress`: 로그인 계정의 `id`, `position`; 익명은 브라우저에 저장
+- `POST /api/admin/claim-progress`: 관리자 자신의 기존 공동 진도 복사
+- `GET /api/audio`, `POST /api/admin/audio`: 목록 조회·관리자 생성 요청
+- `GET /api/audio/:id/file`: WAV·Range, `GET /api/audio/:id/export`: HTML용 음성 묶음
+
+상태를 변경하는 인증 요청에는 동일한 Origin과 세션에서 받은 `X-CSRF-Token`이 필요합니다. OAuth 토큰·클라이언트 비밀값은 브라우저 저장소에 넣지 않습니다.
