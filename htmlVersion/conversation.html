@@ -21,7 +21,6 @@
     border-right: 1px solid #2c3d4b;
   }
   .lesson-list { overflow-y: auto; overscroll-behavior-y: contain; padding: 5px; margin-inline: -5px; }
-  aside h1 { font-size: 1.15rem; margin: 0 0 24px; }
   nav { display: grid; gap: 8px; }
   button, .file-label { font: inherit; color: inherit; background: #203343; border: 1px solid #385263; border-radius: 9px; padding: 9px 13px; cursor: pointer; }
   button:hover:not(:disabled), .file-label:hover { background: #304858; }
@@ -57,12 +56,10 @@
   @media (max-width: 660px) {
     .layout { grid-template-columns: minmax(0, 1fr); }
     aside { position: static; height: auto; max-height: 60dvh; padding: 18px 14px; border-right: 0; border-bottom: 1px solid #2c3d4b; }
-    aside h1 { margin-bottom: 12px; }
   }
   .study-tabs { display: flex; gap: 8px; max-width: 1105px; margin: 0 auto; padding: 10px 14px; }
   .study-tabs button { min-height: 44px; }
   .study-tabs [aria-selected="true"] { border-color: #86e2cf; color: #a1efdf; background: #1d3e41; }
-  #dialogue-panel[hidden], #reader-panel[hidden] { display: none; }
   #reader-panel { max-width: 1105px; margin: 0 auto; }
   #reader-panel label[for="reader-text"] { display: block; margin-bottom: 8px; }
   #reader-text { display: block; width: 100%; min-height: clamp(16rem, 48vh, 32rem); padding: 12px; resize: vertical; font: inherit; color: inherit; background: #15222e; border: 1px solid #526777; border-radius: 9px; }
@@ -88,7 +85,7 @@ input:not([type=checkbox]),select { font:inherit; padding:7px; background:#15222
 :root[data-theme=light] .reading { background:#d8eef5; }
 mark {background:#fae08a;color:#241f08;}
 </style>
-<link rel="manifest" href="./manifest.webmanifest"><meta name="theme-color" content="#15222e"></head>
+</head>
 <body>
 <header class="study-top">
 <div class="study-tabs" role="tablist" aria-label="영어 학습 방식">
@@ -363,14 +360,10 @@ mark {background:#fae08a;color:#241f08;}
     state = 'playing';
     updateControls();
     if (roleTurn?.phase === 'extra') { speechStatus.textContent = '내 차례 · 추가 3초 연습 중'; roleTurn.deadline = performance.now() + roleTurn.remainingMs; tickRoleExtra(roleTurn); return; }
-    if (utterance) {
-      synth.resume();
-      speechStatus.textContent = `읽는 중 · ${current + 1} / ${lines.length}`;
-    } else {
-      if (synth.paused) synth.resume();
-      speakCurrent();
-    }
+    if (synth.paused) synth.resume();
+    speakCurrent();
   }
+
   function togglePlayback() {
     if (state !== 'playing') {
       startOrResume();
@@ -436,7 +429,7 @@ mark {background:#fae08a;color:#241f08;}
       cards.push({ cast, entries, speakers });
       lines.push(...entries);
     });
-    study.resetRole([...new Set(lines.map(entry=>entry.speaker))],lines.length);
+    study.resetRole([...new Set(lines.map(entry=>entry.speaker))]);
     const saved=study.read('html-progress-v1',{})[item.name];
     if(saved){const matches=lines.flatMap((entry,i)=>entry.text===saved.line?.text&&entry.speaker===saved.line?.speaker?[i]:[]);current=matches.length?matches.reduce((a,b)=>Math.abs(a-saved.position)<=Math.abs(b-saved.position)?a:b):Math.max(0,Math.min(Number.isInteger(saved.position)?saved.position:0,lines.length-1));}
     refreshVoices();
@@ -449,12 +442,11 @@ mark {background:#fae08a;color:#241f08;}
           conversation.lines.every(line => typeof line?.text === 'string' && typeof line.speaker === 'string'))) {
       throw new Error('대화 JSON 형식이 올바르지 않습니다.');
     }
-    if(data.level!=null && !/^[ABC][12]$/.test(data.level))throw new Error('level은 A1~C2입니다.');
     for(const dialogue of data.conversations)for(const line of dialogue.lines)if(line.keyPhrase!=null && !(typeof line.keyPhrase==='string'||Array.isArray(line.keyPhrase)&&line.keyPhrase.every(p=>typeof p==='string')))throw new Error('keyPhrase 형식을 확인하세요.');
     return { data, name, date: Date.parse(data.date) || modified || 0 };
   }
 
-  async function loadDocuments(sources, prune=true) {
+  async function loadDocuments(sources) {
     const version = ++loadVersion;
     loadStatus.textContent = '대화 목록을 불러오는 중입니다.';
     const results = await Promise.allSettled(sources.map(source => source.read()));
@@ -466,12 +458,12 @@ mark {background:#fae08a;color:#241f08;}
       documents = loaded.sort((a, b) => b.date - a.date || a.name.localeCompare(b.name));
       lessons.replaceChildren();
       for (const item of documents) {
-        item.row=add(lessons,'div',null,'lesson-row');const check=add(item.row,'input');check.type='checkbox';check.checked=study.checks.has(item.name);check.setAttribute('aria-label',`${item.data.title} 연속 재생 선택`);check.onchange=()=>{if(check.checked)study.checks.add(item.name);else study.checks.delete(item.name);study.write('html-selection-v1',[...study.checks]);study.selection();};
-        item.button = add(item.row, 'button', item.data.title);
+        const row=add(lessons,'div',null,'lesson-row');const check=add(row,'input');check.type='checkbox';check.checked=study.checks.has(item.name);check.setAttribute('aria-label',`${item.data.title} 연속 재생 선택`);check.onchange=()=>{if(check.checked)study.checks.add(item.name);else study.checks.delete(item.name);study.write('html-selection-v1',[...study.checks]);study.selection();};
+        item.button = add(row, 'button', item.data.title);
         if (item.date) add(item.button, 'small', dateFormat.format(item.date));
         item.button.addEventListener('click', () => {playlistActive=false;showDocument(item);});
       }
-      const valid=new Set(documents.map(item=>item.name));if(prune && !failed.length)for(const id of study.checks)if(!valid.has(id))study.checks.delete(id);study.write('html-selection-v1',[...study.checks]);
+      const valid=new Set(documents.map(item=>item.name));if(!failed.length)for(const id of study.checks)if(!valid.has(id))study.checks.delete(id);study.write('html-selection-v1',[...study.checks]);
       study.selection();
       showDocument(documents[0]);
       lessonList.scrollTop = 0;
@@ -499,8 +491,8 @@ mark {background:#fae08a;color:#241f08;}
       let manifest;
       try { const response=await fetch(new URL('./lessons.json',location.href),{cache:'no-cache'});if(response.ok)manifest=await response.json(); } catch {}
       if(Array.isArray(manifest)&&manifest.length){urls=manifest.map(name=>new URL(encodeURIComponent(name),directory));}
-      const index = urls ? null : await fetch(directory, { cache: 'no-cache' });
-      if(urls) { /* 자료 목록 manifest 우선 */ } else {
+      if (!urls) {
+      const index = await fetch(directory, { cache: 'no-cache' });
       if (!index.ok) throw new Error(`HTTP ${index.status}`);
       const listing = new DOMParser().parseFromString(await index.text(), 'text/html');
       const discovered = [...listing.querySelectorAll('a[href]')].map(link => new URL(link.getAttribute('href'), directory))
@@ -520,10 +512,9 @@ mark {background:#fae08a;color:#241f08;}
       return {
         name,
         read: async () => {
-          try { const response = await fetch(url, { cache: 'no-cache' });
+          const response = await fetch(url, { cache: 'no-cache' });
           if (!response.ok) throw new Error(`HTTP ${response.status}`);
-          return readDocument(await response.json(), name, Date.parse(response.headers.get('Last-Modified'))); }
-          catch(error){throw error;}
+          return readDocument(await response.json(), name, Date.parse(response.headers.get('Last-Modified')));
         }
       };
     }));

@@ -52,7 +52,7 @@ npm run verify
 
 Vite 개발 서버는 `/api`를 43871 백엔드로 프록시합니다. Google 인증·CSRF·쿠키를 함께 확인하려면 빌드 결과를 백엔드에서 제공하는 같은 origin으로 접속하세요. 백엔드 직접 실행 시 `DATABASE_URL`을 설정하고 `npm start`를 사용합니다. DB 없이 프런트 화면만 확인하려면 저장소 루트에서 `python3 wordStudy_/scripts/browser-preview.py`를 실행합니다. 이 서버는 seed fixture와 인증 꺼짐 응답만 제공하며 운영 서버가 아닙니다.
 
-### 추가 인터페이스
+### 제공하는 API
 
 - `GET /api/auth/session`, `GET /api/auth/login`, `GET /api/auth/callback`, `POST /api/auth/logout`
 - `POST /api/import`: `name`, `modified`, `data`, 선택 `policy: update|skip`; 결과 `added|updated|unchanged|skipped`
@@ -60,3 +60,11 @@ Vite 개발 서버는 `/api`를 43871 백엔드로 프록시합니다. Google �
 - `POST /api/admin/claim-progress`: 관리자 자신의 기존 공동 진도 복사
 
 상태를 변경하는 인증 요청에는 동일한 Origin과 세션에서 받은 `X-CSRF-Token`이 필요합니다. OAuth 토큰·클라이언트 비밀값은 브라우저 저장소에 넣지 않습니다.
+
+## 코드·데이터 유지보수
+
+`npm run build`는 TypeScript의 미사용 선언·매개변수 검사도 실행합니다. 현재 직접 의존성은 React·Fastify·PostgreSQL 접근과 프런트 빌드에 필요한 패키지로 구성됩니다.
+
+적용된 `drizzle/` 마이그레이션 이력은 수정하지 않습니다. 과거 DB에 남은 추가 메타데이터 열은 보존하지만 현재 ORM 스키마·API·가져오기에서는 읽거나 갱신하지 않습니다. 기존 학습 JSON과 진도 데이터는 그대로 유지합니다.
+
+과거 버전의 서비스 워커가 브라우저에 남은 경우에는 해당 등록만 수동 해제합니다. 진도·체크·원문이 있는 브라우저 저장소 전체를 지울 필요는 없습니다.

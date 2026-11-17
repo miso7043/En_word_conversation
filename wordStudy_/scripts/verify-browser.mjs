@@ -70,15 +70,7 @@ try {
     await speech.goto(`http://127.0.0.1:43879${url}`);await speech.locator(lineSelector).first().click();await speech.waitForFunction(()=>window.spoken.length===1);await speech.locator(barSelector).getByRole('button',{name:'정지',exact:true}).click();await speech.waitForFunction(()=>Math.abs(document.getElementById('lesson-title').getBoundingClientRect().top)<=2);assert.equal(await speech.locator('#lesson-title').textContent(),'culinary');
   }
   await speech.close();
-  // 기존 사용자의 캐싱 워커가 새 버전에서 등록 해제되는지 검증한다.
-  for (const [url, script, scope, cache] of [['/', '/sw.js', '/', 'study-shell-v1'], ['/htmlVersion/conversation.html', '/htmlVersion/sw.js', '/htmlVersion/', 'html-study-shell-v1']]) {
-    const legacyContext=await browser.newContext();const legacy=await legacyContext.newPage();
-    await legacy.request.post('http://127.0.0.1:43879/__tests/legacy-worker',{data:{enabled:true}});
-    await legacy.goto(`http://127.0.0.1:43879${url}`);
-    await legacy.evaluate(async ({script,scope,cache})=>{await caches.open(cache);await navigator.serviceWorker.register(script,{scope});await navigator.serviceWorker.ready;},{script,scope,cache});
-    await legacy.request.post('http://127.0.0.1:43879/__tests/legacy-worker',{data:{enabled:false}});await legacy.reload();
-    await legacy.waitForFunction(async scope=>!(await navigator.serviceWorker.getRegistrations()).some(registration=>registration.scope===new URL(scope,location.href).href),scope);
-    await legacy.waitForFunction(async key=>!(await caches.keys()).includes(key),cache,{timeout:10000});await legacyContext.close();
-  }
-  assert.deepEqual(errors,[]);console.log('PASS: 중복 선택·관리 링크·검색/난이도·음성 인식 제거, 재생 바 순서/설정 위치, 팝업·Escape·포커스 복원, 영어/해석 보기, 관리자 경로 제한, 속도·음소거+3초·진행바·정지 스크롤·상단 메뉴·모바일·워커 해제');await context.close();
+  // 제거한 자산이 빌드나 정적 서버에 다시 포함되지 않았는지 확인한다.
+  for(const asset of ['/sw.js','/manifest.webmanifest','/icon.svg','/icon-192.png','/icon-512.png','/htmlVersion/sw.js','/htmlVersion/manifest.webmanifest','/htmlVersion/icon.svg','/htmlVersion/icon-192.png','/htmlVersion/icon-512.png'])assert.equal((await page.request.get(`http://127.0.0.1:43879${asset}`)).status(),404,asset);
+  assert.deepEqual(errors,[]);console.log('PASS: 중복 선택·관리 링크·검색/난이도·음성 인식 제거, 재생 바 순서/설정 위치, 팝업·Escape·포커스 복원, 영어/해석 보기, 관리자 경로 제한, 속도·음소거+3초·진행바·정지 스크롤·상단 메뉴·모바일·삭제 자산 404');await context.close();
 } finally {await browser.close();}

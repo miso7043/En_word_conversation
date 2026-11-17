@@ -66,10 +66,4 @@
       if(hide) { const button=document.createElement('button');button.textContent=label;button.onclick=render;parent.append(button); } else render();
     },
   };
-  // 이전 버전의 캐싱 서비스 워커만 갱신하여 등록 해제를 진행한다.
-  if ('serviceWorker' in navigator && location.protocol !== 'file:') {
-    navigator.serviceWorker.getRegistration('./').then(registration => {
-      if (registration?.scope === new URL('./', location.href).href) return registration.update();
-    }).catch(() => {});
-  }
 })();

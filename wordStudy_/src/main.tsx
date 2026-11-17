@@ -4,7 +4,6 @@ import type { Lesson } from '../shared/lesson';
 import { usePlayback } from './usePlayback';
 import { selectedPlaylist, updateSelection } from './playlist';
 import './style.css';
-import './retireOffline';
 import { StudyControls, Concealed, useSettings, useWakeLock, type Settings } from './study';
 import { readStored, writeStored, bookmark, restore, type Bookmark } from './storage';
 let csrfToken = '';

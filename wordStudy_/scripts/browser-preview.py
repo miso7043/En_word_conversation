@@ -11,23 +11,7 @@ for p in (root/'wordStudy_/seed').glob('*.json'):
         if isinstance(c['description'],str):c['description']=[c['description']]
     lessons.append(d)
 class Handler(SimpleHTTPRequestHandler):
-    legacy_worker = False
-    def do_POST(self):
-        if self.path != '/__tests/legacy-worker':
-            self.send_error(404)
-            return
-        Handler.legacy_worker = json.loads(self.rfile.read(int(self.headers['Content-Length'])))['enabled']
-        self.send_response(204)
-        self.end_headers()
     def do_GET(self):
-        if Handler.legacy_worker and self.path in ('/sw.js', '/htmlVersion/sw.js'):
-            body = b"self.addEventListener('install',()=>self.skipWaiting());self.addEventListener('activate',e=>e.waitUntil(self.clients.claim()));"
-            self.send_response(200)
-            self.send_header('Content-Type','application/javascript')
-            self.send_header('Cache-Control','no-store')
-            self.end_headers()
-            self.wfile.write(body)
-            return
         if self.path.startswith('/api/'):
             payload={'lessons':lessons,'auth/session':{'enabled':False,'user':None},'config':{'canImport':False}}.get(self.path[5:],{})
             body=json.dumps(payload).encode();self.send_response(200);self.send_header('Content-Type','application/json');self.end_headers();self.wfile.write(body);return
