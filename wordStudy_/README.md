@@ -29,7 +29,7 @@ PUBLIC_ORIGIN=http://localhost:43871
 
 `SESSION_SECRET`은 `start.sh`가 없을 때 32바이트 무작위 값으로 생성합니다. 직접 실행한다면 32자 이상을 설정합니다. 값 변경 시 기존 로그인 세션은 무효가 됩니다. 세션은 7일, 로그인 진행 요청은 10분 동안 유효합니다.
 
-4. `sh ./start.sh` 후 `/administration`에서 Google 로그인하고 화면에 표시되는 **Google ID**를 확인합니다.
+4. `sh ./start.sh` 후 주소창으로 `/administration`에 직접 접속하여 Google 로그인하고 화면에 표시되는 **Google ID**를 확인합니다.
 5. `config/access.example.json`을 `config/access.json`으로 복사하고 해당 ID를 등록합니다.
 
 ```json

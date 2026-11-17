@@ -5,7 +5,7 @@ import { usePlayback } from './usePlayback';
 import { selectedPlaylist, updateSelection } from './playlist';
 import './style.css';
 import './retireOffline';
-import { StudyControls, Concealed, Shadowing, useSettings, useWakeLock, type Settings } from './study';
+import { StudyControls, Concealed, useSettings, useWakeLock, type Settings } from './study';
 import { readStored, writeStored, bookmark, restore, type Bookmark } from './storage';
 let csrfToken = '';
 type User = { sub: string; admin: boolean; csrf: string };
@@ -30,11 +30,11 @@ function Paragraphs({ values }: { values: string[] }) {
   return values.map((value, index) => <p key={index} className="mb-2 leading-relaxed text-slate-300">{value}</p>);
 }
 
-function LessonView({ lesson, save, startSelected, autoPlay, onComplete, selectionCount, order, settings, changeSettings }: {
+function LessonView({ lesson, save, startSelected, autoPlay, onComplete, selectionCount, order, changeOrder, settings, changeSettings }: {
   lesson: Lesson; save: (position: number) => void;
   startSelected: () => boolean;
   autoPlay: boolean; onComplete: () => void;
-  selectionCount: number; order: string; settings: Settings; changeSettings: (s: Settings) => void;
+  selectionCount: number; order: 'reverse' | 'forward'; changeOrder: (order: 'reverse' | 'forward') => void; settings: Settings; changeSettings: (s: Settings) => void;
 }) {
   const player = usePlayback(lesson, save, { autoPlay, onComplete, settings });
   const wakeStatus = useWakeLock(player.mode === 'playing', settings.wake);
@@ -90,15 +90,16 @@ function LessonView({ lesson, save, startSelected, autoPlay, onComplete, selecti
             player.stop();
             window.scrollTo(0, 0);
           }}>정지</button>
-          <button className="control border border-edge" disabled={!player.canPlay} onClick={player.nextLine}>다음 문장</button>
-          {selectionCount > 0 && <span className="text-sm text-slate-300">
-            선택 {selectionCount}개{selectionCount > 1 ? ` 연속 재생 (${order === 'reverse' ? '아래 → 위' : '위 → 아래'})` : ' 재생'}
-          </span>}
+          <div className="flex items-center gap-2">
+            <button className="control border border-edge" disabled={!player.canPlay} onClick={player.nextLine}>다음 문장</button>
+            <select className="min-h-11" aria-label="연속 재생 방향" value={order} onChange={e => changeOrder(e.target.value as 'reverse' | 'forward')}><option value="reverse">아래 → 위</option><option value="forward">위 → 아래</option></select>
+          </div>
+          <StudyControls settings={settings} change={changeSettings} speakers={[...new Set(flat.map(line => line.speaker))]} count={flat.length} />
         </div>
+        {selectionCount > 0 && <p className="mt-1 text-sm text-slate-300">선택 {selectionCount}개{selectionCount > 1 ? ' 연속 재생' : ' 재생'}</p>}
         {wakeStatus && <p role="status">{wakeStatus}</p>}
         <p className="mt-1 min-h-5 text-sm text-slate-300" role="status">{player.status}</p>
       </section>
-      <StudyControls settings={settings} change={changeSettings} speakers={[...new Set(flat.map(line => line.speaker))]} count={flat.length} />
       {lesson.conversations.map((dialogue, group) => {
         const start = offset;
         offset += dialogue.lines.length;
@@ -120,9 +121,8 @@ function LessonView({ lesson, save, startSelected, autoPlay, onComplete, selecti
                     <button className="control min-w-11 border border-edge bg-panel px-2 text-accent" disabled={!player.canPlay} onClick={() => player.playLine(position)}
                       aria-label={`${line.speaker} · ${index + 1}번째 대사 · ${active ? playLabel : '여기부터 재생'}`}>{line.speaker}</button>
                     <div className="min-w-0 break-words py-1">
-                      <p lang="en" className="leading-relaxed"><Concealed text={line.text} hidden={settings.hideEnglish} phrases={line.keyPhrase} /></p>
-                      {line.meaning && <p className="mt-1 text-sm leading-relaxed text-slate-300"><Concealed text={line.meaning} hidden={settings.hideMeaning} /></p>}
-                      <Shadowing text={line.text} pause={player.pause} />
+                      <p lang="en" className="leading-relaxed"><Concealed label="영어 보기" text={line.text} hidden={settings.hideEnglish} phrases={line.keyPhrase} /></p>
+                      {line.meaning && <p className="mt-1 text-sm leading-relaxed text-slate-300"><Concealed label="해석 보기" text={line.meaning} hidden={settings.hideMeaning} /></p>}
                     </div>
                   </div>
                 );
@@ -165,13 +165,10 @@ function SentenceReader({ settings, changeSettings }: { settings: Settings; chan
         synth?.cancel();
       }
     }
-    const external = () => { cancel(); setPlaying(false); };
-    window.addEventListener('study-microphone', external);
     refresh();
     synth?.addEventListener('voiceschanged', refresh);
     window.addEventListener('pagehide', cancel);
     return () => {
-      window.removeEventListener('study-microphone', external);
       synth?.removeEventListener('voiceschanged', refresh);
       window.removeEventListener('pagehide', cancel);
       cancel();
@@ -186,7 +183,6 @@ function SentenceReader({ settings, changeSettings }: { settings: Settings; chan
   }
 
   function speak(value: string) {
-    window.dispatchEvent(new Event('study-play'));
     const alternatives = voices.filter(voice => voiceKey(voice) !== previousVoice.current);
     const pool = alternatives.length ? alternatives : voices;
     const voice = pool[Math.floor(Math.random() * pool.length)];
@@ -242,8 +238,9 @@ function SentenceReader({ settings, changeSettings }: { settings: Settings; chan
           repeating.current = event.target.checked;
           setRepeat(event.target.checked);
         }} />반복 재생</label>
+        <StudyControls settings={settings} change={changeSettings} />
       </div>
-      <StudyControls settings={settings} change={changeSettings} /><p role="status">{wakeStatus}</p>
+      <p role="status">{wakeStatus}</p>
       <p className="mt-2 text-sm text-slate-300" role="status">{status}</p>
     </main>
   );
@@ -284,7 +281,6 @@ function App() {
   const [authEnabled, setAuthEnabled] = useState(false);
   const [settings, changeSettings] = useSettings();
   const [order, setOrder] = useState<'reverse' | 'forward'>(() => readStored<string>('playlist-order-v1', 'reverse') === 'forward' ? 'forward' : 'reverse');
-  const [query, setQuery] = useState(''), [level, setLevel] = useState('');
   const [policy, setPolicy] = useState('update');
   const scope = user?.sub ?? 'anonymous';
   const [page, setPage] = useState<'dialogues' | 'sentences'>('dialogues');
@@ -304,14 +300,12 @@ function App() {
   const currentScope = useRef(scope); currentScope.current = scope;
   const selected = lessons.find(lesson => lesson.id === selectedId) ?? lessons[0];
   const playlist = selectedPlaylist(lessons, checkedIds, order);
-  const visible = lessons.filter(lesson => (!level || lesson.level === level)
-    && [lesson.title, ...lesson.description].join(' ').toLowerCase().includes(query.toLowerCase()));
   useEffect(() => { if (authReady) writeStored(`selection-v1:${scope}`, [...checkedIds]); }, [checkedIds]);
   useEffect(() => { writeStored('playlist-order-v1', order); }, [order]);
 
   function checkLesson(id: string, event: { shiftKey: boolean; ctrlKey: boolean; metaKey: boolean }) {
     const anchor = selectionAnchor.current;
-    setCheckedIds(previous => updateSelection(visible.map(lesson => lesson.id), previous,
+    setCheckedIds(previous => updateSelection(lessons.map(lesson => lesson.id), previous,
       id, anchor, event.shiftKey, event.ctrlKey || event.metaKey));
     if (!event.shiftKey || anchor === null) selectionAnchor.current = id;
   }
@@ -433,7 +427,7 @@ function App() {
           <h1 className="text-xl font-bold">영어 대화 연습</h1>
           <label className="text-sm"><span className="sr-only">테마</span><select aria-label="테마" value={settings.theme} onChange={e => changeSettings({ ...settings, theme: e.target.value })}><option value="dark">어둡게</option><option value="light">밝게</option><option value="system">시스템</option></select></label>
         </header>
-        <p className="mb-3 text-sm"><a href={administration ? '/' : '/administration'}>{administration ? '학습 화면' : '관리·로그인'}</a></p>
+        {administration && <p className="mb-3 text-sm"><a href="/">학습 화면</a></p>}
         {administration && <section className="mb-3"><h2>자료 관리</h2>{!user ? authEnabled ? <a className="control border" href="/api/auth/login">Google 로그인</a> : <p>Google 인증 설정이 필요합니다.</p> : <><p className="break-all">Google ID: {user.sub}</p><p>{user.admin ? '관리자' : '관리자로 등록되지 않은 계정입니다.'}</p>
         <button className="control border" onClick={() => { void api('auth/logout', 'POST', {}).then(() => location.reload()); }}>로그아웃</button>
         {user.admin && <button className="control border" onClick={() => { void api<{ copied: boolean }>('admin/claim-progress', 'POST', {}).then(result => { setStatus(result.copied ? '기존 공동 진도를 복사했습니다.' : '이미 복사한 계정입니다.'); void reload(); }).catch(error => setStatus(error.message)); }}>기존 공동 진도 복사</button>}</>}</section>}
@@ -448,19 +442,10 @@ function App() {
         </nav>
         {page === 'dialogues' && !!lessons.length && (
           <>
-            <input aria-label="자료 검색" placeholder="제목·설명 검색" value={query} onChange={e => setQuery(e.target.value)} />
-            <select aria-label="난이도 필터" value={level} onChange={e => setLevel(e.target.value)}><option value="">모든 난이도</option>{['A1','A2','B1','B2','C1','C2'].map(value => <option key={value}>{value}</option>)}</select>
-            <select aria-label="연속 재생 방향" value={order} onChange={e => setOrder(e.target.value as 'reverse' | 'forward')}><option value="reverse">아래 → 위</option><option value="forward">위 → 아래</option></select>
-            <p>선택 {checkedIds.size}개 · 필터로 숨김 {[...checkedIds].filter(id => !visible.some(item => item.id === id)).length}개</p>
-            <label className="block md:hidden">
-              <span className="sr-only">대화 선택</span>
-              <select className="mb-3 w-full rounded-xl border border-edge bg-panel px-3 py-3" value={selected?.id ?? ''} onChange={event => selectLesson(event.target.value)}>
-                {visible.map(lesson => <option key={lesson.id} value={lesson.id}>{lesson.title}</option>)}
-              </select>
-            </label>
+            <p className="mb-2 text-sm">선택 {checkedIds.size}개</p>
             <p className="mb-2 text-xs text-slate-400">체크: 재생할 자료 선택 · Ctrl+클릭: 개별 선택 · Shift+클릭: 범위 선택</p>
             <nav aria-label="대화 목록" className="max-h-40 sm:max-h-64 min-h-0 flex-1 space-y-2 overflow-y-auto p-1 md:max-h-none">
-              {visible.map(lesson => (
+              {lessons.map(lesson => (
                 <div key={lesson.id} className={`flex items-center gap-2 rounded-xl border px-2 ${checkedIds.has(lesson.id) ? 'border-accent bg-sky-950' : 'border-edge'}`}>
                   <input type="checkbox" className="h-4 w-4 shrink-0 accent-sky-400"
                     aria-label={`${lesson.title} 연속 재생 선택`} checked={checkedIds.has(lesson.id)}
@@ -510,7 +495,7 @@ function App() {
         <LessonView key={`${selected.id}-${session}`}
           lesson={{ ...selected, position: positions.current.get(selected.id) ?? selected.position }}
           startSelected={startSelected}
-          selectionCount={playlist.length} order={order} settings={settings} changeSettings={changeSettings}
+          selectionCount={playlist.length} order={order} changeOrder={setOrder} settings={settings} changeSettings={changeSettings}
           autoPlay={autoPlay} onComplete={playPreviousLesson}
           save={position => save(selected.id, position)} />
       )}

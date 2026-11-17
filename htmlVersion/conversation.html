@@ -15,7 +15,7 @@
     align-self: start;
     height: 100dvh;
     display: grid;
-    grid-template-rows: minmax(0, 1fr) auto;
+    grid-template-rows: minmax(0, 1fr) auto auto auto;
     padding: 30px 20px max(20px, env(safe-area-inset-bottom));
     background: #15222e;
     border-right: 1px solid #2c3d4b;
@@ -36,8 +36,8 @@
   #load-status { margin: 0 0 10px; font-size: .86rem; line-height: 1.6; }
   #load-status:empty { display: none; }
   main { padding: 0 clamp(14px, 4vw, 42px) 42px; min-width: 0; }
-  .player { padding-top: 14px; margin-top: 10px; border-top: 1px solid #385263; text-align: center; }
-  .controls { display: flex; justify-content: center; flex-wrap: wrap; gap: 8px; }
+  .player { position:fixed; bottom:0; inset-inline:0; z-index:10; max-width:1105px; margin:0 auto; padding:12px 14px max(12px,env(safe-area-inset-bottom)); border-top:1px solid #385263; background:#15222e; }
+  .controls { display: flex; justify-content: flex-start; flex-wrap: wrap; align-items:center; gap: 8px; }
   #play { display: grid; place-items: center; width: 44px; min-height: 44px; background: #86e2cf; color: #102721; }
   #play::before { content: ""; border-block: 8px solid transparent; border-left: 12px solid currentColor; margin-left: 2px; }
   #play[data-playing="true"]::before { width: 12px; height: 16px; margin: 0; border: solid currentColor; border-width: 0 4px; }
@@ -45,7 +45,7 @@
   #speech-status { margin: 7px 0 0; font-size: .84rem; }
   #speech-status:empty { margin: 0; }
   h2 { margin: 28px 0 12px; font-size: clamp(1.65rem, 4vw, 2.65rem); overflow-wrap: anywhere; }
-  #content { line-height: 1.6; }
+  #content { line-height: 1.6; padding-bottom:180px; }
   article { margin-top: 16px; padding: 16px; border: 1px solid #2c3d4b; border-radius: 13px; background: #172532; }
   article h3 { margin: 0 0 5px; font-size: 1.05rem; }
   .cast { margin: 0 0 10px; font-size: .82rem; overflow-wrap: anywhere; }
@@ -75,14 +75,14 @@
   #reader-status { color: #b4c6d1; overflow-wrap: anywhere; }
 
 .study-header { max-width:1105px; margin:0 auto; padding:12px 14px; display:flex; flex-wrap:wrap; align-items:center; gap:16px; }.study-header h1 { font-size:1.25rem; margin:0; }
-.study-options { max-width:1105px; margin:0 auto; padding:12px; border:1px solid #526777; border-radius:10px; }
-.options-grid { display:flex; flex-wrap:wrap; gap:10px; padding-top:12px; }
+.study-options { width:calc(100% - 2rem); max-width:500px; max-height:85dvh; margin:auto; padding:20px; color:inherit; background:#15222e; border:1px solid #526777; border-radius:14px; overflow:auto; }.study-options::backdrop { background:#0009; }.settings-heading { display:flex; align-items:center; justify-content:space-between; gap:12px; }.settings-heading h2 { margin:0; font-size:1.25rem; }.settings-trigger { margin-left:auto; }.play-order { display:flex; align-items:center; gap:8px; }
+.options-grid { display:grid; gap:20px; padding-top:20px; }.options-grid label { display:flex; align-items:center; gap:8px; }.options-grid input[type=number],.options-grid select { margin-left:auto; }
 .options-grid input[type=number] { width:5rem; }
 input:not([type=checkbox]),select { font:inherit; padding:7px; background:#15222e;color:inherit;border:1px solid #526777;border-radius:6px; }
 [hidden] { display:none !important; }
 .lesson-row { display:flex;align-items:center;gap:8px; }.lesson-row button { flex:1; }
 :root[data-theme=light] { color-scheme:light; background:#f4f7fa;color:#172b3a; }
-:root[data-theme=light] :is(aside,article,button,.file-label,select,input,textarea,#reader-text) { background:#fff;color:#172b3a; }
+:root[data-theme=light] :is(aside,article,button,.file-label,select,input,textarea,#reader-text,.player,.study-options) { background:#fff;color:#172b3a; }
 :root[data-theme=light] :is(.muted,.meaning,.cast,small,#speech-status,#load-status,#reader-status) { color:#405466; }
 :root[data-theme=light] .reading { background:#d8eef5; }
 mark {background:#fae08a;color:#241f08;}
@@ -99,19 +99,20 @@ mark {background:#fae08a;color:#241f08;}
     <div class="lesson-list">
       <nav id="lessons" aria-label="대화 목록"></nav>
     </div>
+    <label class="file-label">JSON 폴더 열기 <input id="folder" type="file" webkitdirectory multiple></label>
+    <p id="load-status" role="status"></p>
+    <p id="selection-count"></p>
+  </aside>
+  <main>
+    <div id="content"></div>
+  </main>
     <section class="player" aria-label="대화 및 음성 제어">
-      <label class="file-label">JSON 폴더 열기 <input id="folder" type="file" webkitdirectory multiple></label>
-      <p id="load-status" role="status"></p>
       <div class="controls">
         <button id="play" type="button" aria-label="재생" title="재생" disabled></button>
         <button id="stop" type="button" disabled>정지</button>
       </div>
       <p id="speech-status" role="status"></p>
     </section>
-  </aside>
-  <main>
-    <div id="content"></div>
-  </main>
 </div>
 <script src="./study.js"></script>
 <script>
@@ -143,13 +144,7 @@ mark {background:#fae08a;color:#241f08;}
   const study = window.study;
   const config = study.settings;
   function savePosition() { if(selected) { const saved=study.read('html-progress-v1',{}); saved[selected.name]={position:current, line:lines[current] && {text:lines[current].text,speaker:lines[current].speaker}};study.write('html-progress-v1',saved); } }
-  function filterLessons() {
-    const query=study.query();let hidden=0;
-    for(const item of documents) { const match=(!query.level || item.data.level===query.level) && [item.data.title,...[].concat(item.data.description||[])].join(' ').toLowerCase().includes(query.text);item.row.hidden=!match;if(!match&&study.checks.has(item.name))hidden++; }
-    study.selection(hidden);
-  }
-  window.addEventListener('study-filter',filterLessons);
-  window.addEventListener('study-settings',()=>{filterLessons();if(selected){for(const entry of lines){entry.english.replaceChildren();study.text(entry.english,entry.text,config.hideEnglish,entry.keyPhrase);if(entry.meaning){entry.meaning.replaceChildren();study.text(entry.meaning,entry.meaningText,config.hideMeaning);}}}});
+  window.addEventListener('study-settings',()=>{if(selected){for(const entry of lines){entry.english.replaceChildren();study.text(entry.english,entry.text,config.hideEnglish,entry.keyPhrase,'영어 보기');if(entry.meaning){entry.meaning.replaceChildren();study.text(entry.meaning,entry.meaningText,config.hideMeaning,undefined,'해석 보기');}}}});
   study.next(()=>{if(!lines.length||!voices.length)return;if(!lines[current]?.voice)assignVoices();utterance=null;synth?.cancel();waiting=false;repeatCount=0;current++;state='playing';speakCurrent();});
   function selectedPlaylist() { const list=documents.filter(item=>study.checks.has(item.name)&&item.data.conversations.some(c=>c.lines.length));return config.order==='reverse'?list.toReversed():list; }
 
@@ -294,7 +289,7 @@ mark {background:#fae08a;color:#241f08;}
     updateControls();
     const entry = lines[current];
     savePosition();
-    if(config.role && entry.speaker===config.role && !waiting){waiting=true;state='paused';updateControls();speechStatus.textContent='내 차례입니다. 말해 보기 또는 다음 문장을 누르세요.';return;}
+    if(config.role && entry.speaker===config.role && !waiting){waiting=true;state='paused';updateControls();speechStatus.textContent='내 차례입니다. 말한 뒤 다음 문장을 누르세요.';return;}
     waiting=false;
     entry.element.classList.add('reading');
     entry.element.scrollIntoView({
@@ -394,10 +389,9 @@ mark {background:#fae08a;color:#241f08;}
           startOrResume();
         });
         const dialogue = add(element, 'div');
-        const english=add(dialogue,'span');english.lang='en';study.text(english,line.text,config.hideEnglish,line.keyPhrase);
+        const english=add(dialogue,'span');english.lang='en';study.text(english,line.text,config.hideEnglish,line.keyPhrase,'영어 보기');
         const meaning=line.meaning?add(dialogue,'span',null,'meaning'):null;
-        if(meaning)study.text(meaning,line.meaning,config.hideMeaning);
-        study.shadow(dialogue,line.text,()=>{if(state==='playing'){state='paused';utterance=null;synth?.cancel();updateControls();}});
+        if(meaning)study.text(meaning,line.meaning,config.hideMeaning,undefined,'해석 보기');
         return { element, button, english, meaning, meaningText:line.meaning,keyPhrase:line.keyPhrase,text: line.text, speaker: line.speaker, lineNumber: lineIndex + 1 };
       });
       const speakers = [...new Set(entries.map(entry => entry.speaker))];
@@ -434,13 +428,13 @@ mark {background:#fae08a;color:#241f08;}
       documents = loaded.sort((a, b) => b.date - a.date || a.name.localeCompare(b.name));
       lessons.replaceChildren();
       for (const item of documents) {
-        item.row=add(lessons,'div',null,'lesson-row');const check=add(item.row,'input');check.type='checkbox';check.checked=study.checks.has(item.name);check.setAttribute('aria-label',`${item.data.title} 연속 재생 선택`);check.onchange=()=>{if(check.checked)study.checks.add(item.name);else study.checks.delete(item.name);study.write('html-selection-v1',[...study.checks]);filterLessons();};
+        item.row=add(lessons,'div',null,'lesson-row');const check=add(item.row,'input');check.type='checkbox';check.checked=study.checks.has(item.name);check.setAttribute('aria-label',`${item.data.title} 연속 재생 선택`);check.onchange=()=>{if(check.checked)study.checks.add(item.name);else study.checks.delete(item.name);study.write('html-selection-v1',[...study.checks]);study.selection();};
         item.button = add(item.row, 'button', item.data.title);
         if (item.date) add(item.button, 'small', dateFormat.format(item.date));
         item.button.addEventListener('click', () => {playlistActive=false;showDocument(item);});
       }
       const valid=new Set(documents.map(item=>item.name));if(prune && !failed.length)for(const id of study.checks)if(!valid.has(id))study.checks.delete(id);study.write('html-selection-v1',[...study.checks]);
-      filterLessons();
+      study.selection();
       showDocument(documents[0]);
       lessonList.scrollTop = 0;
     }

@@ -84,8 +84,6 @@ export function usePlayback(lesson: Lesson, save: (position: number) => void,
       }
       setVoices(eligible);
     }
-    function pauseForOtherMedia() { if (state.current === 'playing') { changeMode('paused'); cancelSpeech(); } }
-    window.addEventListener('study-microphone', pauseForOtherMedia);
     function cancel() {
       if (pending.current !== null) clearTimeout(pending.current);
       pending.current = null;
@@ -97,7 +95,6 @@ export function usePlayback(lesson: Lesson, save: (position: number) => void,
     synth?.addEventListener('voiceschanged', refresh);
     window.addEventListener('pagehide', cancel);
     return () => {
-      window.removeEventListener('study-microphone', pauseForOtherMedia);
       synth?.removeEventListener('voiceschanged', refresh);
       window.removeEventListener('pagehide', cancel);
       cancel();
@@ -146,7 +143,7 @@ export function usePlayback(lesson: Lesson, save: (position: number) => void,
     }
     const config = settings.current;
     if (config?.role && line.speaker === config.role && !waiting.current) {
-      move(index); waiting.current = true; changeMode('paused'); setMessage('내 차례입니다. 말해 보기 또는 다음을 누르세요.'); return;
+      move(index); waiting.current = true; changeMode('paused'); setMessage('내 차례입니다. 말한 뒤 다음 문장을 누르세요.'); return;
     }
     waiting.current = false;
     const voice = assignments[line.group].get(line.speaker);
@@ -193,7 +190,6 @@ export function usePlayback(lesson: Lesson, save: (position: number) => void,
 
   function start(index: number) {
     if (!voices.length || !flat[index]) return;
-    window.dispatchEvent?.(new Event('study-play'));
     cancelSpeech();
     repeats.current = 0; waiting.current = false;
     const assignments = assignVoices(lesson, voices, previous.current);
@@ -214,15 +210,11 @@ export function usePlayback(lesson: Lesson, save: (position: number) => void,
       cancelSpeech();
     } else if (state.current === 'paused') {
       if (waiting.current) { nextLine(); return; }
-      window.dispatchEvent?.(new Event('study-play'));
       changeMode('playing');
       speak(current.current, cast);
     } else start(current.current);
   }
 
-  function pause() {
-    if (state.current === 'playing') { changeMode('paused'); cancelSpeech(); }
-  }
   function nextLine() {
     cancelSpeech(); waiting.current = false; repeats.current = 0;
     const next = current.current + 1;
@@ -236,13 +228,13 @@ export function usePlayback(lesson: Lesson, save: (position: number) => void,
       ? '일부 화자가 같은 목소리를 사용합니다.' : '';
 
   return {
-    cast, mode, position, toggle, stop, pause, nextLine,
+    cast, mode, position, toggle, stop, nextLine,
     canPlay: !!voices.length && !!flat.length,
     playLine: (index: number) => {
       if (state.current !== 'idle' && current.current === index) toggle();
       else start(index);
     },
     status: mode === 'playing' ? `읽는 중 · ${position + 1} / ${flat.length}`
-      : mode === 'paused' ? (waiting.current ? '내 차례입니다. 말해 보기 또는 다음을 누르세요.' : '일시정지됨') : message || voiceStatus,
+      : mode === 'paused' ? (waiting.current ? '내 차례입니다. 말한 뒤 다음 문장을 누르세요.' : '일시정지됨') : message || voiceStatus,
   };
 }
