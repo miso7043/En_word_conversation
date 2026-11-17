@@ -35,3 +35,12 @@
     @apply inline-flex min-h-11 items-center justify-center rounded-lg px-3 font-medium;
   }
 }
+
+input:not([type=checkbox]), select { background: var(--color-panel); color: inherit; border: 1px solid var(--color-edge); border-radius: .4rem; padding: .45rem; }
+.study-controls input[type=number] { width: 5rem; }
+mark { background: #fae08a; color: #241f08; border-radius: .2rem; }
+:root[data-theme=light] { color-scheme: light; --color-canvas: #f4f7fa; --color-panel: #ffffff; --color-edge: #9aaabb; --color-accent: #036983; }
+:root[data-theme=light] body, :root[data-theme=light] .text-slate-100 { color: #172b3a; }
+:root[data-theme=light] :is(.text-slate-300,.text-slate-400) { color: #405466; }
+:root[data-theme=light] .bg-sky-950 { background: #e0f0f6; }
+:root[data-theme=light] .bg-accent { background: #7dd3fc; }

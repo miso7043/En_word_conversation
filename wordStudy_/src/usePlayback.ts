@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
+import type { Settings } from './study';
 import type { Lesson } from '../shared/lesson';
 
 const locales = ['en-us', 'en-ca', 'en-gb', 'en-au', 'en-in'];
@@ -36,7 +37,11 @@ function assignVoices(lesson: Lesson, voices: SpeechSynthesisVoice[], previous: 
 type Mode = 'idle' | 'playing' | 'paused';
 
 export function usePlayback(lesson: Lesson, save: (position: number) => void,
-  options: { autoPlay?: boolean; onComplete?: () => void } = {}) {
+  options: { autoPlay?: boolean; onComplete?: () => void; settings?: Settings } = {}) {
+  const settings = useRef(options.settings);
+  settings.current = options.settings;
+  const repeats = useRef(0);
+  const waiting = useRef(false);
   const synth = window.speechSynthesis;
   const flat = useMemo(() => lesson.conversations.flatMap((dialogue, group) =>
     dialogue.lines.map(line => ({ ...line, group })),
@@ -79,6 +84,9 @@ export function usePlayback(lesson: Lesson, save: (position: number) => void,
       }
       setVoices(eligible);
     }
+    function pauseForOtherMedia() { if (state.current === 'playing') { changeMode('paused'); cancelSpeech(); } }
+    window.addEventListener('study-microphone', pauseForOtherMedia);
+    window.addEventListener('study-audio', pauseForOtherMedia);
     function cancel() {
       if (pending.current !== null) clearTimeout(pending.current);
       pending.current = null;
@@ -90,6 +98,7 @@ export function usePlayback(lesson: Lesson, save: (position: number) => void,
     synth?.addEventListener('voiceschanged', refresh);
     window.addEventListener('pagehide', cancel);
     return () => {
+      window.removeEventListener('study-microphone', pauseForOtherMedia); window.removeEventListener('study-audio', pauseForOtherMedia);
       synth?.removeEventListener('voiceschanged', refresh);
       window.removeEventListener('pagehide', cancel);
       cancel();
@@ -136,6 +145,11 @@ export function usePlayback(lesson: Lesson, save: (position: number) => void,
       stop('재생이 끝났습니다.');
       return;
     }
+    const config = settings.current;
+    if (config?.role && line.speaker === config.role && !waiting.current) {
+      move(index); waiting.current = true; changeMode('paused'); setMessage('내 차례입니다. 말해 보기 또는 다음을 누르세요.'); return;
+    }
+    waiting.current = false;
     const voice = assignments[line.group].get(line.speaker);
     if (!voice) return;
     move(index);
@@ -143,17 +157,26 @@ export function usePlayback(lesson: Lesson, save: (position: number) => void,
     const utterance = new SpeechSynthesisUtterance(line.text);
     utterance.voice = voice;
     utterance.lang = voice.lang;
-    utterance.rate = 0.95;
+    utterance.rate = settings.current?.rate ?? 0.95;
+    utterance.pitch = settings.current?.pitch ?? 1;
     active.current = utterance;
     utterance.onend = () => {
       if (active.current !== utterance) return;
       active.current = null;
-      if (index + 1 >= flat.length) {
+      const config = settings.current;
+      repeats.current++;
+      let next = index + 1;
+      if (repeats.current < (config?.repeat ?? 1)) next = index;
+      else {
+        repeats.current = 0;
+        if (config && config.a >= 0 && config.b >= config.a && index >= config.b) next = config.a;
+      }
+      if (next >= flat.length) {
         stop('재생이 끝났습니다.');
         completion.current?.();
       }
-      else if (state.current === 'playing') speak(index + 1, assignments);
-      else move(index + 1);
+      else if (state.current === 'playing') speak(next, assignments);
+      else move(next);
     };
     utterance.onerror = (event) => {
       if (active.current !== utterance) return;
@@ -173,7 +196,10 @@ export function usePlayback(lesson: Lesson, save: (position: number) => void,
 
   function start(index: number) {
     if (!voices.length || !flat[index]) return;
+    document.querySelectorAll?.('audio').forEach(audio => audio.pause());
+    window.dispatchEvent?.(new Event('study-play'));
     cancelSpeech();
+    repeats.current = 0; waiting.current = false;
     const assignments = assignVoices(lesson, voices, previous.current);
     previous.current = assignments.map(group => {
       const first = group.values().next().value;
@@ -191,24 +217,39 @@ export function usePlayback(lesson: Lesson, save: (position: number) => void,
       // Keep the sentence position and restart it when playback resumes.
       cancelSpeech();
     } else if (state.current === 'paused') {
+      if (waiting.current) { nextLine(); return; }
+      document.querySelectorAll?.('audio').forEach(audio => audio.pause());
+      window.dispatchEvent?.(new Event('study-play'));
       changeMode('playing');
       speak(current.current, cast);
     } else start(current.current);
   }
 
+  function pause() {
+    if (state.current === 'playing') { changeMode('paused'); cancelSpeech(); }
+  }
+  function nextLine() {
+    cancelSpeech(); waiting.current = false; repeats.current = 0;
+    const config = settings.current;
+    let next = current.current + 1;
+    if (config && config.a >= 0 && config.b >= config.a && current.current >= config.b) next = config.a;
+    if (next >= flat.length) { stop('재생이 끝났습니다.'); completion.current?.(); return; }
+    if (!cast.length) { start(next); return; }
+    changeMode('playing'); speak(next, cast);
+  }
   const voiceStatus = !synth ? '이 브라우저는 음성 재생을 지원하지 않습니다.'
     : !voices.length ? '사용 가능한 미국·캐나다·영국·호주·인도 영어 음성이 없습니다.'
     : lesson.conversations.some(group => new Set(group.lines.map(line => line.speaker)).size > voices.length)
       ? '일부 화자가 같은 목소리를 사용합니다.' : '';
 
   return {
-    cast, mode, position, toggle, stop,
+    cast, mode, position, toggle, stop, pause, nextLine,
     canPlay: !!voices.length && !!flat.length,
     playLine: (index: number) => {
       if (state.current !== 'idle' && current.current === index) toggle();
       else start(index);
     },
     status: mode === 'playing' ? `읽는 중 · ${position + 1} / ${flat.length}`
-      : mode === 'paused' ? '일시정지됨' : message || voiceStatus,
+      : mode === 'paused' ? (waiting.current ? '내 차례입니다. 말해 보기 또는 다음을 누르세요.' : '일시정지됨') : message || voiceStatus,
   };
 }

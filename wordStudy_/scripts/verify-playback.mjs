@@ -115,3 +115,22 @@ assert.equal(player.mode, 'idle');
 flush();
 assert.equal(player.mode, 'idle');
 console.log('PASS: automatic start, latest completion callback, no automatic restart');
+
+// 학습 모드도 실제 재생 hook을 통해 검증한다.
+slots.length = 0; spoken.length = 0; timers.clear();
+options = { settings: {rate:.7,pitch:1.2,repeat:2,role:'',a:-1,b:-1} };
+render(); render(); player.toggle(); render(); flush();
+assert.equal(spoken.at(-1).rate,.7);assert.equal(spoken.at(-1).pitch,1.2);
+spoken.at(-1).onend();render();flush();assert.equal(spoken.at(-1).text,'First sentence.');
+spoken.at(-1).onend();render();flush();assert.equal(spoken.at(-1).text,'Second sentence.');
+player.stop();render();
+slots.length=0;spoken.length=0;timers.clear();
+options={settings:{rate:1,pitch:1,repeat:1,role:'A',a:-1,b:-1}};
+render();render();player.toggle();render();flush();assert.equal(player.mode,'paused');assert.equal(spoken.length,0);
+player.nextLine();render();flush();assert.equal(spoken.at(-1).text,'Second sentence.');
+player.stop();render();
+slots.length=0;spoken.length=0;timers.clear();
+options={settings:{rate:1,pitch:1,repeat:1,role:'',a:0,b:0}};
+render();render();player.toggle();render();flush();spoken.at(-1).onend();render();flush();assert.equal(spoken.at(-1).text,'First sentence.');
+const count=spoken.length;player.stop();render();flush();assert.equal(spoken.length,count);
+console.log('PASS: 속도·피치·문장 반복·롤플레이 대기/다음·A-B 반복·정지');

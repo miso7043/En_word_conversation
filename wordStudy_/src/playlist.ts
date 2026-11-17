@@ -16,7 +16,8 @@ export function updateSelection(ids: string[], selected: Set<string>, id: string
   return next;
 }
 
-export function selectedPlaylist(lessons: Lesson[], selected: Set<string>) {
-  return lessons.filter(lesson => selected.has(lesson.id)
-    && lesson.conversations.some(group => group.lines.length)).toReversed();
+export function selectedPlaylist(lessons: Lesson[], selected: Set<string>, order: 'reverse' | 'forward' = 'reverse') {
+  const items = lessons.filter(lesson => selected.has(lesson.id)
+    && lesson.conversations.some(group => group.lines.length));
+  return order === 'reverse' ? items.toReversed() : items;
 }

@@ -73,8 +73,20 @@
   #reader-play { color: #102721; background: #86e2cf; }
   #reader-play:hover:not(:disabled) { background: #a1efdf; }
   #reader-status { color: #b4c6d1; overflow-wrap: anywhere; }
+
+.study-options { max-width:1105px; margin:0 auto; padding:12px; border:1px solid #526777; border-radius:10px; }
+.options-grid { display:flex; flex-wrap:wrap; gap:10px; padding-top:12px; }
+.options-grid input[type=number] { width:5rem; }
+input:not([type=checkbox]),select { font:inherit; padding:7px; background:#15222e;color:inherit;border:1px solid #526777;border-radius:6px; }
+[hidden] { display:none !important; }
+.lesson-row { display:flex;align-items:center;gap:8px; }.lesson-row button { flex:1; }
+:root[data-theme=light] { color-scheme:light; background:#f4f7fa;color:#172b3a; }
+:root[data-theme=light] :is(aside,article,button,.file-label,select,input,textarea,#reader-text) { background:#fff;color:#172b3a; }
+:root[data-theme=light] :is(.muted,.meaning,.cast,small,#speech-status,#load-status,#reader-status) { color:#405466; }
+:root[data-theme=light] .reading { background:#d8eef5; }
+mark {background:#fae08a;color:#241f08;}
 </style>
-</head>
+<link rel="manifest" href="./manifest.webmanifest"><meta name="theme-color" content="#15222e"></head>
 <body>
 <div class="study-tabs" role="tablist" aria-label="영어 학습 방식">
   <button type="button" role="tab" id="dialogue-tab" aria-selected="true" aria-controls="dialogue-panel">대화 연습</button>
@@ -100,6 +112,7 @@
     <div id="content"></div>
   </main>
 </div>
+<script src="./study.js"></script>
 <script>
   const lessonList = document.querySelector('.lesson-list');
   const lessons = document.querySelector('#lessons');
@@ -123,6 +136,24 @@
   let state = 'idle';
   let utterance = null;
   let loadVersion = 0;
+  let repeatCount = 0;
+  let waiting = false;
+  let playlistActive = false;
+  const study = window.study;
+  const config = study.settings;
+  function savePosition() { if(selected) { const saved=study.read('html-progress-v1',{}); saved[selected.name]={position:current, line:lines[current] && {text:lines[current].text,speaker:lines[current].speaker}};study.write('html-progress-v1',saved); } }
+  function filterLessons() {
+    const query=study.query();let hidden=0;
+    for(const item of documents) { const match=(!query.tag || item.data.tags?.includes(query.tag)) && (!query.level || item.data.level===query.level) && JSON.stringify(item.data).toLowerCase().includes(query.text);item.row.hidden=!match;if(!match&&study.checks.has(item.name))hidden++; }
+    study.selection(hidden);
+  }
+  window.addEventListener('study-filter',filterLessons);
+  window.addEventListener('study-settings',()=>{filterLessons();if(selected){for(const entry of lines){entry.english.replaceChildren();study.text(entry.english,entry.text,config.hideEnglish,entry.keyPhrase);if(entry.meaning){entry.meaning.replaceChildren();study.text(entry.meaning,entry.meaningText,config.hideMeaning);}}}});
+  window.addEventListener('study-audio-play',()=>resetPlayback());
+  study.next(()=>{if(!lines.length||!voices.length)return;if(!lines[current]?.voice)assignVoices();utterance=null;synth?.cancel();waiting=false;repeatCount=0;current++;if(config.a>=0&&config.b>=config.a&&current>config.b)current=config.a;state='playing';speakCurrent();});
+  study.save(()=>study.write('html-offline-v1',documents.filter(item=>study.checks.size?study.checks.has(item.name):item===selected).map(({data,name,date})=>({data,name,date}))));
+  function selectedPlaylist() { const list=documents.filter(item=>study.checks.has(item.name)&&item.data.conversations.some(c=>c.lines.length));return config.order==='reverse'?list.toReversed():list; }
+
 
   function add(parent, tag, text, className) {
     const element = document.createElement(tag);
@@ -192,6 +223,7 @@
       line.button.title = lineAction;
     });
     stop.disabled = state === 'idle';
+    study.play(playing);
   }
 
   function voiceStatus() {
@@ -243,7 +275,7 @@
     const wasActive = state !== 'idle';
     state = 'idle';
     utterance = null;
-    current = 0;
+    current = 0; repeatCount=0;waiting=false;study.play(false);
     if (wasActive) {
       synth.cancel();
       if (synth.paused) synth.resume();
@@ -255,11 +287,16 @@
 
   function speakCurrent() {
     if (current >= lines.length) {
-      resetPlayback('재생이 끝났습니다.');
+      const list=selectedPlaylist(), index=list.indexOf(selected), next=playlistActive&&index>=0?list[index+1]:null;
+      resetPlayback('재생이 끝났습니다.');savePosition();
+      if(next){showDocument(next);current=0;startOrResume();}else playlistActive=false;
       return;
     }
     updateControls();
     const entry = lines[current];
+    savePosition();
+    if(config.role && entry.speaker===config.role && !waiting){waiting=true;state='paused';updateControls();speechStatus.textContent='내 차례입니다. 말해 보기 또는 다음 문장을 누르세요.';return;}
+    waiting=false;
     entry.element.classList.add('reading');
     entry.element.scrollIntoView({
       behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth',
@@ -269,13 +306,14 @@
     const next = new SpeechSynthesisUtterance(entry.text);
     next.voice = entry.voice;
     next.lang = entry.voice.lang;
-    next.rate = 0.95;
+    next.rate = config.rate;next.pitch=config.pitch;
     utterance = next;
     next.onend = () => {
       if (utterance !== next) return;
       utterance = null;
       entry.element.classList.remove('reading');
-      current++;
+      repeatCount++;
+      if(repeatCount>=config.repeat){repeatCount=0;current++;if(config.a>=0&&config.b>=config.a&&current>config.b)current=config.a;}
       if (state === 'playing') speakCurrent();
       else updateControls();
     };
@@ -286,6 +324,7 @@
   }
 
   function startOrResume() {
+    if(waiting){waiting=false;current++;}
     if (state === 'idle') {
       assignVoices();
       for (const card of cards) {
@@ -309,13 +348,16 @@
       return;
     }
     state = 'paused';
-    synth.pause();
+    utterance=null;synth.cancel();
     updateControls();
     speechStatus.textContent = '일시정지됨';
   }
-  play.addEventListener('click', togglePlayback);
+  play.addEventListener('click', () => {
+    if(state==='idle' && study.checks.size){const first=selectedPlaylist()[0];if(first){if(selected!==first)showDocument(first);current=0;playlistActive=true;}}
+    togglePlayback();
+  });
   stop.addEventListener('click', () => {
-    resetPlayback('재생을 정지했습니다.');
+    playlistActive=false;resetPlayback('재생을 정지했습니다.');savePosition();
     window.scrollTo(0, 0);
   });
   synth?.addEventListener('voiceschanged', refreshVoices);
@@ -353,14 +395,19 @@
           startOrResume();
         });
         const dialogue = add(element, 'div');
-        add(dialogue, 'span', line.text).lang = 'en';
-        if (line.meaning) add(dialogue, 'span', line.meaning, 'meaning');
-        return { element, button, text: line.text, speaker: line.speaker, lineNumber: lineIndex + 1 };
+        const english=add(dialogue,'span');english.lang='en';study.text(english,line.text,config.hideEnglish,line.keyPhrase);
+        const meaning=line.meaning?add(dialogue,'span',null,'meaning'):null;
+        if(meaning)study.text(meaning,line.meaning,config.hideMeaning);
+        study.shadow(dialogue,line.text,()=>{if(state==='playing'){state='paused';utterance=null;synth?.cancel();updateControls();}});
+        return { element, button, english, meaning, meaningText:line.meaning,keyPhrase:line.keyPhrase,text: line.text, speaker: line.speaker, lineNumber: lineIndex + 1 };
       });
       const speakers = [...new Set(entries.map(entry => entry.speaker))];
       cards.push({ cast, entries, speakers });
       lines.push(...entries);
     });
+    study.resetRole([...new Set(lines.map(entry=>entry.speaker))],lines.length);
+    const saved=study.read('html-progress-v1',{})[item.name];
+    if(saved){const matches=lines.flatMap((entry,i)=>entry.text===saved.line?.text&&entry.speaker===saved.line?.speaker?[i]:[]);current=matches.length?matches.reduce((a,b)=>Math.abs(a-saved.position)<=Math.abs(b-saved.position)?a:b):Math.max(0,Math.min(Number.isInteger(saved.position)?saved.position:0,lines.length-1));}
     refreshVoices();
     window.scrollTo(0, 0);
   }
@@ -371,10 +418,13 @@
           conversation.lines.every(line => typeof line?.text === 'string' && typeof line.speaker === 'string'))) {
       throw new Error('대화 JSON 형식이 올바르지 않습니다.');
     }
+    if(data.tags!=null && (!Array.isArray(data.tags)||data.tags.some(tag=>typeof tag!=='string'||!tag.trim())))throw new Error('tags 배열을 확인하세요.');
+    if(data.level!=null && !/^[ABC][12]$/.test(data.level))throw new Error('level은 A1~C2입니다.');
+    for(const dialogue of data.conversations)for(const line of dialogue.lines)if(line.keyPhrase!=null && !(typeof line.keyPhrase==='string'||Array.isArray(line.keyPhrase)&&line.keyPhrase.every(p=>typeof p==='string')))throw new Error('keyPhrase 형식을 확인하세요.');
     return { data, name, date: Date.parse(data.date) || modified || 0 };
   }
 
-  async function loadDocuments(sources) {
+  async function loadDocuments(sources, prune=true) {
     const version = ++loadVersion;
     loadStatus.textContent = '대화 목록을 불러오는 중입니다.';
     const results = await Promise.allSettled(sources.map(source => source.read()));
@@ -386,10 +436,13 @@
       documents = loaded.sort((a, b) => b.date - a.date || a.name.localeCompare(b.name));
       lessons.replaceChildren();
       for (const item of documents) {
-        item.button = add(lessons, 'button', item.data.title);
+        item.row=add(lessons,'div',null,'lesson-row');const check=add(item.row,'input');check.type='checkbox';check.checked=study.checks.has(item.name);check.setAttribute('aria-label',`${item.data.title} 연속 재생 선택`);check.onchange=()=>{if(check.checked)study.checks.add(item.name);else study.checks.delete(item.name);study.write('html-selection-v1',[...study.checks]);filterLessons();};
+        item.button = add(item.row, 'button', item.data.title);
         if (item.date) add(item.button, 'small', dateFormat.format(item.date));
-        item.button.addEventListener('click', () => showDocument(item));
+        item.button.addEventListener('click', () => {playlistActive=false;showDocument(item);});
       }
+      const valid=new Set(documents.map(item=>item.name));if(prune && !failed.length)for(const id of study.checks)if(!valid.has(id))study.checks.delete(id);study.write('html-selection-v1',[...study.checks]);
+      study.tags([...new Set(documents.flatMap(item=>item.data.tags||[]))]);filterLessons();
       showDocument(documents[0]);
       lessonList.scrollTop = 0;
     }
@@ -409,18 +462,25 @@
   });
 
   async function loadFromServer() {
+    if(!navigator.onLine){const offline=study.read('html-offline-v1',[]);if(offline.length){await loadDocuments(offline.map(item=>({name:item.name,read:async()=>item})),false);return;}}
     const directory = new URL('./json/', location.href);
     let urls;
     const version = loadVersion;
     try {
-      const index = await fetch(directory, { cache: 'no-cache' });
+      let manifest;
+      try { const response=await fetch(new URL('./lessons.json',location.href),{cache:'no-cache'});if(response.ok)manifest=await response.json(); } catch {}
+      if(Array.isArray(manifest)&&manifest.length){urls=manifest.map(name=>new URL(encodeURIComponent(name),directory));}
+      const index = urls ? null : await fetch(directory, { cache: 'no-cache' });
+      if(urls) { /* 자료 목록 manifest 우선 */ } else {
       if (!index.ok) throw new Error(`HTTP ${index.status}`);
       const listing = new DOMParser().parseFromString(await index.text(), 'text/html');
       const discovered = [...listing.querySelectorAll('a[href]')].map(link => new URL(link.getAttribute('href'), directory))
         .filter(url => /\.json$/i.test(url.pathname) && new URL('.', url).href === directory.href);
       urls = [...new Map(discovered.map(url => [url.pathname, url])).values()];
       if (!urls.length) throw new Error('JSON 목록이 비어 있습니다.');
+      }
     } catch {
+      const offline=study.read('html-offline-v1',[]);if(offline.length){await loadDocuments(offline.map(item=>({name:item.name,read:async()=>item})),false);return;}
       if (version === loadVersion) {
         loadStatus.textContent = '서버에서 json 폴더 목록을 읽을 수 없습니다. JSON 폴더 열기를 사용하세요.';
       }
@@ -432,9 +492,10 @@
       return {
         name,
         read: async () => {
-          const response = await fetch(url, { cache: 'no-cache' });
+          try { const response = await fetch(url, { cache: 'no-cache' });
           if (!response.ok) throw new Error(`HTTP ${response.status}`);
-          return readDocument(await response.json(), name, Date.parse(response.headers.get('Last-Modified')));
+          return readDocument(await response.json(), name, Date.parse(response.headers.get('Last-Modified'))); }
+          catch(error){const saved=study.read('html-offline-v1',[]).find(item=>item.name===name);if(saved)return saved;throw error;}
         }
       };
     }));
@@ -916,6 +977,8 @@
 <script>
   {
     const input = document.querySelector('#reader-text');
+    input.value=window.study.read('html-reader-text-v1','');
+    input.addEventListener('input',()=>window.study.write('html-reader-text-v1',input.value));
     const play = document.querySelector('#reader-play');
     const stop = document.querySelector('#reader-stop');
     const status = document.querySelector('#reader-status');
@@ -948,7 +1011,7 @@
         active = null;
         synth.cancel();
       }
-      stop.disabled = true;
+      stop.disabled = true;window.study.play(false);
     }
 
     function speakText(text, voices) {
@@ -960,7 +1023,8 @@
       const utterance = new SpeechSynthesisUtterance(text);
       utterance.voice = voice;
       utterance.lang = voice.lang.replaceAll('_', '-');
-      utterance.rate = 0.95;
+      utterance.rate = window.study.settings.rate;utterance.pitch=window.study.settings.pitch;
+      window.study.play(true);
       active = utterance;
       stop.disabled = false;
       const label = `${voice.name} (${voice.lang})`;
@@ -969,7 +1033,7 @@
       function finish(message) {
         if (active !== utterance) return;
         active = null;
-        stop.disabled = true;
+        stop.disabled = true;window.study.play(false);
         status.textContent = `${message} · ${label}`;
       }
 
@@ -1000,6 +1064,7 @@
     input.addEventListener('input', refresh);
     synth?.addEventListener('voiceschanged', refresh);
     window.addEventListener('pagehide', cancel);
+    window.addEventListener('study-audio-play', cancel);
 
     const tabs = [...document.querySelectorAll('.study-tabs [role="tab"]')];
     let selectedTab = tabs[0];

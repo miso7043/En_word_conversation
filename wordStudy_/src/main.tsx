@@ -4,6 +4,13 @@ import type { Lesson } from '../shared/lesson';
 import { usePlayback } from './usePlayback';
 import { selectedPlaylist, updateSelection } from './playlist';
 import './style.css';
+import { StudyControls, Concealed, Shadowing, useSettings, useWakeLock, type Settings } from './study';
+import { readStored, writeStored, bookmark, restore, type Bookmark } from './storage';
+import { AudioLibrary } from './audio';
+import { OfflinePanel } from './offline';
+let csrfToken = '';
+type User = { sub: string; admin: boolean; csrf: string };
+
 
 const dateFormat = new Intl.DateTimeFormat('ko-KR', {
   dateStyle: 'medium', timeStyle: 'short', timeZone: 'Asia/Seoul',
@@ -12,7 +19,7 @@ const dateFormat = new Intl.DateTimeFormat('ko-KR', {
 async function api<T>(path: string, method = 'GET', body?: object): Promise<T> {
   const response = await fetch(`/api/${path}`, {
     method,
-    headers: body ? { 'Content-Type': 'application/json' } : undefined,
+    headers: body ? { 'Content-Type': 'application/json', 'X-CSRF-Token': csrfToken } : undefined,
     body: body ? JSON.stringify(body) : undefined,
   });
   const data = await response.json();
@@ -24,13 +31,15 @@ function Paragraphs({ values }: { values: string[] }) {
   return values.map((value, index) => <p key={index} className="mb-2 leading-relaxed text-slate-300">{value}</p>);
 }
 
-function LessonView({ lesson, save, startSelected, autoPlay, onComplete, selectionCount }: {
+function LessonView({ lesson, save, startSelected, autoPlay, onComplete, selectionCount, order, settings, changeSettings }: {
   lesson: Lesson; save: (position: number) => void;
   startSelected: () => boolean;
   autoPlay: boolean; onComplete: () => void;
-  selectionCount: number;
+  selectionCount: number; order: string; settings: Settings; changeSettings: (s: Settings) => void;
 }) {
-  const player = usePlayback(lesson, save, { autoPlay, onComplete });
+  const player = usePlayback(lesson, save, { autoPlay, onComplete, settings });
+  const wakeStatus = useWakeLock(player.mode === 'playing', settings.wake);
+  const flat = lesson.conversations.flatMap(group => group.lines);
   useEffect(() => {
     function handleSpace(event: KeyboardEvent) {
       if (event.code !== 'Space' || event.defaultPrevented || event.isComposing
@@ -82,12 +91,15 @@ function LessonView({ lesson, save, startSelected, autoPlay, onComplete, selecti
             player.stop();
             window.scrollTo(0, 0);
           }}>정지</button>
+          <button className="control border border-edge" disabled={!player.canPlay} onClick={player.nextLine}>다음 문장</button>
           {selectionCount > 0 && <span className="text-sm text-slate-300">
-            선택 {selectionCount}개{selectionCount > 1 ? ' 연속 재생 (아래 → 위)' : ' 재생'}
+            선택 {selectionCount}개{selectionCount > 1 ? ` 연속 재생 (${order === 'reverse' ? '아래 → 위' : '위 → 아래'})` : ' 재생'}
           </span>}
         </div>
+        {wakeStatus && <p role="status">{wakeStatus}</p>}
         <p className="mt-1 min-h-5 text-sm text-slate-300" role="status">{player.status}</p>
       </section>
+      <StudyControls settings={settings} change={changeSettings} speakers={[...new Set(flat.map(line => line.speaker))]} count={flat.length} />
       {lesson.conversations.map((dialogue, group) => {
         const start = offset;
         offset += dialogue.lines.length;
@@ -109,8 +121,9 @@ function LessonView({ lesson, save, startSelected, autoPlay, onComplete, selecti
                     <button className="control min-w-11 border border-edge bg-panel px-2 text-accent" disabled={!player.canPlay} onClick={() => player.playLine(position)}
                       aria-label={`${line.speaker} · ${index + 1}번째 대사 · ${active ? playLabel : '여기부터 재생'}`}>{line.speaker}</button>
                     <div className="min-w-0 break-words py-1">
-                      <p lang="en" className="leading-relaxed">{line.text}</p>
-                      {line.meaning && <p className="mt-1 text-sm leading-relaxed text-slate-300">{line.meaning}</p>}
+                      <p lang="en" className="leading-relaxed"><Concealed text={line.text} hidden={settings.hideEnglish} phrases={line.keyPhrase} /></p>
+                      {line.meaning && <p className="mt-1 text-sm leading-relaxed text-slate-300"><Concealed text={line.meaning} hidden={settings.hideMeaning} /></p>}
+                      <Shadowing text={line.text} pause={player.pause} />
                     </div>
                   </div>
                 );
@@ -123,10 +136,12 @@ function LessonView({ lesson, save, startSelected, autoPlay, onComplete, selecti
   );
 }
 
-type ImportResult = { added: string[]; skipped: string[]; failed: string[] };
+type ImportResult = Record<'added' | 'updated' | 'unchanged' | 'skipped' | 'failed', string[]>;
+const emptyImport = (): ImportResult => ({ added: [], updated: [], unchanged: [], skipped: [], failed: [] });
 
-function SentenceReader() {
-  const [text, setText] = useState(() => localStorage.getItem('sentence-reader-text') ?? '');
+function SentenceReader({ settings, changeSettings }: { settings: Settings; changeSettings: (s: Settings) => void }) {
+  const config = useRef(settings); config.current = settings;
+  const [text, setText] = useState(() => { try { return localStorage.getItem('sentence-reader-text') ?? ''; } catch { return ''; } });
   const [voices, setVoices] = useState<SpeechSynthesisVoice[]>([]);
   const [playing, setPlaying] = useState(false);
   const [message, setMessage] = useState('');
@@ -151,10 +166,13 @@ function SentenceReader() {
         synth?.cancel();
       }
     }
+    const external = () => { cancel(); setPlaying(false); };
+    window.addEventListener('study-audio', external); window.addEventListener('study-microphone', external);
     refresh();
     synth?.addEventListener('voiceschanged', refresh);
     window.addEventListener('pagehide', cancel);
     return () => {
+      window.removeEventListener('study-audio', external); window.removeEventListener('study-microphone', external);
       synth?.removeEventListener('voiceschanged', refresh);
       window.removeEventListener('pagehide', cancel);
       cancel();
@@ -169,6 +187,7 @@ function SentenceReader() {
   }
 
   function speak(value: string) {
+    document.querySelectorAll('audio').forEach(audio => audio.pause()); window.dispatchEvent(new Event('study-play'));
     const alternatives = voices.filter(voice => voiceKey(voice) !== previousVoice.current);
     const pool = alternatives.length ? alternatives : voices;
     const voice = pool[Math.floor(Math.random() * pool.length)];
@@ -177,7 +196,7 @@ function SentenceReader() {
     const utterance = new SpeechSynthesisUtterance(value);
     utterance.voice = voice;
     utterance.lang = voice.lang.replaceAll('_', '-');
-    utterance.rate = 0.95;
+    utterance.rate = config.current.rate; utterance.pitch = config.current.pitch;
     active.current = utterance;
     setPlaying(true);
     const label = `${voice.name} (${voice.lang})`;
@@ -201,6 +220,7 @@ function SentenceReader() {
     synth.speak(utterance);
   }
 
+  const wakeStatus = useWakeLock(playing, settings.wake);
   const status = message || (!synth ? '이 브라우저는 음성 재생을 지원하지 않습니다.'
     : voices.length ? `사용 가능한 영어 목소리 ${voices.length}개 · 재생할 때 무작위로 선택합니다.`
     : '사용 가능한 영어 목소리가 아직 없습니다.');
@@ -211,7 +231,7 @@ function SentenceReader() {
       <label htmlFor="sentence-reader-input" className="mb-2 block text-slate-300">영어 문장</label>
       <textarea id="sentence-reader-input" lang="en" spellCheck={false} rows={12} value={text} onChange={event => {
         setText(event.target.value);
-        localStorage.setItem('sentence-reader-text', event.target.value);
+        try { localStorage.setItem('sentence-reader-text', event.target.value); } catch { /* 저장 실패 시에도 입력 유지 */ }
       }} className="mb-3 w-full rounded-xl border border-edge bg-panel p-3 focus-visible:outline-accent" />
       <div className="flex flex-wrap items-center gap-2">
         <button className="control bg-accent text-slate-950" disabled={!text.trim() || !voices.length} onClick={() => {
@@ -224,6 +244,7 @@ function SentenceReader() {
           setRepeat(event.target.checked);
         }} />반복 재생</label>
       </div>
+      <StudyControls settings={settings} change={changeSettings} /><p role="status">{wakeStatus}</p>
       <p className="mt-2 text-sm text-slate-300" role="status">{status}</p>
     </main>
   );
@@ -238,6 +259,8 @@ function ImportSummary({ result, close }: { result: ImportResult; close: () => v
       <h2 id="import-title" className="mb-5 text-xl font-bold">폴더 가져오기 결과</h2>
       {([
         ['새로 등록한 파일', result.added],
+        ['갱신한 파일', result.updated],
+        ['변경 없는 파일', result.unchanged],
         ['기존에 있어 건너뛴 파일', result.skipped],
         ['가져오지 못한 파일', result.failed],
       ] as const).map(([title, files]) => (
@@ -256,6 +279,15 @@ function ImportSummary({ result, close }: { result: ImportResult; close: () => v
 }
 
 function App() {
+  const administration = location.pathname === '/administration';
+  const [user, setUser] = useState<User | null>(null);
+  const [authReady, setAuthReady] = useState(false);
+  const [authEnabled, setAuthEnabled] = useState(false);
+  const [settings, changeSettings] = useSettings();
+  const [order, setOrder] = useState<'reverse' | 'forward'>(() => readStored<string>('playlist-order-v1', 'reverse') === 'forward' ? 'forward' : 'reverse');
+  const [query, setQuery] = useState(''), [tag, setTag] = useState(''), [level, setLevel] = useState('');
+  const [policy, setPolicy] = useState('update');
+  const scope = user?.sub ?? 'anonymous';
   const [page, setPage] = useState<'dialogues' | 'sentences'>('dialogues');
   const [lessons, setLessons] = useState<Lesson[]>([]);
   const [selectedId, setSelectedId] = useState('');
@@ -270,24 +302,30 @@ function App() {
   const [importResult, setImportResult] = useState<ImportResult | null>(null);
   const pending = useRef<Promise<unknown>>(Promise.resolve());
   const positions = useRef(new Map<string, number>());
+  const currentScope = useRef(scope); currentScope.current = scope;
   const selected = lessons.find(lesson => lesson.id === selectedId) ?? lessons[0];
-  const playlist = selectedPlaylist(lessons, checkedIds);
+  const playlist = selectedPlaylist(lessons, checkedIds, order);
+  const visible = lessons.filter(lesson => (!tag || lesson.tags?.includes(tag)) && (!level || lesson.level === level)
+    && JSON.stringify([lesson.title, lesson.description, lesson.conversations]).toLowerCase().includes(query.toLowerCase()));
+  useEffect(() => { if (authReady) writeStored(`selection-v1:${scope}`, [...checkedIds]); }, [checkedIds]);
+  useEffect(() => { writeStored('playlist-order-v1', order); }, [order]);
 
   function checkLesson(id: string, event: { shiftKey: boolean; ctrlKey: boolean; metaKey: boolean }) {
     const anchor = selectionAnchor.current;
-    setCheckedIds(previous => updateSelection(lessons.map(lesson => lesson.id), previous,
+    setCheckedIds(previous => updateSelection(visible.map(lesson => lesson.id), previous,
       id, anchor, event.shiftKey, event.ctrlKey || event.metaKey));
     if (!event.shiftKey || anchor === null) selectionAnchor.current = id;
   }
 
   function selectLesson(id: string) {
     setAutoPlay(false);
-    setSelectedId(id);
+    setSelectedId(id); changeSettings({ ...settings, a: -1, b: -1, role: '' });
   }
 
   function startSelected() {
     const bottom = playlist[0];
     if (!bottom) return false;
+    if (bottom.id !== selected?.id) changeSettings({ ...settings, a: -1, b: -1, role: '' });
     setSelectedId(bottom.id);
     setAutoPlay(true);
     setSession(value => value + 1);
@@ -296,76 +334,133 @@ function App() {
 
   function playPreviousLesson() {
     if (!selected) return;
-    const index = lessons.findIndex(lesson => lesson.id === selected.id);
-    const previous = playlist.find(lesson => lessons.findIndex(item => item.id === lesson.id) < index);
+    const index = playlist.findIndex(lesson => lesson.id === selected.id);
+    const previous = index < 0 ? undefined : playlist[index + 1];
     if (!previous) {
       setAutoPlay(false);
       return;
     }
+    changeSettings({ ...settings, a: -1, b: -1, role: '' });
     setSelectedId(previous.id);
     setAutoPlay(true);
   }
 
   async function reload() {
     await pending.current;
-    const data = await api<Lesson[]>('lessons');
+    let online = true;
+    const data = await api<Lesson[]>('lessons').catch(error => { online = false; const stored = readStored<Lesson[]>(`offline-lessons-v1:${scope}`, []); if (!stored.length) throw error; setStatus('오프라인 저장 자료를 표시합니다.'); return stored; });
+    if (currentScope.current !== scope) return 0;
+    const saved = readStored<Record<string, Bookmark>>(`progress-v1:${scope}`, {});
+    const queued = readStored<Record<string, Bookmark>>(`progress-queue-v1:${scope}`, {});
+    for (const lesson of data) {
+      if (!user || !online) lesson.position = restore(lesson, saved?.[lesson.id]);
+      if (user && queued?.[lesson.id]) lesson.position = restore(lesson, queued[lesson.id]);
+    }
     positions.current.clear();
     setLessons(data);
+    const stored = readStored<unknown>(`selection-v1:${scope}`, []);
+    setCheckedIds(new Set(Array.isArray(stored) ? stored.filter((id): id is string => typeof id === 'string' && (!online || data.some(item => item.id === id))) : []));
     setSession(value => value + 1);
     return data.length;
   }
 
   useEffect(() => {
+    void api<{ enabled: boolean; user: User | null }>('auth/session').then(data => {
+      writeStored('last-account-v1', data.user ? { sub: data.user.sub, admin: false, csrf: '' } : null);
+      csrfToken = data.user?.csrf ?? ''; setUser(data.user); setAuthEnabled(data.enabled); setAuthReady(true);
+    }).catch(() => { if (!navigator.onLine) setUser(readStored<User | null>('last-account-v1', null)); setAuthReady(true); setStatus('인증 상태를 확인할 수 없습니다. 오프라인에서는 관리 기능을 사용할 수 없습니다.'); });
+  }, []);
+  useEffect(() => {
+    if (!authReady) return;
     void reload().then(count => setStatus(count ? '' : '등록된 대화가 없습니다.'))
       .catch(() => setStatus('대화 목록을 불러올 수 없습니다. 서버 상태를 확인하세요.'));
     void api<{ canImport: boolean }>('config').then(config => setCanImport(config.canImport)).catch(() => {});
-  }, []);
+  }, [authReady, scope]);
 
   function save(id: string, position: number) {
     positions.current.set(id, position);
-    pending.current = pending.current.then(() => api('progress', 'PUT', { id, position }))
-      .then(() => setProgressError(''))
-      .catch(() => setProgressError('학습 위치를 서버에 저장하지 못했습니다.'));
+    const lesson = lessons.find(item => item.id === id);
+    const saved = readStored<Record<string, Bookmark>>(`progress-v1:${scope}`, {});
+    if (lesson) writeStored(`progress-v1:${scope}`, { ...saved, [id]: bookmark(lesson, position) });
+    if (!user || !lesson) return;
+    const queueKey = `progress-queue-v1:${user.sub}`, value = bookmark(lesson, position);
+    writeStored(queueKey, { ...readStored<Record<string, Bookmark>>(queueKey, {}), [id]: value });
+    const sub = user.sub;
+    pending.current = pending.current.then(async () => {
+      if (currentScope.current !== sub) return;
+      await api('progress', 'PUT', { id, position });
+      const queued = readStored<Record<string, Bookmark>>(queueKey, {});
+      if (JSON.stringify(queued[id]) === JSON.stringify(value)) { delete queued[id]; writeStored(queueKey, queued); }
+      setProgressError('');
+    }).catch(() => setProgressError('학습 위치를 저장하지 못했습니다. 연결 복구 후 다시 저장합니다.'));
   }
+
+  useEffect(() => {
+    if (!user || !authReady) return;
+    const sub = user.sub;
+    let disposed = false;
+    async function flush() {
+      if (!navigator.onLine || disposed) return;
+      try {
+        const session = await api<{ user: User | null }>('auth/session');
+        if (disposed || currentScope.current !== sub || session.user?.sub !== sub) return;
+        csrfToken = session.user.csrf;
+        const fresh = await api<Lesson[]>('lessons');
+        const key = `progress-queue-v1:${sub}`;
+        await pending.current;
+        for (const [id, value] of Object.entries(readStored<Record<string, Bookmark>>(key, {}))) {
+          if (disposed || currentScope.current !== sub) return;
+          const lesson = fresh.find(item => item.id === id);
+          if (!lesson) continue;
+          const position = restore(lesson, value);
+          await api('progress', 'PUT', { id, position });
+          const queued = readStored<Record<string, Bookmark>>(key, {});
+          if (JSON.stringify(queued[id]) === JSON.stringify(value)) { delete queued[id]; writeStored(key, queued); }
+        }
+        setProgressError('');
+      } catch { if (!disposed) setProgressError('오프라인 진도를 연결 복구 후 다시 저장합니다.'); }
+    }
+    void flush(); window.addEventListener('online', flush);
+    return () => { disposed = true; window.removeEventListener('online', flush); };
+  }, [user, authReady]);
 
   async function importFiles(files: FileList | null, folder = false) {
     const json = Array.from(files ?? []).filter(file => /\.json$/i.test(file.name));
     if (!json.length) {
-      if (folder && files?.length) setImportResult({ added: [], skipped: [], failed: [] });
+      if (folder && files?.length) setImportResult(emptyImport());
       return;
     }
     setBusy(true);
     setStatus('JSON 자료를 가져오는 중입니다.');
-    const result: ImportResult = { added: [], skipped: [], failed: [] };
-    const known = new Set(lessons.map(lesson => lesson.id));
+    const result: ImportResult = emptyImport();
+    const duplicates = new Set(json.filter((file, i) => json.some((other, j) => i !== j && file.name === other.name)).map(file => file.name));
     await pending.current;
     for (const file of json) {
       const label = folder ? file.webkitRelativePath || file.name : file.name;
-      if (known.has(file.name)) {
-        result.skipped.push(label);
+      if (duplicates.has(file.name)) {
+        result.failed.push(`${label} · 같은 파일명 충돌`);
         continue;
       }
       try {
         const data = JSON.parse((await file.text()).replace(/^\uFEFF/, ''));
-        const response = await api<{ status: 'added' | 'skipped' }>('import', 'POST', {
-          name: file.name, modified: file.lastModified, data,
+        const response = await api<{ status: 'added' | 'updated' | 'unchanged' | 'skipped' }>('import', 'POST', {
+          name: file.name, modified: file.lastModified, data, policy,
         });
         result[response.status].push(label);
-        known.add(file.name);
+
       } catch {
         result.failed.push(label);
       }
     }
     try {
-      if (result.added.length) await reload();
+      if (result.added.length || result.updated.length) await reload();
       setStatus(result.failed.length ? `가져오지 못한 파일 · ${result.failed.join(', ')}`
         : result.added.length ? `${result.added.length}개 자료를 저장했습니다.` : '');
     } catch {
       setStatus('가져온 뒤 목록을 다시 읽지 못했습니다. 페이지를 새로고침하세요.');
     } finally {
       setBusy(false);
-      if (folder) setImportResult(result);
-      else if (result.skipped.length) window.alert(`기존의 내용이 있습니다.\n${result.skipped.join('\n')}`);
+      setImportResult(result);
     }
   }
 
@@ -373,6 +468,10 @@ function App() {
     <div className={`mx-auto grid max-w-6xl ${page === 'sentences' ? 'md:grid-cols-[8rem_minmax(0,1fr)]' : 'md:grid-cols-[17rem_minmax(0,1fr)]'}`}>
       <aside className="p-4 md:sticky md:top-0 md:flex md:h-dvh md:flex-col md:border-r md:border-edge md:bg-panel md:p-5">
         <h1 className={`mb-4 text-xl font-bold ${page === 'sentences' ? 'md:sr-only' : ''}`}>영어 대화 연습</h1>
+        <p className="mb-3 text-sm"><a href={administration ? '/' : '/administration'}>{administration ? '학습 화면' : '관리·로그인'}</a></p>
+        {administration && <section className="mb-3"><h2>자료 관리</h2>{!user ? authEnabled ? <a className="control border" href="/api/auth/login">Google 로그인</a> : <p>Google 인증 설정이 필요합니다.</p> : <><p className="break-all">Google ID: {user.sub}</p><p>{user.admin ? '관리자' : '관리자로 등록되지 않은 계정입니다.'}</p>
+        <button className="control border" onClick={() => { void api('auth/logout', 'POST', {}).then(() => location.reload()); }}>로그아웃</button>
+        {user.admin && <button className="control border" onClick={() => { void api<{ copied: boolean }>('admin/claim-progress', 'POST', {}).then(result => { setStatus(result.copied ? '기존 공동 진도를 복사했습니다.' : '이미 복사한 계정입니다.'); void reload(); }).catch(error => setStatus(error.message)); }}>기존 공동 진도 복사</button>}</>}</section>}
         <nav aria-label="학습 메뉴" className={`mb-4 flex gap-2 ${page === 'sentences' ? 'md:flex-col' : ''}`}>
           {([['dialogues', '대화 연습'], ['sentences', '문장읽기']] as const).map(([value, label]) => (
             <button key={value} aria-current={page === value ? 'page' : undefined} onClick={() => {
@@ -384,15 +483,20 @@ function App() {
         </nav>
         {page === 'dialogues' && !!lessons.length && (
           <>
+            <input aria-label="자료 검색" placeholder="제목·설명·대사 검색" value={query} onChange={e => setQuery(e.target.value)} />
+            <select aria-label="태그 필터" value={tag} onChange={e => setTag(e.target.value)}><option value="">모든 태그</option>{[...new Set(lessons.flatMap(item => item.tags ?? []))].map(value => <option key={value}>{value}</option>)}</select>
+            <select aria-label="난이도 필터" value={level} onChange={e => setLevel(e.target.value)}><option value="">모든 난이도</option>{['A1','A2','B1','B2','C1','C2'].map(value => <option key={value}>{value}</option>)}</select>
+            <select aria-label="연속 재생 방향" value={order} onChange={e => setOrder(e.target.value as 'reverse' | 'forward')}><option value="reverse">아래 → 위</option><option value="forward">위 → 아래</option></select>
+            <p>선택 {checkedIds.size}개 · 필터로 숨김 {[...checkedIds].filter(id => !visible.some(item => item.id === id)).length}개</p>
             <label className="block md:hidden">
               <span className="sr-only">대화 선택</span>
               <select className="mb-3 w-full rounded-xl border border-edge bg-panel px-3 py-3" value={selected?.id ?? ''} onChange={event => selectLesson(event.target.value)}>
-                {lessons.map(lesson => <option key={lesson.id} value={lesson.id}>{lesson.title}</option>)}
+                {visible.map(lesson => <option key={lesson.id} value={lesson.id}>{lesson.title}</option>)}
               </select>
             </label>
             <p className="mb-2 text-xs text-slate-400">체크: 재생할 자료 선택 · Ctrl+클릭: 개별 선택 · Shift+클릭: 범위 선택</p>
-            <nav aria-label="대화 목록" className="max-h-64 min-h-0 flex-1 space-y-2 overflow-y-auto p-1 md:max-h-none">
-              {lessons.map(lesson => (
+            <nav aria-label="대화 목록" className="max-h-40 sm:max-h-64 min-h-0 flex-1 space-y-2 overflow-y-auto p-1 md:max-h-none">
+              {visible.map(lesson => (
                 <div key={lesson.id} className={`flex items-center gap-2 rounded-xl border px-2 ${checkedIds.has(lesson.id) ? 'border-accent bg-sky-950' : 'border-edge'}`}>
                   <input type="checkbox" className="h-4 w-4 shrink-0 accent-sky-400"
                     aria-label={`${lesson.title} 연속 재생 선택`} checked={checkedIds.has(lesson.id)}
@@ -412,8 +516,9 @@ function App() {
           </>
         )}
         {page === 'dialogues' && <div className="mt-2 space-y-2 text-sm">
-          {canImport && (
+          {administration && canImport && (
             <div className="flex flex-wrap gap-2">
+              <select aria-label="가져오기 정책" value={policy} onChange={e => setPolicy(e.target.value)}><option value="update">변경된 자료 갱신·진도 유지</option><option value="skip">기존 자료 건너뛰기</option></select>
               <label className="control cursor-pointer border border-edge focus-within:outline-2 focus-within:outline-accent">
                 JSON 파일
                 <input type="file" className="sr-only" accept=".json" multiple disabled={busy} onChange={event => {
@@ -434,16 +539,19 @@ function App() {
           {progressError && <p role="status" className="text-amber-300">{progressError}</p>}
         </div>}
       </aside>
+      <div className="min-w-0"><div className="px-4"><OfflinePanel lessons={lessons} selected={checkedIds.size ? lessons.filter(l => checkedIds.has(l.id)) : selected ? [selected] : []} scope={scope} />
+      <AudioLibrary lessons={playlist.length ? playlist : selected ? [selected] : []} settings={settings} admin={administration && !!user?.admin} request={api} savePosition={save} /></div>
       {importResult && <ImportSummary result={importResult} close={() => setImportResult(null)} />}
-      {page === 'sentences' && <SentenceReader />}
+      {page === 'sentences' && <SentenceReader settings={settings} changeSettings={changeSettings} />}
       {page === 'dialogues' && selected && !busy && (
         <LessonView key={`${selected.id}-${session}`}
           lesson={{ ...selected, position: positions.current.get(selected.id) ?? selected.position }}
           startSelected={startSelected}
-          selectionCount={playlist.length}
+          selectionCount={playlist.length} order={order} settings={settings} changeSettings={changeSettings}
           autoPlay={autoPlay} onComplete={playPreviousLesson}
           save={position => save(selected.id, position)} />
       )}
+      </div>
     </div>
   );
 }
