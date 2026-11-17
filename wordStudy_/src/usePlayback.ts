@@ -86,7 +86,6 @@ export function usePlayback(lesson: Lesson, save: (position: number) => void,
     }
     function pauseForOtherMedia() { if (state.current === 'playing') { changeMode('paused'); cancelSpeech(); } }
     window.addEventListener('study-microphone', pauseForOtherMedia);
-    window.addEventListener('study-audio', pauseForOtherMedia);
     function cancel() {
       if (pending.current !== null) clearTimeout(pending.current);
       pending.current = null;
@@ -98,7 +97,7 @@ export function usePlayback(lesson: Lesson, save: (position: number) => void,
     synth?.addEventListener('voiceschanged', refresh);
     window.addEventListener('pagehide', cancel);
     return () => {
-      window.removeEventListener('study-microphone', pauseForOtherMedia); window.removeEventListener('study-audio', pauseForOtherMedia);
+      window.removeEventListener('study-microphone', pauseForOtherMedia);
       synth?.removeEventListener('voiceschanged', refresh);
       window.removeEventListener('pagehide', cancel);
       cancel();
@@ -158,7 +157,6 @@ export function usePlayback(lesson: Lesson, save: (position: number) => void,
     utterance.voice = voice;
     utterance.lang = voice.lang;
     utterance.rate = settings.current?.rate ?? 0.95;
-    utterance.pitch = settings.current?.pitch ?? 1;
     active.current = utterance;
     utterance.onend = () => {
       if (active.current !== utterance) return;
@@ -169,7 +167,6 @@ export function usePlayback(lesson: Lesson, save: (position: number) => void,
       if (repeats.current < (config?.repeat ?? 1)) next = index;
       else {
         repeats.current = 0;
-        if (config && config.a >= 0 && config.b >= config.a && index >= config.b) next = config.a;
       }
       if (next >= flat.length) {
         stop('재생이 끝났습니다.');
@@ -196,7 +193,6 @@ export function usePlayback(lesson: Lesson, save: (position: number) => void,
 
   function start(index: number) {
     if (!voices.length || !flat[index]) return;
-    document.querySelectorAll?.('audio').forEach(audio => audio.pause());
     window.dispatchEvent?.(new Event('study-play'));
     cancelSpeech();
     repeats.current = 0; waiting.current = false;
@@ -218,7 +214,6 @@ export function usePlayback(lesson: Lesson, save: (position: number) => void,
       cancelSpeech();
     } else if (state.current === 'paused') {
       if (waiting.current) { nextLine(); return; }
-      document.querySelectorAll?.('audio').forEach(audio => audio.pause());
       window.dispatchEvent?.(new Event('study-play'));
       changeMode('playing');
       speak(current.current, cast);
@@ -230,9 +225,7 @@ export function usePlayback(lesson: Lesson, save: (position: number) => void,
   }
   function nextLine() {
     cancelSpeech(); waiting.current = false; repeats.current = 0;
-    const config = settings.current;
-    let next = current.current + 1;
-    if (config && config.a >= 0 && config.b >= config.a && current.current >= config.b) next = config.a;
+    const next = current.current + 1;
     if (next >= flat.length) { stop('재생이 끝났습니다.'); completion.current?.(); return; }
     if (!cast.length) { start(next); return; }
     changeMode('playing'); speak(next, cast);

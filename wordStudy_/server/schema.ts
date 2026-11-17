@@ -5,7 +5,6 @@ export const lessons = pgTable('lessons', {
   title: text().notNull(),
   date: timestamp({ withTimezone: true, mode: 'date' }),
   description: text().array().notNull(),
-  tags: text().array().notNull().default([]),
   level: text(),
   revision: text().notNull().default(''),
 });

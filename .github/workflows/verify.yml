@@ -38,4 +38,4 @@ jobs:
       - name: HTML 및 Python 구문 검사
         run: |
           node scripts/verify-html.mjs
-          python3 -m py_compile tts/service.py scripts/download-model.py
+          python3 -m py_compile scripts/browser-preview.py ../scripts/update-html-manifest.py

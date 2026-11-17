@@ -4,7 +4,6 @@ import Fastify from 'fastify';
 import fastifyStatic from '@fastify/static';
 import { migrate } from 'drizzle-orm/node-postgres/migrator';
 import { parseLesson } from '../shared/lesson.ts';
-import { registerAudio } from './audio.ts';
 import { identity, registerAuth, requireUser, requireAdmin } from './auth.ts';
 import { db, listLessons, pool, saveLesson, saveProgress, importLesson } from './store.ts';
 
@@ -64,7 +63,6 @@ try {
       throw new Error(`${entry.name} 가져오기 실패`, { cause: error });
     }
   }
-  await registerAudio(app);
   if (process.env.SERVE_WEB !== '0') {
     await app.register(fastifyStatic, { root: resolve('dist') });
     app.get('/administration', async (_request, reply) => reply.sendFile('index.html'));

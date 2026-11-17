@@ -28,7 +28,7 @@ export async function importLesson(lesson: Lesson, policy: 'skip' | 'update') {
       .orderBy(asc(lines.conversationOrdinal), asc(lines.ordinal)) : [];
     const oldProgress = existing ? await tx.select().from(progress).where(eq(progress.lessonId, id)) : [];
     const values = { id, title, description, date: lesson.date ? new Date(lesson.date) : null,
-      tags: lesson.tags ?? [], level: lesson.level ?? null, revision };
+      level: lesson.level ?? null, revision };
     await tx.insert(lessons).values(values).onConflictDoUpdate({ target: lessons.id, set: values });
     if (existing) await tx.delete(conversations).where(eq(conversations.lessonId, id));
     for (const [ordinal, dialogue] of lesson.conversations.entries()) {

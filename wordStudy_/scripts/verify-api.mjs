@@ -7,7 +7,6 @@ import { mkdtemp, writeFile, readFile, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import pg from 'pg';
-import { createServer } from 'node:http';
 const admin = new pg.Pool({ connectionString: process.env.DATABASE_URL });
 const database = `wordstudy_verify_${Date.now()}`;
 const connection = new URL(process.env.DATABASE_URL); connection.pathname = `/${database}`;
@@ -16,17 +15,13 @@ const base = 'http://127.0.0.1:43872/api/', origin = 'http://localhost:43872';
 const secret = 'test-only-session-secret-at-least-32-characters';
 const temp = await mkdtemp(join(tmpdir(), 'wordstudy-api-'));
 await writeFile(join(temp, 'access.json'), JSON.stringify({ adminGoogleIds: ['admin'] }));
-let ttsEnabled = false, renderCount = 0, activeRenders = 0, maxActive = 0, failRender = false;
-const wave = Buffer.alloc(48); wave.write('RIFF');wave.writeUInt32LE(40,4);wave.write('WAVEfmt ',8);wave.writeUInt32LE(16,16);wave.writeUInt16LE(1,20);wave.writeUInt16LE(1,22);wave.writeUInt32LE(22050,24);wave.writeUInt32LE(44100,28);wave.writeUInt16LE(2,32);wave.writeUInt16LE(16,34);wave.write('data',36);wave.writeUInt32LE(4,40);
-const tts=createServer(async (req,res)=>{let raw='';for await(const chunk of req)raw+=chunk;renderCount++;activeRenders++;maxActive=Math.max(maxActive,activeRenders);await new Promise(r=>setTimeout(r,50));activeRenders--;if(failRender){res.writeHead(500);res.end();return;}const data=JSON.parse(raw);res.setHeader('content-type','application/json');res.end(JSON.stringify({audio:wave.toString('base64'),timeline:data.items.map((x,i)=>({...x,start:i,end:i+1}))}));});
-await new Promise(r=>tts.listen(43873,'127.0.0.1',r));
 let child, output = '', who = '', csrf = 'test-csrf';
 async function start(enabled = '1') {
   output = '';
   child = spawn(process.execPath, ['--experimental-transform-types', 'server/index.ts'], {
     env: { ...process.env, DATABASE_URL: connection.href, PORT: '43872', SERVE_WEB: '0', ENABLE_IMPORT: enabled,
       PUBLIC_ORIGIN: origin, GOOGLE_CLIENT_ID: 'test-client', GOOGLE_CLIENT_SECRET: 'test-secret', SESSION_SECRET: secret,
-      ACCESS_CONFIG: join(temp,'access.json'), AUDIO_CACHE: join(temp,'audio'), TTS_URL: ttsEnabled ? 'http://127.0.0.1:43873' : '' }, stdio: ['ignore','pipe','pipe'],
+      ACCESS_CONFIG: join(temp,'access.json') }, stdio: ['ignore','pipe','pipe'],
   });
   child.stdout.on('data', chunk => output += chunk); child.stderr.on('data', chunk => output += chunk);
   for(let i=0;i<150;i++) { if(child.exitCode!==null)throw new Error(output);try{if((await fetch(`${base}health`)).ok)return;}catch{}await new Promise(resolve=>setTimeout(resolve,100)); }
@@ -54,7 +49,7 @@ try {
   await db.query("INSERT INTO progress VALUES ('local','legacy.json',1), ('admin','legacy.json',1)");
   await start();
   const legacy = (await request('lessons')).find(l => l.id === 'legacy.json');
-  assert.equal(legacy.title, '기존 자료');assert.equal(legacy.conversations[0].lines.length, 2);assert.deepEqual(legacy.tags, []);
+  assert.equal(legacy.title, '기존 자료');assert.equal(legacy.conversations[0].lines.length, 2);assert.equal('tags' in legacy,false);
   assert.equal((await db.query("SELECT position FROM progress WHERE user_id='local' AND lesson_id='legacy.json'")).rows[0].position,1);
   const seeds=(await request('lessons')).filter(l=>l.id!=='legacy.json');assert.equal(seeds.length,22);assert.equal(seeds.flatMap(l=>l.conversations).length,222);assert.equal(seeds.flatMap(l=>l.conversations.flatMap(c=>c.lines)).length,430);
   assert.deepEqual(await request('config'),{canImport:false});
@@ -94,24 +89,9 @@ try {
   const login=await fetch(`${base}auth/login`,{redirect:'manual'});assert.equal(login.status,302);assert.ok(login.headers.get('set-cookie').includes('HttpOnly'));assert.ok(new URL(login.headers.get('location')).searchParams.get('code_challenge'));
   await request('auth/callback?code=invalid&state=invalid','GET',undefined,400);
   await stop();await start();assert.equal((await find()).title,'수정 자료');
-  await request('admin/audio','POST',{ids:[name],pitch:1,repeat:1,role:'',a:-1,b:-1},503);
-  who='member-token';await request('admin/audio','POST',{ids:[name],pitch:1,repeat:1,role:'',a:-1,b:-1},403);
-  who='admin-token';
-  await stop();ttsEnabled=true;await start();
-  const audioPayload={ids:[name],pitch:1,repeat:2,role:'',a:-1,b:-1};
-  const job=await request('admin/audio','POST',audioPayload);
-  async function waitAudio(id,state='complete') { for(let i=0;i<100;i++){const found=(await request('audio')).jobs.find(j=>j.id===id);if(found?.state===state)return found;await new Promise(r=>setTimeout(r,50));}throw new Error('음성 생성 대기 시간 초과'); }
-  const rendered=await waitAudio(job.id);assert.equal(rendered.timeline.length,2);assert.equal(renderCount,1);
-  assert.equal((await request('admin/audio','POST',audioPayload)).id,job.id);assert.equal(renderCount,1);
-  who='';const file=await fetch(`${base}audio/${job.id}/file`);assert.equal(file.status,200);assert.equal((await file.arrayBuffer()).byteLength,48);
-  const ranged=await fetch(`${base}audio/${job.id}/file`,{headers:{range:'bytes=4-11'}});assert.equal(ranged.status,206);assert.equal((await ranged.arrayBuffer()).byteLength,8);
-  assert.equal((await fetch(`${base}audio/${job.id}/file`,{headers:{range:'bytes=100-200'}})).status,416);
-  const exported=await request(`audio/${job.id}/export`);assert.equal(exported.version,1);assert.ok(exported.audio.startsWith('data:audio/wav;base64,'));
-  who='admin-token';const roleJob=await request('admin/audio','POST',{...audioPayload,role:'A'});assert.equal((await waitAudio(roleJob.id)).timeline[0].userTurn,true);
-  failRender=true;const failed=await request('admin/audio','POST',{...audioPayload,pitch:1.1});await waitAudio(failed.id,'failed');failRender=false;
-  assert.equal((await request('admin/audio','POST',{...audioPayload,pitch:1.1})).id,failed.id);await waitAudio(failed.id);assert.equal(maxActive,1);
-  await stop();await start();assert.equal((await waitAudio(job.id)).state,'complete');
+  for (const path of ['audio', 'audio/old/file', 'audio/old/export']) await request(path,'GET',undefined,404);
+  await request('admin/audio','POST',{},404);
   await request('auth/logout','POST',{});await request('import','POST',payload(),401);
   await stop();await start('0');assert.deepEqual(await request('config'),{canImport:false});await request('import','POST',payload(),404);
-  console.log('PASS: 구형 DB 마이그레이션·기존 seed·진도 보존, 관리자/일반/익명/만료 권한, CSRF, 변경 해시, 갱신·문장 이동·보정, 동시 가져오기, 롤백, 공동 진도 복사, 음성 큐·캐시·재시도·WAV Range·내보내기·롤플레이·재시작, 로그아웃, 가져오기 기본 차단');
-} finally { await stop();await db.end();await admin.query(`DROP DATABASE ${database} WITH (FORCE)`);await admin.end();await new Promise(r=>tts.close(r));await rm(temp,{recursive:true,force:true}); }
+  console.log('PASS: 구형 DB 마이그레이션·기존 seed·진도 보존, 관리자/일반/익명/만료 권한, CSRF, 변경 해시, 갱신·문장 이동·보정, 동시 가져오기, 롤백, 공동 진도 복사, 음성 생성 API 제거, 로그아웃, 가져오기 기본 차단');
+} finally { await stop();await db.end();await admin.query(`DROP DATABASE ${database} WITH (FORCE)`);await admin.end();await rm(temp,{recursive:true,force:true}); }

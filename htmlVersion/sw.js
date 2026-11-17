@@ -1,8 +1,8 @@
-const SHELL = 'html-study-shell-v1';
-self.addEventListener('install', event => event.waitUntil(caches.open(SHELL).then(cache => cache.addAll(['./conversation.html','./study.js','./manifest.webmanifest','./icon.svg','./icon-192.png','./icon-512.png']))));
-self.addEventListener('activate', event => event.waitUntil(caches.keys().then(keys => Promise.all(keys.filter(key => key.startsWith('html-study-shell-') && key !== SHELL).map(key => caches.delete(key))))));
-self.addEventListener('fetch', event => {
-  const url = new URL(event.request.url);
-  if(event.request.method !== 'GET' || url.origin !== location.origin || !['conversation.html','study.js','manifest.webmanifest','icon.svg','icon-192.png','icon-512.png'].includes(url.pathname.split('/').pop())) return;
-  event.respondWith(fetch(event.request).then(response => { if(response.ok){const copy=response.clone();void caches.open(SHELL).then(cache=>cache.put(event.request,copy));}return response; }).catch(()=>caches.match(event.request)));
-});
+// 기존 HTML 캐싱 워커를 갱신한 후 등록 해제한다. 새 캐싱은 하지 않는다.
+self.addEventListener('install', () => self.skipWaiting());
+self.addEventListener('activate', event => event.waitUntil((async () => {
+  const keys = await caches.keys();
+  await Promise.all(keys.filter(key => key.startsWith('html-study-shell-')).map(key => caches.delete(key)));
+  await self.clients.claim();
+  await self.registration.unregister();
+})()));

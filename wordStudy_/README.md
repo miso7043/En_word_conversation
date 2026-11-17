@@ -9,11 +9,11 @@ sh ./start.sh
 podman compose -p wordstudy ps
 podman compose -p wordstudy logs -f app
 curl -fsS http://localhost:43871/api/health
-# 자료·진도·음성 볼륨을 보존하며 중지
+# 자료·진도 볼륨을 보존하며 중지
 podman compose -p wordstudy stop
 ```
 
-기존 `.env`의 DB 암호를 보존하세요. `start.sh`는 앱·DB 컨테이너를 재생성하고 마이그레이션을 적용하며 `wordstudy-data` 볼륨을 삭제하지 않습니다. `down -v`는 사용하지 마세요. DB 포트와 TTS 포트는 호스트에 공개하지 않습니다.
+기존 `.env`의 DB 암호를 보존하세요. `start.sh`는 앱·DB 컨테이너를 재생성하고 마이그레이션을 적용하며 `wordstudy-data` 볼륨을 삭제하지 않습니다. `down -v`는 사용하지 마세요. DB 포트는 호스트에 공개하지 않습니다.
 
 ## Google 로그인 설정
 
@@ -42,35 +42,6 @@ PUBLIC_ORIGIN=http://localhost:43871
 
 모바일에서 로그인할 때 `localhost`는 휴대폰 자신을 가리킵니다. HTTPS 운영 도메인·Google 리디렉션 URI·`PUBLIC_ORIGIN`을 일치시키고 HTTPS 리버스 프록시를 사용하세요. `PUBLIC_ORIGIN`은 경로·끝 슬래시 없이 지정합니다. 쿠키는 HttpOnly·SameSite=Lax이며 HTTPS 주소에서는 Secure가 붙습니다. Google 로그인에는 인터넷이 필요합니다.
 
-## 선택적 로컬 TTS
-
-Piper 1.3.0을 별도 컨테이너에서 실행합니다. GPU는 필요하지 않습니다. 최초 이미지·모델 다운로드에는 인터넷과 디스크 여유 공간이 필요합니다.
-
-```bash
-python3 scripts/download-model.py
-```
-
-모델·설정·모델 카드가 `models/`에 저장됩니다. 고정 리비전과 SHA-256을 검사하며 Git에서는 제외합니다. 출처·라이선스는 [권리 안내](../THIRD_PARTY_NOTICES.md)를 확인하세요.
-
-`.env`에 다음 값을 추가하고 실행합니다.
-
-```dotenv
-TTS_URL=http://tts:8080
-TTS_MODEL_REVISION=piper-1.3.0-ljspeech-medium-e9ab671f2a0e50a701b34361136ba3e6a3a9eb0c
-```
-
-```bash
-sh ./start.sh
-# 직접 Compose를 사용한다면
-podman compose -p wordstudy --profile tts up -d --build
-```
-
-`start.sh`는 위 TTS_URL일 때 `tts` 프로필도 시작합니다. 모델 파일을 교체하면 `TTS_MODEL_REVISION`을 변경하세요. 문장 캐시에는 실제 모델·설정 파일의 해시도 반영합니다.
-
-관리자는 학습 목록을 체크하고 속도·피치·반복 설정 후 **생성 오디오 → 선택 자료 음성 생성·재시도**를 누릅니다. 순차 작업 큐가 대기·생성 중·완료·실패 상태를 저장합니다. 동일 요청은 기존 결과를 재사용하고 실패한 요청은 다시 시도합니다. 재시작 때 중단된 작업은 대기열에 복구합니다.
-
-한 번에 자료 100개, 반복 후 문장 2000개, 총 텍스트 10만 자까지 생성합니다. 파일은 `wordstudy-audio` 볼륨에 남습니다. 자동 삭제는 하지 않으므로 장기간 사용 시 볼륨 용량을 확인하세요. 일반 사용자는 완료 오디오를 재생·내보내기 할 수 있지만 생성은 관리자만 가능합니다.
-
 ## 개발
 
 ```bash
@@ -87,7 +58,5 @@ Vite 개발 서버는 `/api`를 43871 백엔드로 프록시합니다. Google �
 - `POST /api/import`: `name`, `modified`, `data`, 선택 `policy: update|skip`; 결과 `added|updated|unchanged|skipped`
 - `PUT /api/progress`: 로그인 계정의 `id`, `position`; 익명은 브라우저에 저장
 - `POST /api/admin/claim-progress`: 관리자 자신의 기존 공동 진도 복사
-- `GET /api/audio`, `POST /api/admin/audio`: 목록 조회·관리자 생성 요청
-- `GET /api/audio/:id/file`: WAV·Range, `GET /api/audio/:id/export`: HTML용 음성 묶음
 
 상태를 변경하는 인증 요청에는 동일한 Origin과 세션에서 받은 `X-CSRF-Token`이 필요합니다. OAuth 토큰·클라이언트 비밀값은 브라우저 저장소에 넣지 않습니다.

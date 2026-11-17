@@ -17,9 +17,5 @@ if grep -Eq '^GOOGLE_CLIENT_ID=.+$' .env && grep -Eq '^GOOGLE_CLIENT_SECRET=.+$'
   ENABLE_IMPORT=1
 fi
 export ENABLE_IMPORT
-if grep -Eq '^TTS_URL=http://tts:8080/?$' .env; then
-  podman compose -p wordstudy --profile tts up -d --build --force-recreate
-else
-  podman compose -p wordstudy up -d --build --force-recreate
-fi
+podman compose -p wordstudy up -d --build --force-recreate
 podman port wordStudy_ 43871/tcp

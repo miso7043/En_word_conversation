@@ -6,7 +6,7 @@ const {parseLesson,remapPosition}=await import('../shared/lesson.ts');
 const {selectedPlaylist}=await import('../src/playlist.ts');
 const input={title:'Test',tags:['test','test'],level:'B1',conversations:[{lines:[{speaker:'A',text:'Hello',keyPhrase:'Hello'}]}]};
 const lesson=parseLesson('test.json',input,0);
-assert.deepEqual(lesson.tags,['test']);assert.deepEqual(lesson.conversations[0].lines[0].keyPhrase,['Hello']);
+assert.equal('tags' in lesson,false);assert.deepEqual(lesson.conversations[0].lines[0].keyPhrase,['Hello']);
 assert.throws(()=>parseLesson('x.json',{...input,level:'bad'},0));assert.throws(()=>parseLesson('../x.json',input,0));
 const a={speaker:'A',text:'a'}, b={speaker:'B',text:'b'};
 assert.equal(remapPosition([a,b],[b,a,b],1),0);assert.equal(remapPosition([a,b],[a],1),0);assert.equal(remapPosition([a],[],0),0);

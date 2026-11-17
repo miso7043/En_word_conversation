@@ -118,19 +118,22 @@ console.log('PASS: automatic start, latest completion callback, no automatic res
 
 // 학습 모드도 실제 재생 hook을 통해 검증한다.
 slots.length = 0; spoken.length = 0; timers.clear();
-options = { settings: {rate:.7,pitch:1.2,repeat:2,role:'',a:-1,b:-1} };
+options = { settings: {rate:.7,repeat:2,role:''} };
 render(); render(); player.toggle(); render(); flush();
-assert.equal(spoken.at(-1).rate,.7);assert.equal(spoken.at(-1).pitch,1.2);
+assert.equal(spoken.at(-1).rate,.7);assert.equal(spoken.at(-1).pitch,undefined);
 spoken.at(-1).onend();render();flush();assert.equal(spoken.at(-1).text,'First sentence.');
 spoken.at(-1).onend();render();flush();assert.equal(spoken.at(-1).text,'Second sentence.');
 player.stop();render();
 slots.length=0;spoken.length=0;timers.clear();
-options={settings:{rate:1,pitch:1,repeat:1,role:'A',a:-1,b:-1}};
+options={settings:{rate:1,repeat:1,role:'A'}};
 render();render();player.toggle();render();flush();assert.equal(player.mode,'paused');assert.equal(spoken.length,0);
 player.nextLine();render();flush();assert.equal(spoken.at(-1).text,'Second sentence.');
 player.stop();render();
 slots.length=0;spoken.length=0;timers.clear();
-options={settings:{rate:1,pitch:1,repeat:1,role:'',a:0,b:0}};
-render();render();player.toggle();render();flush();spoken.at(-1).onend();render();flush();assert.equal(spoken.at(-1).text,'First sentence.');
-const count=spoken.length;player.stop();render();flush();assert.equal(spoken.length,count);
-console.log('PASS: 속도·피치·문장 반복·롤플레이 대기/다음·A-B 반복·정지');
+// 이전 저장 설정에 구간과 피치가 남아 있어도 다시 적용하지 않는다.
+options={settings:{rate:.7,pitch:1.4,repeat:1,role:'',a:0,b:0}};
+render();render();player.toggle();render();flush();
+options={settings:{rate:1.3,repeat:1,role:''}};render();
+spoken.at(-1).onend();render();flush();assert.equal(spoken.at(-1).text,'Second sentence.');assert.equal(spoken.at(-1).rate,1.3);assert.equal(spoken.at(-1).pitch,undefined);
+spoken.at(-1).onend();render();flush();assert.equal(player.mode,'idle');
+console.log('PASS: 속도와 다음 문장 적용·문장 반복·롤플레이·이전 구간/피치 설정 무시·종료');

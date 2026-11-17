@@ -1,15 +1,17 @@
 import { useEffect, useRef, useState } from 'react';
 import { readStored, writeStored } from './storage';
-export type Settings = { rate: number; pitch: number; repeat: number; hideEnglish: boolean; hideMeaning: boolean;
-  role: string; a: number; b: number; wake: boolean; theme: string };
-const defaults: Settings = { rate: .95, pitch: 1, repeat: 1, hideEnglish: false, hideMeaning: false, role: '', a: -1, b: -1, wake: false, theme: 'dark' };
+export type Settings = { rate: number; repeat: number; hideEnglish: boolean; hideMeaning: boolean;
+  role: string; wake: boolean; theme: string };
+const defaults: Settings = { rate: .95, repeat: 1, hideEnglish: false, hideMeaning: false, role: '', wake: false, theme: 'dark' };
 export function useSettings() {
   const [settings, setSettings] = useState<Settings>(() => {
     const raw = readStored<Partial<Settings>>('study-settings-v1', {});
-    return { ...defaults, ...raw, rate: clamp(raw?.rate, .5, 1.5, .95), pitch: clamp(raw?.pitch, .5, 1.5, 1), repeat: Math.round(clamp(raw?.repeat, 1, 10, 1)), a: -1, b: -1, role: '' };
+    return { ...defaults, rate: clamp(raw?.rate, .5, 1.5, .95), repeat: Math.round(clamp(raw?.repeat, 1, 10, 1)),
+      hideEnglish: raw.hideEnglish === true, hideMeaning: raw.hideMeaning === true, wake: raw.wake === true,
+      theme: ['light', 'dark', 'system'].includes(raw.theme ?? '') ? raw.theme! : 'dark' };
   });
   useEffect(() => {
-    writeStored('study-settings-v1', { ...settings, a: -1, b: -1, role: '' });
+    writeStored('study-settings-v1', { ...settings, role: '' });
     const query = matchMedia('(prefers-color-scheme: light)');
     const apply = () => { document.documentElement.dataset.theme = settings.theme === 'system' ? query.matches ? 'light' : 'dark' : settings.theme; };
     apply(); query.addEventListener('change', apply);
@@ -21,15 +23,10 @@ function clamp(value: unknown, min: number, max: number, fallback: number) { ret
 export function StudyControls({ settings: s, change, speakers = [], count = 0 }: { settings: Settings; change: (next: Settings) => void; speakers?: string[]; count?: number }) {
   return <details className="study-controls rounded-xl border border-edge p-3 my-3"><summary>학습 설정</summary><div className="flex flex-wrap gap-3 mt-3">
     <label>속도 <input aria-label="재생 속도" type="number" min="0.5" max="1.5" step="0.05" value={s.rate} onChange={e => change({ ...s, rate: clamp(+e.target.value, .5, 1.5, .95) })} /></label>
-    <label>피치 <input aria-label="음성 피치" type="number" min="0.5" max="1.5" step="0.1" value={s.pitch} onChange={e => change({ ...s, pitch: clamp(+e.target.value, .5, 1.5, 1) })} /></label>
     {!!count && <label>문장 반복 <input type="number" min="1" max="10" value={s.repeat} onChange={e => change({ ...s, repeat: Math.round(clamp(+e.target.value, 1, 10, 1)) })} /></label>}
     {(['hideEnglish', 'hideMeaning', 'wake'] as const).filter(key => count > 0 || key === 'wake').map((key, i) => <label key={key}><input type="checkbox" checked={s[key]} onChange={e => change({ ...s, [key]: e.target.checked })} /> {({ hideEnglish: '영어 가리기', hideMeaning: '뜻 가리기', wake: '재생 중 화면 유지' })[key]}</label>)}
-    <label>테마 <select value={s.theme} onChange={e => change({ ...s, theme: e.target.value })}>{[['dark', '어둡게'], ['light', '밝게'], ['system', '시스템']].map(([v, t]) => <option key={v} value={v}>{t}</option>)}</select></label>
     {!!count && <><label>내 역할 <select value={s.role} onChange={e => change({ ...s, role: e.target.value })}><option value="">모두 읽기</option>{speakers.map(speaker => <option key={speaker}>{speaker}</option>)}</select></label>
-    <label>A <input type="number" min="1" max={count} value={s.a < 0 ? '' : s.a + 1} onChange={e => change({ ...s, a: e.target.value ? Math.round(clamp(+e.target.value, 1, count, 1)) - 1 : -1 })} /></label>
-    <label>B <input type="number" min="1" max={count} value={s.b < 0 ? '' : s.b + 1} onChange={e => change({ ...s, b: e.target.value ? Math.round(clamp(+e.target.value, 1, count, count)) - 1 : -1 })} /></label>
-    <button className="control border" onClick={() => change({ ...s, a: -1, b: -1 })}>구간 해제</button>
-    <span>{s.a >= 0 && s.b >= s.a ? `${s.a + 1}~${s.b + 1}번 문장 무한 반복` : 'A ≤ B를 지정하면 구간 반복'}</span></>}
+    </>}
   </div></details>;
 }
 export function Concealed({ text, hidden, phrases = [] }: { text: string; hidden: boolean; phrases?: string[] }) {
@@ -84,7 +81,6 @@ export function Shadowing({ text, pause }: { text: string; pause: () => void }) 
   return <span className="block text-sm"><button className="control border border-edge" disabled={!Engine} onClick={() => {
     if (listening) { active.current?.abort(); return; }
     if (!Engine || !window.confirm('브라우저 음성 인식은 음성을 외부 서버에서 처리할 수 있으며 인터넷이 필요할 수 있습니다. 시작할까요?')) return;
-    document.querySelectorAll('audio').forEach(audio => audio.pause());
     window.dispatchEvent(new Event('study-microphone'));
     pause(); const recognition = new Engine(); active.current = recognition; recognition.lang = 'en-US'; recognition.continuous = false; recognition.interimResults = false;
     recognition.onresult = event => { if (active.current !== recognition) return; const actual = event.results[0][0].transcript, result = compareWords(text, actual);

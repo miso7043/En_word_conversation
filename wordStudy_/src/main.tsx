@@ -4,10 +4,9 @@ import type { Lesson } from '../shared/lesson';
 import { usePlayback } from './usePlayback';
 import { selectedPlaylist, updateSelection } from './playlist';
 import './style.css';
+import './retireOffline';
 import { StudyControls, Concealed, Shadowing, useSettings, useWakeLock, type Settings } from './study';
 import { readStored, writeStored, bookmark, restore, type Bookmark } from './storage';
-import { AudioLibrary } from './audio';
-import { OfflinePanel } from './offline';
 let csrfToken = '';
 type User = { sub: string; admin: boolean; csrf: string };
 
@@ -167,12 +166,12 @@ function SentenceReader({ settings, changeSettings }: { settings: Settings; chan
       }
     }
     const external = () => { cancel(); setPlaying(false); };
-    window.addEventListener('study-audio', external); window.addEventListener('study-microphone', external);
+    window.addEventListener('study-microphone', external);
     refresh();
     synth?.addEventListener('voiceschanged', refresh);
     window.addEventListener('pagehide', cancel);
     return () => {
-      window.removeEventListener('study-audio', external); window.removeEventListener('study-microphone', external);
+      window.removeEventListener('study-microphone', external);
       synth?.removeEventListener('voiceschanged', refresh);
       window.removeEventListener('pagehide', cancel);
       cancel();
@@ -187,7 +186,7 @@ function SentenceReader({ settings, changeSettings }: { settings: Settings; chan
   }
 
   function speak(value: string) {
-    document.querySelectorAll('audio').forEach(audio => audio.pause()); window.dispatchEvent(new Event('study-play'));
+    window.dispatchEvent(new Event('study-play'));
     const alternatives = voices.filter(voice => voiceKey(voice) !== previousVoice.current);
     const pool = alternatives.length ? alternatives : voices;
     const voice = pool[Math.floor(Math.random() * pool.length)];
@@ -196,7 +195,7 @@ function SentenceReader({ settings, changeSettings }: { settings: Settings; chan
     const utterance = new SpeechSynthesisUtterance(value);
     utterance.voice = voice;
     utterance.lang = voice.lang.replaceAll('_', '-');
-    utterance.rate = config.current.rate; utterance.pitch = config.current.pitch;
+    utterance.rate = config.current.rate;
     active.current = utterance;
     setPlaying(true);
     const label = `${voice.name} (${voice.lang})`;
@@ -285,7 +284,7 @@ function App() {
   const [authEnabled, setAuthEnabled] = useState(false);
   const [settings, changeSettings] = useSettings();
   const [order, setOrder] = useState<'reverse' | 'forward'>(() => readStored<string>('playlist-order-v1', 'reverse') === 'forward' ? 'forward' : 'reverse');
-  const [query, setQuery] = useState(''), [tag, setTag] = useState(''), [level, setLevel] = useState('');
+  const [query, setQuery] = useState(''), [level, setLevel] = useState('');
   const [policy, setPolicy] = useState('update');
   const scope = user?.sub ?? 'anonymous';
   const [page, setPage] = useState<'dialogues' | 'sentences'>('dialogues');
@@ -305,8 +304,8 @@ function App() {
   const currentScope = useRef(scope); currentScope.current = scope;
   const selected = lessons.find(lesson => lesson.id === selectedId) ?? lessons[0];
   const playlist = selectedPlaylist(lessons, checkedIds, order);
-  const visible = lessons.filter(lesson => (!tag || lesson.tags?.includes(tag)) && (!level || lesson.level === level)
-    && JSON.stringify([lesson.title, lesson.description, lesson.conversations]).toLowerCase().includes(query.toLowerCase()));
+  const visible = lessons.filter(lesson => (!level || lesson.level === level)
+    && [lesson.title, ...lesson.description].join(' ').toLowerCase().includes(query.toLowerCase()));
   useEffect(() => { if (authReady) writeStored(`selection-v1:${scope}`, [...checkedIds]); }, [checkedIds]);
   useEffect(() => { writeStored('playlist-order-v1', order); }, [order]);
 
@@ -319,13 +318,13 @@ function App() {
 
   function selectLesson(id: string) {
     setAutoPlay(false);
-    setSelectedId(id); changeSettings({ ...settings, a: -1, b: -1, role: '' });
+    setSelectedId(id); changeSettings({ ...settings, role: '' });
   }
 
   function startSelected() {
     const bottom = playlist[0];
     if (!bottom) return false;
-    if (bottom.id !== selected?.id) changeSettings({ ...settings, a: -1, b: -1, role: '' });
+    if (bottom.id !== selected?.id) changeSettings({ ...settings, role: '' });
     setSelectedId(bottom.id);
     setAutoPlay(true);
     setSession(value => value + 1);
@@ -340,35 +339,31 @@ function App() {
       setAutoPlay(false);
       return;
     }
-    changeSettings({ ...settings, a: -1, b: -1, role: '' });
+    changeSettings({ ...settings, role: '' });
     setSelectedId(previous.id);
     setAutoPlay(true);
   }
 
   async function reload() {
     await pending.current;
-    let online = true;
-    const data = await api<Lesson[]>('lessons').catch(error => { online = false; const stored = readStored<Lesson[]>(`offline-lessons-v1:${scope}`, []); if (!stored.length) throw error; setStatus('오프라인 저장 자료를 표시합니다.'); return stored; });
+    const data = await api<Lesson[]>('lessons');
     if (currentScope.current !== scope) return 0;
-    const saved = readStored<Record<string, Bookmark>>(`progress-v1:${scope}`, {});
-    const queued = readStored<Record<string, Bookmark>>(`progress-queue-v1:${scope}`, {});
-    for (const lesson of data) {
-      if (!user || !online) lesson.position = restore(lesson, saved?.[lesson.id]);
-      if (user && queued?.[lesson.id]) lesson.position = restore(lesson, queued[lesson.id]);
+    if (!user) {
+      const saved = readStored<Record<string, Bookmark>>(`progress-v1:${scope}`, {});
+      for (const lesson of data) lesson.position = restore(lesson, saved?.[lesson.id]);
     }
     positions.current.clear();
     setLessons(data);
     const stored = readStored<unknown>(`selection-v1:${scope}`, []);
-    setCheckedIds(new Set(Array.isArray(stored) ? stored.filter((id): id is string => typeof id === 'string' && (!online || data.some(item => item.id === id))) : []));
+    setCheckedIds(new Set(Array.isArray(stored) ? stored.filter((id): id is string => typeof id === 'string' && data.some(item => item.id === id)) : []));
     setSession(value => value + 1);
     return data.length;
   }
 
   useEffect(() => {
     void api<{ enabled: boolean; user: User | null }>('auth/session').then(data => {
-      writeStored('last-account-v1', data.user ? { sub: data.user.sub, admin: false, csrf: '' } : null);
       csrfToken = data.user?.csrf ?? ''; setUser(data.user); setAuthEnabled(data.enabled); setAuthReady(true);
-    }).catch(() => { if (!navigator.onLine) setUser(readStored<User | null>('last-account-v1', null)); setAuthReady(true); setStatus('인증 상태를 확인할 수 없습니다. 오프라인에서는 관리 기능을 사용할 수 없습니다.'); });
+    }).catch(() => { setAuthReady(true); setStatus('인증 상태를 확인할 수 없습니다. 서버 연결을 확인하세요.'); });
   }, []);
   useEffect(() => {
     if (!authReady) return;
@@ -383,46 +378,13 @@ function App() {
     const saved = readStored<Record<string, Bookmark>>(`progress-v1:${scope}`, {});
     if (lesson) writeStored(`progress-v1:${scope}`, { ...saved, [id]: bookmark(lesson, position) });
     if (!user || !lesson) return;
-    const queueKey = `progress-queue-v1:${user.sub}`, value = bookmark(lesson, position);
-    writeStored(queueKey, { ...readStored<Record<string, Bookmark>>(queueKey, {}), [id]: value });
     const sub = user.sub;
     pending.current = pending.current.then(async () => {
       if (currentScope.current !== sub) return;
       await api('progress', 'PUT', { id, position });
-      const queued = readStored<Record<string, Bookmark>>(queueKey, {});
-      if (JSON.stringify(queued[id]) === JSON.stringify(value)) { delete queued[id]; writeStored(queueKey, queued); }
       setProgressError('');
-    }).catch(() => setProgressError('학습 위치를 저장하지 못했습니다. 연결 복구 후 다시 저장합니다.'));
+    }).catch(() => setProgressError('학습 위치를 저장하지 못했습니다. 서버 연결을 확인하세요.'));
   }
-
-  useEffect(() => {
-    if (!user || !authReady) return;
-    const sub = user.sub;
-    let disposed = false;
-    async function flush() {
-      if (!navigator.onLine || disposed) return;
-      try {
-        const session = await api<{ user: User | null }>('auth/session');
-        if (disposed || currentScope.current !== sub || session.user?.sub !== sub) return;
-        csrfToken = session.user.csrf;
-        const fresh = await api<Lesson[]>('lessons');
-        const key = `progress-queue-v1:${sub}`;
-        await pending.current;
-        for (const [id, value] of Object.entries(readStored<Record<string, Bookmark>>(key, {}))) {
-          if (disposed || currentScope.current !== sub) return;
-          const lesson = fresh.find(item => item.id === id);
-          if (!lesson) continue;
-          const position = restore(lesson, value);
-          await api('progress', 'PUT', { id, position });
-          const queued = readStored<Record<string, Bookmark>>(key, {});
-          if (JSON.stringify(queued[id]) === JSON.stringify(value)) { delete queued[id]; writeStored(key, queued); }
-        }
-        setProgressError('');
-      } catch { if (!disposed) setProgressError('오프라인 진도를 연결 복구 후 다시 저장합니다.'); }
-    }
-    void flush(); window.addEventListener('online', flush);
-    return () => { disposed = true; window.removeEventListener('online', flush); };
-  }, [user, authReady]);
 
   async function importFiles(files: FileList | null, folder = false) {
     const json = Array.from(files ?? []).filter(file => /\.json$/i.test(file.name));
@@ -465,9 +427,12 @@ function App() {
   }
 
   return (
-    <div className={`mx-auto grid max-w-6xl ${page === 'sentences' ? 'md:grid-cols-[8rem_minmax(0,1fr)]' : 'md:grid-cols-[17rem_minmax(0,1fr)]'}`}>
+    <div className={`mx-auto grid max-w-6xl md:grid-cols-[20rem_minmax(0,1fr)]`}>
       <aside className="p-4 md:sticky md:top-0 md:flex md:h-dvh md:flex-col md:border-r md:border-edge md:bg-panel md:p-5">
-        <h1 className={`mb-4 text-xl font-bold ${page === 'sentences' ? 'md:sr-only' : ''}`}>영어 대화 연습</h1>
+        <header className="mb-4 flex flex-wrap items-center justify-between gap-2">
+          <h1 className="text-xl font-bold">영어 대화 연습</h1>
+          <label className="text-sm"><span className="sr-only">테마</span><select aria-label="테마" value={settings.theme} onChange={e => changeSettings({ ...settings, theme: e.target.value })}><option value="dark">어둡게</option><option value="light">밝게</option><option value="system">시스템</option></select></label>
+        </header>
         <p className="mb-3 text-sm"><a href={administration ? '/' : '/administration'}>{administration ? '학습 화면' : '관리·로그인'}</a></p>
         {administration && <section className="mb-3"><h2>자료 관리</h2>{!user ? authEnabled ? <a className="control border" href="/api/auth/login">Google 로그인</a> : <p>Google 인증 설정이 필요합니다.</p> : <><p className="break-all">Google ID: {user.sub}</p><p>{user.admin ? '관리자' : '관리자로 등록되지 않은 계정입니다.'}</p>
         <button className="control border" onClick={() => { void api('auth/logout', 'POST', {}).then(() => location.reload()); }}>로그아웃</button>
@@ -483,8 +448,7 @@ function App() {
         </nav>
         {page === 'dialogues' && !!lessons.length && (
           <>
-            <input aria-label="자료 검색" placeholder="제목·설명·대사 검색" value={query} onChange={e => setQuery(e.target.value)} />
-            <select aria-label="태그 필터" value={tag} onChange={e => setTag(e.target.value)}><option value="">모든 태그</option>{[...new Set(lessons.flatMap(item => item.tags ?? []))].map(value => <option key={value}>{value}</option>)}</select>
+            <input aria-label="자료 검색" placeholder="제목·설명 검색" value={query} onChange={e => setQuery(e.target.value)} />
             <select aria-label="난이도 필터" value={level} onChange={e => setLevel(e.target.value)}><option value="">모든 난이도</option>{['A1','A2','B1','B2','C1','C2'].map(value => <option key={value}>{value}</option>)}</select>
             <select aria-label="연속 재생 방향" value={order} onChange={e => setOrder(e.target.value as 'reverse' | 'forward')}><option value="reverse">아래 → 위</option><option value="forward">위 → 아래</option></select>
             <p>선택 {checkedIds.size}개 · 필터로 숨김 {[...checkedIds].filter(id => !visible.some(item => item.id === id)).length}개</p>
@@ -539,8 +503,7 @@ function App() {
           {progressError && <p role="status" className="text-amber-300">{progressError}</p>}
         </div>}
       </aside>
-      <div className="min-w-0"><div className="px-4"><OfflinePanel lessons={lessons} selected={checkedIds.size ? lessons.filter(l => checkedIds.has(l.id)) : selected ? [selected] : []} scope={scope} />
-      <AudioLibrary lessons={playlist.length ? playlist : selected ? [selected] : []} settings={settings} admin={administration && !!user?.admin} request={api} savePosition={save} /></div>
+      <div className="min-w-0">
       {importResult && <ImportSummary result={importResult} close={() => setImportResult(null)} />}
       {page === 'sentences' && <SentenceReader settings={settings} changeSettings={changeSettings} />}
       {page === 'dialogues' && selected && !busy && (

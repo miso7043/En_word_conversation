@@ -15,7 +15,7 @@
     align-self: start;
     height: 100dvh;
     display: grid;
-    grid-template-rows: auto minmax(0, 1fr) auto;
+    grid-template-rows: minmax(0, 1fr) auto;
     padding: 30px 20px max(20px, env(safe-area-inset-bottom));
     background: #15222e;
     border-right: 1px solid #2c3d4b;
@@ -74,6 +74,7 @@
   #reader-play:hover:not(:disabled) { background: #a1efdf; }
   #reader-status { color: #b4c6d1; overflow-wrap: anywhere; }
 
+.study-header { max-width:1105px; margin:0 auto; padding:12px 14px; display:flex; flex-wrap:wrap; align-items:center; gap:16px; }.study-header h1 { font-size:1.25rem; margin:0; }
 .study-options { max-width:1105px; margin:0 auto; padding:12px; border:1px solid #526777; border-radius:10px; }
 .options-grid { display:flex; flex-wrap:wrap; gap:10px; padding-top:12px; }
 .options-grid input[type=number] { width:5rem; }
@@ -88,13 +89,13 @@ mark {background:#fae08a;color:#241f08;}
 </style>
 <link rel="manifest" href="./manifest.webmanifest"><meta name="theme-color" content="#15222e"></head>
 <body>
+<header class="study-header"><h1>영어 대화 연습</h1><label>테마 <select aria-label="테마" data-setting="theme"><option value="dark">어둡게</option><option value="light">밝게</option><option value="system">시스템</option></select></label></header>
 <div class="study-tabs" role="tablist" aria-label="영어 학습 방식">
   <button type="button" role="tab" id="dialogue-tab" aria-selected="true" aria-controls="dialogue-panel">대화 연습</button>
   <button type="button" role="tab" id="reader-tab" aria-selected="false" aria-controls="reader-panel" tabindex="-1">문장 읽기</button>
 </div>
 <div class="layout" id="dialogue-panel" role="tabpanel" aria-labelledby="dialogue-tab">
   <aside>
-    <h1>영어 대화 연습</h1>
     <div class="lesson-list">
       <nav id="lessons" aria-label="대화 목록"></nav>
     </div>
@@ -144,14 +145,12 @@ mark {background:#fae08a;color:#241f08;}
   function savePosition() { if(selected) { const saved=study.read('html-progress-v1',{}); saved[selected.name]={position:current, line:lines[current] && {text:lines[current].text,speaker:lines[current].speaker}};study.write('html-progress-v1',saved); } }
   function filterLessons() {
     const query=study.query();let hidden=0;
-    for(const item of documents) { const match=(!query.tag || item.data.tags?.includes(query.tag)) && (!query.level || item.data.level===query.level) && JSON.stringify(item.data).toLowerCase().includes(query.text);item.row.hidden=!match;if(!match&&study.checks.has(item.name))hidden++; }
+    for(const item of documents) { const match=(!query.level || item.data.level===query.level) && [item.data.title,...[].concat(item.data.description||[])].join(' ').toLowerCase().includes(query.text);item.row.hidden=!match;if(!match&&study.checks.has(item.name))hidden++; }
     study.selection(hidden);
   }
   window.addEventListener('study-filter',filterLessons);
   window.addEventListener('study-settings',()=>{filterLessons();if(selected){for(const entry of lines){entry.english.replaceChildren();study.text(entry.english,entry.text,config.hideEnglish,entry.keyPhrase);if(entry.meaning){entry.meaning.replaceChildren();study.text(entry.meaning,entry.meaningText,config.hideMeaning);}}}});
-  window.addEventListener('study-audio-play',()=>resetPlayback());
-  study.next(()=>{if(!lines.length||!voices.length)return;if(!lines[current]?.voice)assignVoices();utterance=null;synth?.cancel();waiting=false;repeatCount=0;current++;if(config.a>=0&&config.b>=config.a&&current>config.b)current=config.a;state='playing';speakCurrent();});
-  study.save(()=>study.write('html-offline-v1',documents.filter(item=>study.checks.size?study.checks.has(item.name):item===selected).map(({data,name,date})=>({data,name,date}))));
+  study.next(()=>{if(!lines.length||!voices.length)return;if(!lines[current]?.voice)assignVoices();utterance=null;synth?.cancel();waiting=false;repeatCount=0;current++;state='playing';speakCurrent();});
   function selectedPlaylist() { const list=documents.filter(item=>study.checks.has(item.name)&&item.data.conversations.some(c=>c.lines.length));return config.order==='reverse'?list.toReversed():list; }
 
 
@@ -306,14 +305,14 @@ mark {background:#fae08a;color:#241f08;}
     const next = new SpeechSynthesisUtterance(entry.text);
     next.voice = entry.voice;
     next.lang = entry.voice.lang;
-    next.rate = config.rate;next.pitch=config.pitch;
+    next.rate = config.rate;
     utterance = next;
     next.onend = () => {
       if (utterance !== next) return;
       utterance = null;
       entry.element.classList.remove('reading');
       repeatCount++;
-      if(repeatCount>=config.repeat){repeatCount=0;current++;if(config.a>=0&&config.b>=config.a&&current>config.b)current=config.a;}
+      if(repeatCount>=config.repeat){repeatCount=0;current++;}
       if (state === 'playing') speakCurrent();
       else updateControls();
     };
@@ -418,7 +417,6 @@ mark {background:#fae08a;color:#241f08;}
           conversation.lines.every(line => typeof line?.text === 'string' && typeof line.speaker === 'string'))) {
       throw new Error('대화 JSON 형식이 올바르지 않습니다.');
     }
-    if(data.tags!=null && (!Array.isArray(data.tags)||data.tags.some(tag=>typeof tag!=='string'||!tag.trim())))throw new Error('tags 배열을 확인하세요.');
     if(data.level!=null && !/^[ABC][12]$/.test(data.level))throw new Error('level은 A1~C2입니다.');
     for(const dialogue of data.conversations)for(const line of dialogue.lines)if(line.keyPhrase!=null && !(typeof line.keyPhrase==='string'||Array.isArray(line.keyPhrase)&&line.keyPhrase.every(p=>typeof p==='string')))throw new Error('keyPhrase 형식을 확인하세요.');
     return { data, name, date: Date.parse(data.date) || modified || 0 };
@@ -442,7 +440,7 @@ mark {background:#fae08a;color:#241f08;}
         item.button.addEventListener('click', () => {playlistActive=false;showDocument(item);});
       }
       const valid=new Set(documents.map(item=>item.name));if(prune && !failed.length)for(const id of study.checks)if(!valid.has(id))study.checks.delete(id);study.write('html-selection-v1',[...study.checks]);
-      study.tags([...new Set(documents.flatMap(item=>item.data.tags||[]))]);filterLessons();
+      filterLessons();
       showDocument(documents[0]);
       lessonList.scrollTop = 0;
     }
@@ -462,7 +460,6 @@ mark {background:#fae08a;color:#241f08;}
   });
 
   async function loadFromServer() {
-    if(!navigator.onLine){const offline=study.read('html-offline-v1',[]);if(offline.length){await loadDocuments(offline.map(item=>({name:item.name,read:async()=>item})),false);return;}}
     const directory = new URL('./json/', location.href);
     let urls;
     const version = loadVersion;
@@ -480,7 +477,6 @@ mark {background:#fae08a;color:#241f08;}
       if (!urls.length) throw new Error('JSON 목록이 비어 있습니다.');
       }
     } catch {
-      const offline=study.read('html-offline-v1',[]);if(offline.length){await loadDocuments(offline.map(item=>({name:item.name,read:async()=>item})),false);return;}
       if (version === loadVersion) {
         loadStatus.textContent = '서버에서 json 폴더 목록을 읽을 수 없습니다. JSON 폴더 열기를 사용하세요.';
       }
@@ -495,7 +491,7 @@ mark {background:#fae08a;color:#241f08;}
           try { const response = await fetch(url, { cache: 'no-cache' });
           if (!response.ok) throw new Error(`HTTP ${response.status}`);
           return readDocument(await response.json(), name, Date.parse(response.headers.get('Last-Modified'))); }
-          catch(error){const saved=study.read('html-offline-v1',[]).find(item=>item.name===name);if(saved)return saved;throw error;}
+          catch(error){throw error;}
         }
       };
     }));
@@ -1023,7 +1019,7 @@ mark {background:#fae08a;color:#241f08;}
       const utterance = new SpeechSynthesisUtterance(text);
       utterance.voice = voice;
       utterance.lang = voice.lang.replaceAll('_', '-');
-      utterance.rate = window.study.settings.rate;utterance.pitch=window.study.settings.pitch;
+      utterance.rate = window.study.settings.rate;
       window.study.play(true);
       active = utterance;
       stop.disabled = false;
@@ -1064,7 +1060,6 @@ mark {background:#fae08a;color:#241f08;}
     input.addEventListener('input', refresh);
     synth?.addEventListener('voiceschanged', refresh);
     window.addEventListener('pagehide', cancel);
-    window.addEventListener('study-audio-play', cancel);
 
     const tabs = [...document.querySelectorAll('.study-tabs [role="tab"]')];
     let selectedTab = tabs[0];

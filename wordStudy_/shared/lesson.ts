@@ -7,7 +7,6 @@ export type Lesson = {
   description: string[];
   conversations: Dialogue[];
   position: number;
-  tags?: string[];
   level?: string;
   revision?: string;
   sourceDate?: string | null;
@@ -45,7 +44,6 @@ export function parseLesson(id: string, value: unknown, modified: number): Lesso
     description: paragraphs(data.description),
     position: 0,
     sourceDate: Number.isFinite(declaredDate) ? new Date(declaredDate).toISOString() : null,
-    tags: data.tags == null ? [] : stringArray(data.tags, 'tags'),
     level: data.level == null ? undefined : level(data.level),
     conversations: data.conversations.map((value, index) => {
       const dialogue = record(value);

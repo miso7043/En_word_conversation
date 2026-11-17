@@ -6,40 +6,50 @@ const root=fileURLToPath(new URL('../../',import.meta.url));await mkdir(`${root}
 const browser=await chromium.launch({executablePath:process.env.CHROME_PATH ?? '/opt/google/chrome/chrome',headless:true,args:['--no-sandbox']});
 try {
   const context=await browser.newContext({viewport:{width:1440,height:1000}}),page=await context.newPage(),errors=[];
-  page.on('pageerror',e=>errors.push(e.message));
+  page.on('pageerror',error=>errors.push(error.message));
+  async function removed() {
+    assert.equal(await page.locator('audio,[data-setting=pitch],[data-setting=a],[data-setting=b],#study-tag').count(),0);
+    assert.equal(await page.getByText(/오프라인 저장|생성 오디오|구간 해제|모든 태그/).count(),0);
+    assert.equal(await page.getByRole('spinbutton',{name:'음성 피치'}).count(),0);
+    assert.equal(await page.locator('header').getByLabel('테마').count(),1);
+  }
   await page.goto('http://127.0.0.1:43879/');await page.getByRole('heading',{level:2}).first().waitFor();
-  const checkbox=page.getByRole('checkbox').first();await checkbox.check();await page.reload();await page.getByRole('checkbox').first().waitFor();assert.equal(await page.getByRole('checkbox').first().isChecked(),true);
-  await page.getByLabel('자료 검색').fill('NOTFOUND123');assert.equal(await page.locator('nav[aria-label="대화 목록"] input').count(),0);await page.getByLabel('자료 검색').fill('');
-  await page.getByText('학습 설정',{exact:true}).click();await page.getByText('영어 가리기',{exact:true}).click();assert.ok(await page.getByRole('button',{name:'탭하여 보기'}).count()>0);
-  await page.getByRole('button',{name:'탭하여 보기'}).first().click();await page.getByText('영어 가리기',{exact:true}).click();
-  await page.locator('summary').filter({hasText:'학습 설정'}).click();
-  await page.screenshot({path:`${root}/docs/images/react-desktop.png`,fullPage:false});
-  await page.getByText('오프라인 저장 ·',{exact:false}).click();await page.getByRole('button',{name:'선택 자료 오프라인 저장·갱신',exact:true}).click();
-  await page.waitForFunction(()=>navigator.serviceWorker.controller!==null).catch(()=>{});
-  await page.reload();await page.waitForTimeout(300);await context.setOffline(true);await page.reload();await page.getByRole('heading',{level:2}).first().waitFor();assert.ok(await page.getByRole('checkbox').first().isChecked());await context.setOffline(false);
+  await removed();await page.getByRole('checkbox').first().check();await page.reload();await page.getByRole('checkbox').first().waitFor();assert.equal(await page.getByRole('checkbox').first().isChecked(),true);
+  await page.getByLabel('테마',{exact:true}).selectOption('light');assert.equal(await page.locator('html').getAttribute('data-theme'),'light');await page.reload();assert.equal(await page.getByLabel('테마',{exact:true}).inputValue(),'light');await page.getByLabel('테마',{exact:true}).selectOption('dark');
+  await page.getByLabel('자료 검색').fill('What did you think of my presentation today?');assert.equal(await page.locator('nav[aria-label="대화 목록"] input').count(),0);
+  await page.getByLabel('자료 검색').fill('candid');assert.equal(await page.locator('nav[aria-label="대화 목록"] input').count(),1);await page.getByLabel('자료 검색').fill('');
+  await page.getByText('학습 설정',{exact:true}).click();await page.getByText('영어 가리기',{exact:true}).click();assert.ok(await page.getByRole('button',{name:'탭하여 보기'}).count()>0);await page.getByRole('button',{name:'탭하여 보기'}).first().click();await page.getByText('영어 가리기',{exact:true}).click();
+  assert.equal(await page.getByLabel('재생 속도').count(),1);await page.getByLabel('재생 속도').fill('0.7');await page.locator('summary').filter({hasText:'학습 설정'}).click();
+  await page.screenshot({path:`${root}/docs/images/react-desktop.png`});
   await page.goto('http://127.0.0.1:43879/administration');await page.getByText('Google 인증 설정이 필요합니다.',{exact:true}).waitFor();assert.equal(await page.getByText('JSON 파일',{exact:true}).count(),0);
-  await page.goto('http://127.0.0.1:43879/htmlVersion/conversation.html');await page.locator('#lessons button').first().waitFor();
-  assert.ok(await page.locator('#content article').count()>0);await page.locator('#lessons input').first().check();await page.reload();await page.locator('#lessons input').first().waitFor();assert.equal(await page.locator('#lessons input').first().isChecked(),true);
+  await page.goto('http://127.0.0.1:43879/htmlVersion/conversation.html');await page.locator('#lessons button').first().waitFor();await removed();
+  await page.locator('#lessons input').first().check();await page.reload();await page.locator('#lessons input').first().waitFor();assert.equal(await page.locator('#lessons input').first().isChecked(),true);
+  await page.getByLabel('테마',{exact:true}).selectOption('light');await page.reload();assert.equal(await page.getByLabel('테마',{exact:true}).inputValue(),'light');await page.getByLabel('테마',{exact:true}).selectOption('dark');
   await page.locator('.study-options summary').click();await page.locator('[data-setting=hideEnglish]').check();assert.ok(await page.getByRole('button',{name:'탭하여 보기'}).count()>0);await page.locator('[data-setting=hideEnglish]').uncheck();
-  await page.locator('#study-search').fill('NOTFOUND123');assert.equal(await page.locator('.lesson-row:visible').count(),0);await page.locator('#study-search').fill('');await page.locator('.study-options summary').click();
-  await page.screenshot({path:`${root}/docs/images/html-desktop.png`,fullPage:false});
-  await page.locator('.study-options summary').click();await page.locator('[data-save]').click();
-  await page.waitForFunction(()=>navigator.serviceWorker.controller!==null);await page.reload();await page.locator('#lessons button').first().waitFor();
-  await context.setOffline(true);await page.reload();await page.locator('#lessons button').first().waitFor();assert.ok(await page.locator('#content article').count()>0);await context.setOffline(false);
-  const audioContext=await browser.newContext({serviceWorkers:'block'});const audioPage=await audioContext.newPage();
-  const wav=Buffer.alloc(44+22050*2*20);wav.write('RIFF');wav.writeUInt32LE(wav.length-8,4);wav.write('WAVEfmt ',8);wav.writeUInt32LE(16,16);wav.writeUInt16LE(1,20);wav.writeUInt16LE(1,22);wav.writeUInt32LE(22050,24);wav.writeUInt32LE(44100,28);wav.writeUInt16LE(2,32);wav.writeUInt16LE(16,34);wav.write('data',36);wav.writeUInt32LE(wav.length-44,40);
-  const audioJob={id:'11111111-1111-1111-1111-111111111111',title:'재생 회귀 검증',state:'complete',pitch:1,loop:false,timeline:[{start:0,end:20,text:'Audio test',lessonId:'candid.json',position:0}]};
-  await audioPage.route('**/api/audio',route=>route.fulfill({json:{enabled:true,jobs:[audioJob]}}));
-  await audioPage.route('**/api/audio/*/file',route=>route.fulfill({contentType:'audio/wav',body:wav}));
-  await audioPage.goto('http://127.0.0.1:43879/');await audioPage.getByText('생성 오디오 · 잠금 화면 재생',{exact:true}).click();await audioPage.getByLabel('생성 오디오 선택').selectOption(audioJob.id);
-  await audioPage.locator('audio').evaluate(el=>el.play());await audioPage.waitForTimeout(5600);assert.equal(await audioPage.locator('audio').evaluate(el=>el.paused),false);await audioContext.close();
-  const microphone=await context.newPage();
-  await microphone.addInitScript(()=>{class Recognition{start(){setTimeout(()=>{this.onerror?.({error:'not-allowed'});this.onend?.();},10);}abort(){this.onend?.();}}Object.defineProperty(window,'SpeechRecognition',{value:Recognition,configurable:true});});
+  const line=await page.locator('#content [lang=en]').first().textContent();await page.locator('#study-search').fill(line);assert.equal(await page.locator('.lesson-row:visible').count(),0);await page.locator('#study-search').fill('');await page.locator('.study-options summary').click();
+  await page.screenshot({path:`${root}/docs/images/html-desktop.png`});
+  // 실제 브라우저 UI가 선택한 속도를 두 버전 모두 utterance에 전달하는지 확인한다.
+  const speech=await context.newPage();await speech.addInitScript(()=>{
+    window.spoken=[];window.SpeechSynthesisUtterance=class {constructor(text){this.text=text;}};
+    Object.defineProperty(window,'speechSynthesis',{value:{paused:false,getVoices:()=>[{name:'English',lang:'en-US',voiceURI:'test'}],addEventListener(){},removeEventListener(){},cancel(){},resume(){},speak(item){window.spoken.push({text:item.text,rate:item.rate,pitch:item.pitch});}},configurable:true});
+  });
+  await speech.goto('http://127.0.0.1:43879/');await speech.getByText('학습 설정',{exact:true}).click();await speech.getByLabel('재생 속도').fill('0.65');await speech.getByRole('button',{name:'재생',exact:true}).click();await speech.waitForFunction(()=>window.spoken.length>0);assert.equal(await speech.evaluate(()=>window.spoken[0].rate),.65);assert.equal(await speech.evaluate(()=>window.spoken[0].pitch),undefined);
+  await speech.goto('http://127.0.0.1:43879/htmlVersion/conversation.html');await speech.locator('#lessons button').first().waitFor();await speech.locator('.study-options summary').click();await speech.locator('[data-setting=rate]').fill('0.75');await speech.locator('[data-setting=rate]').dispatchEvent('change');await speech.locator('#play').click();await speech.waitForFunction(()=>window.spoken.length>0);assert.equal(await speech.evaluate(()=>window.spoken[0].rate),.75);assert.equal(await speech.evaluate(()=>window.spoken[0].pitch),undefined);await speech.close();
+  const microphone=await context.newPage();await microphone.addInitScript(()=>{class Recognition{start(){setTimeout(()=>{this.onerror?.({error:'not-allowed'});this.onend?.();},10);}abort(){this.onend?.();}}Object.defineProperty(window,'SpeechRecognition',{value:Recognition,configurable:true});});
   microphone.on('dialog',dialog=>dialog.accept());await microphone.goto('http://127.0.0.1:43879/');await microphone.getByRole('button',{name:'말해 보기',exact:true}).first().click();await microphone.getByText('음성 인식 실패 (not-allowed). 수동 연습을 계속할 수 있습니다.',{exact:true}).waitFor();await microphone.close();
-  const unsupported=await context.newPage();await unsupported.addInitScript(()=>{Object.defineProperty(window,'SpeechRecognition',{value:undefined,configurable:true});Object.defineProperty(window,'webkitSpeechRecognition',{value:undefined,configurable:true});});
-  await unsupported.goto('http://127.0.0.1:43879/');await unsupported.getByRole('button',{name:'말해 보기',exact:true}).first().waitFor();assert.equal(await unsupported.getByRole('button',{name:'말해 보기',exact:true}).first().isDisabled(),true);await unsupported.close();
-  await page.setViewportSize({width:390,height:844});await page.goto('http://127.0.0.1:43879/');await page.getByRole('heading',{level:2}).first().waitFor();assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false);await page.screenshot({path:`${root}/docs/images/react-mobile.png`,fullPage:false});
-  await page.goto('http://127.0.0.1:43879/htmlVersion/conversation.html');await page.locator('#lessons button').first().waitFor();assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false);await page.screenshot({path:`${root}/docs/images/html-mobile.png`,fullPage:false});
-  assert.deepEqual(errors,[]);console.log('PASS: React/HTML 화면, 선택 복원, 검색, 가리기, 관리자 UI 차단, 양쪽 오프라인 재진입·마이크 거부·음성 인식 미지원, 모바일 가로 넘침 없음·목록 갱신 중 오디오 재생 유지');
-  await context.close();
-}finally{await browser.close();}
+  for (const [url,kind] of [['/','react'],['/htmlVersion/conversation.html','html']]) {
+    await page.setViewportSize({width:390,height:844});await page.goto(`http://127.0.0.1:43879${url}`);await page.getByRole('heading',{name:'영어 대화 연습',exact:true}).waitFor();
+    assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false);await removed();await page.screenshot({path:`${root}/docs/images/${kind}-mobile.png`});
+  }
+  // 기존 사용자의 캐싱 워커가 새 버전에서 등록 해제되는지 검증한다.
+  for (const [url, script, scope, cache] of [['/', '/sw.js', '/', 'study-shell-v1'], ['/htmlVersion/conversation.html', '/htmlVersion/sw.js', '/htmlVersion/', 'html-study-shell-v1']]) {
+    const legacyContext=await browser.newContext();const legacy=await legacyContext.newPage();
+    await legacy.request.post('http://127.0.0.1:43879/__tests/legacy-worker',{data:{enabled:true}});
+    await legacy.goto(`http://127.0.0.1:43879${url}`);
+    await legacy.evaluate(async ({script,scope,cache})=>{await caches.open(cache);await navigator.serviceWorker.register(script,{scope});await navigator.serviceWorker.ready;},{script,scope,cache});
+    await legacy.request.post('http://127.0.0.1:43879/__tests/legacy-worker',{data:{enabled:false}});await legacy.reload();
+    await legacy.waitForFunction(async scope=>!(await navigator.serviceWorker.getRegistrations()).some(registration=>registration.scope===new URL(scope,location.href).href),scope);
+    await legacy.waitForFunction(async key=>!(await caches.keys()).includes(key),cache,{timeout:10000});await legacyContext.close();
+  }
+  assert.deepEqual(errors,[]);console.log('PASS: 두 버전 제거 항목 부재·상단 테마/저장·제목 검색/대사 제외·선택 복원·가리기·속도 전달·마이크 거부·모바일 레이아웃·기존 캐싱 워커 해제');await context.close();
+} finally {await browser.close();}
