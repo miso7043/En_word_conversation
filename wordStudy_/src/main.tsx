@@ -24,9 +24,9 @@ function Paragraphs({ values }: { values: string[] }) {
   return values.map((value, index) => <p key={index} className="mb-2 leading-relaxed text-slate-300">{value}</p>);
 }
 
-function LessonView({ lesson, save, continuous, setContinuous, autoPlay, onComplete, selectionCount }: {
+function LessonView({ lesson, save, startSelected, autoPlay, onComplete, selectionCount }: {
   lesson: Lesson; save: (position: number) => void;
-  continuous: boolean; setContinuous: (checked: boolean) => void;
+  startSelected: () => boolean;
   autoPlay: boolean; onComplete: () => void;
   selectionCount: number;
 }) {
@@ -72,7 +72,9 @@ function LessonView({ lesson, save, continuous, setContinuous, autoPlay, onCompl
       </div>
       <section aria-label="음성 제어" className="fixed inset-x-0 bottom-0 z-10 border-t border-edge bg-panel px-4 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] md:sticky md:top-0 md:mb-5 md:rounded-xl md:border md:pb-3">
         <div className="flex flex-wrap items-center gap-2">
-          <button className="control bg-accent text-slate-950" disabled={!player.canPlay} onClick={player.toggle}
+          <button className="control bg-accent text-slate-950" disabled={!player.canPlay && !selectionCount} onClick={() => {
+            if (player.mode !== 'idle' || !startSelected()) player.toggle();
+          }}
             aria-keyshortcuts="Space" title="재생 중 스페이스바로 일시정지·이어 듣기">
             {playLabel}
           </button>
@@ -80,12 +82,9 @@ function LessonView({ lesson, save, continuous, setContinuous, autoPlay, onCompl
             player.stop();
             window.scrollTo(0, 0);
           }}>정지</button>
-          <label className="flex cursor-pointer items-center gap-2 text-sm">
-            <input type="checkbox" className="h-4 w-4 accent-sky-400" checked={continuous}
-              disabled={!selectionCount && !continuous}
-              onChange={event => setContinuous(event.target.checked)} />
-            선택 {selectionCount}개 연속 재생 (아래 → 위)
-          </label>
+          {selectionCount > 0 && <span className="text-sm text-slate-300">
+            선택 {selectionCount}개{selectionCount > 1 ? ' 연속 재생 (아래 → 위)' : ' 재생'}
+          </span>}
         </div>
         <p className="mt-1 min-h-5 text-sm text-slate-300" role="status">{player.status}</p>
       </section>
@@ -261,7 +260,6 @@ function App() {
   const [lessons, setLessons] = useState<Lesson[]>([]);
   const [selectedId, setSelectedId] = useState('');
   const [session, setSession] = useState(0);
-  const [continuous, setContinuous] = useState(false);
   const [autoPlay, setAutoPlay] = useState(false);
   const [checkedIds, setCheckedIds] = useState<Set<string>>(() => new Set());
   const selectionAnchor = useRef<string | null>(null);
@@ -287,19 +285,17 @@ function App() {
     setSelectedId(id);
   }
 
-  function changeContinuous(checked: boolean) {
-    if (checked && !playlist.length) return;
-    setContinuous(checked);
-    if (!checked) return;
+  function startSelected() {
     const bottom = playlist[0];
-    if (!bottom) return;
+    if (!bottom) return false;
     setSelectedId(bottom.id);
     setAutoPlay(true);
     setSession(value => value + 1);
+    return true;
   }
 
   function playPreviousLesson() {
-    if (!continuous || !selected) return;
+    if (!selected) return;
     const index = lessons.findIndex(lesson => lesson.id === selected.id);
     const previous = playlist.find(lesson => lessons.findIndex(item => item.id === lesson.id) < index);
     if (!previous) {
@@ -443,7 +439,7 @@ function App() {
       {page === 'dialogues' && selected && !busy && (
         <LessonView key={`${selected.id}-${session}`}
           lesson={{ ...selected, position: positions.current.get(selected.id) ?? selected.position }}
-          continuous={continuous} setContinuous={changeContinuous}
+          startSelected={startSelected}
           selectionCount={playlist.length}
           autoPlay={autoPlay} onComplete={playPreviousLesson}
           save={position => save(selected.id, position)} />
