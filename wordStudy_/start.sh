@@ -13,7 +13,7 @@ if ! grep -q '^SESSION_SECRET=' .env; then
 fi
 # .env를 셸 코드로 실행하지 않고 설정 유무만 확인한다.
 ENABLE_IMPORT=0
-if grep -Eq '^GOOGLE_CLIENT_ID=.+$' .env && grep -Eq '^GOOGLE_CLIENT_SECRET=.+$' .env && [ -f config/access.json ]; then
+if { grep -Eq '^ADMIN_USERNAME=.+$' .env && grep -Eq '^ADMIN_PASSWORD_HASH=.+$' .env; } || { grep -Eq '^GOOGLE_CLIENT_ID=.+$' .env && grep -Eq '^GOOGLE_CLIENT_SECRET=.+$' .env && [ -f config/access.json ]; }; then
   ENABLE_IMPORT=1
 fi
 export ENABLE_IMPORT

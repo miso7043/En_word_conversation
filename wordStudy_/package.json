@@ -9,7 +9,7 @@
     "dev": "vite",
     "build": "tsc --noEmit && vite build",
     "start": "node --experimental-transform-types server/index.ts",
-    "verify": "node scripts/verify-playback.mjs && node scripts/verify-playlist.mjs && node --experimental-transform-types scripts/verify-learning.mjs && node --experimental-transform-types scripts/verify-auth.mjs",
+    "verify": "node scripts/verify-playback.mjs && node scripts/verify-playlist.mjs && node --experimental-transform-types scripts/verify-learning.mjs && node --experimental-transform-types scripts/verify-auth.mjs && node --experimental-transform-types scripts/verify-local-auth.mjs",
     "verify:api": "node scripts/verify-api.mjs"
   },
   "dependencies": {

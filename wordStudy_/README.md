@@ -15,32 +15,15 @@ podman compose -p wordstudy stop
 
 기존 `.env`의 DB 암호를 보존하세요. `start.sh`는 앱·DB 컨테이너를 재생성하고 마이그레이션을 적용하며 `wordstudy-data` 볼륨을 삭제하지 않습니다. `down -v`는 사용하지 마세요. DB 포트는 호스트에 공개하지 않습니다.
 
-## Google 로그인 설정
+## 관리자 인증과 자료 등록
 
-1. Google Cloud에서 OAuth 웹 애플리케이션 클라이언트를 만들고 필요한 테스트 사용자·동의 화면 설정을 완료합니다.
-2. 리디렉션 URI를 정확히 `http://localhost:43871/api/auth/callback`으로 등록합니다. 운영은 `https://학습도메인/api/auth/callback`을 사용합니다.
-3. 기존 `.env`에 다음 키를 추가합니다. 실제 값은 `.env.example`에 기록하지 않습니다.
+`/administration`은 로그인 전에는 아이디·비밀번호 입력 화면만 표시합니다. 로그인 후에는 등록된 리스트, JSON 파일 등록, JSON 폴더 등록과 로그아웃만 표시하며 자료 내용·학습 메뉴·재생바는 표시하지 않습니다. 일반 학습 화면은 `/`입니다. `htmlVersion/`은 별도의 정적 실행 방식이며 이 서버 인증을 사용하지 않습니다.
 
-```dotenv
-GOOGLE_CLIENT_ID=발급받은_클라이언트_ID
-GOOGLE_CLIENT_SECRET=발급받은_클라이언트_비밀값
-PUBLIC_ORIGIN=http://localhost:43871
-```
+관리자 설정은 Git에서 제외되는 `wordStudy_/.env`에 `ADMIN_USERNAME`, `ADMIN_PASSWORD_HASH`로 저장합니다. 비밀번호는 무작위 salt를 사용하는 scrypt 해시(`salt:hash`)로만 저장하며 평문은 기록하지 않습니다. 아이디는 로그인 비교를 위한 일반 설정입니다. `SESSION_SECRET`은 `start.sh`가 없을 때 생성합니다. 인증 설정을 변경한 뒤 `sh ./start.sh`로 적용합니다. 기존 DB 암호와 볼륨은 보존하세요.
 
-`SESSION_SECRET`은 `start.sh`가 없을 때 32바이트 무작위 값으로 생성합니다. 직접 실행한다면 32자 이상을 설정합니다. 값 변경 시 기존 로그인 세션은 무효가 됩니다. 세션은 7일, 로그인 진행 요청은 10분 동안 유효합니다.
+`start.sh`는 관리자 인증 설정이 있으면 파일 등록을 활성화합니다. Compose를 직접 실행한다면 `ENABLE_IMPORT=1`을 설정해야 합니다. 세션은 7일간 유효하고 HttpOnly·SameSite=Lax 쿠키를 사용합니다. 로그인 실패는 IP별 15분 동안 5회까지 허용합니다. 파일 등록·로그아웃에는 동일한 Origin과 CSRF 토큰이 필요합니다. 외부 서비스에서는 HTTPS와 일치하는 `PUBLIC_ORIGIN`을 설정하세요.
 
-4. `sh ./start.sh` 후 주소창으로 `/administration`에 직접 접속하여 Google 로그인하고 화면에 표시되는 **Google ID**를 확인합니다.
-5. `config/access.example.json`을 `config/access.json`으로 복사하고 해당 ID를 등록합니다.
-
-```json
-{"adminGoogleIds": ["실제_Google_sub"]}
-```
-
-6. `sh ./start.sh`를 다시 실행합니다. 인증 설정·config가 있을 때만 `ENABLE_IMPORT=1`을 전달합니다. 첫 로그인 계정이 자동 관리자가 되지는 않습니다. config는 요청 때 다시 읽으므로 관리자 제외는 즉시 반영됩니다.
-
-설정이 빠지면 공개 학습은 실행되지만 가져오기는 막힙니다. Compose를 직접 실행할 때 기본 `ENABLE_IMPORT=0`이며, 필요한 경우 명시적으로 `ENABLE_IMPORT=1`을 설정해야 합니다. 환경 변수를 1로 해도 관리자 세션·CSRF 검사를 생략하지 않습니다.
-
-모바일에서 로그인할 때 `localhost`는 휴대폰 자신을 가리킵니다. HTTPS 운영 도메인·Google 리디렉션 URI·`PUBLIC_ORIGIN`을 일치시키고 HTTPS 리버스 프록시를 사용하세요. `PUBLIC_ORIGIN`은 경로·끝 슬래시 없이 지정합니다. 쿠키는 HttpOnly·SameSite=Lax이며 HTTPS 주소에서는 Secure가 붙습니다. Google 로그인에는 인터넷이 필요합니다.
+기존 Google OAuth API는 호환성을 위해 유지하지만 관리자 화면에서 Google 설정은 필요하지 않습니다.
 
 ## 개발
 
@@ -50,11 +33,11 @@ npm run build
 npm run verify
 ```
 
-Vite 개발 서버는 `/api`를 43871 백엔드로 프록시합니다. Google 인증·CSRF·쿠키를 함께 확인하려면 빌드 결과를 백엔드에서 제공하는 같은 origin으로 접속하세요. 백엔드 직접 실행 시 `DATABASE_URL`을 설정하고 `npm start`를 사용합니다. DB 없이 프런트 화면만 확인하려면 저장소 루트에서 `python3 wordStudy_/scripts/browser-preview.py`를 실행합니다. 이 서버는 seed fixture와 인증 꺼짐 응답만 제공하며 운영 서버가 아닙니다.
+Vite 개발 서버는 `/api`를 43871 백엔드로 프록시합니다. 관리자 인증·CSRF·쿠키를 함께 확인하려면 빌드 결과를 백엔드에서 제공하는 같은 origin으로 접속하세요. 백엔드 직접 실행 시 `DATABASE_URL`을 설정하고 `npm start`를 사용합니다. DB 없이 프런트 화면만 확인하려면 저장소 루트에서 `python3 wordStudy_/scripts/browser-preview.py`를 실행합니다. 이 서버는 seed fixture와 인증 꺼짐 응답만 제공하며 운영 서버가 아닙니다.
 
 ### 제공하는 API
 
-- `GET /api/auth/session`, `GET /api/auth/login`, `GET /api/auth/callback`, `POST /api/auth/logout`
+- `POST /api/auth/login` (아이디·비밀번호), `GET /api/auth/session`, `GET /api/auth/login`, `GET /api/auth/callback`, `POST /api/auth/logout`
 - `POST /api/import`: `name`, `modified`, `data`, 선택 `policy: update|skip`; 결과 `added|updated|unchanged|skipped`
 - `PUT /api/progress`: 로그인 계정의 `id`, `position`; 익명은 브라우저에 저장
 - `POST /api/admin/claim-progress`: 관리자 자신의 기존 공동 진도 복사

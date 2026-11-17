@@ -1,4 +1,4 @@
-import { createHash, createPublicKey, randomBytes, verify } from 'node:crypto';
+import { createHash, createPublicKey, randomBytes, scryptSync, timingSafeEqual, verify } from 'node:crypto';
 import { readFile } from 'node:fs/promises';
 import type { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
 import { pool, claimLegacyProgress } from './store.ts';
@@ -8,7 +8,17 @@ const secret = process.env.SESSION_SECRET ?? '';
 const digest = (value: string) => createHash('sha256').update(secret).update(value).digest('hex');
 const origin = process.env.PUBLIC_ORIGIN ?? 'http://localhost:43871';
 const callback = `${origin}/api/auth/callback`;
-export const authEnabled = !!(process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET && secret.length >= 32);
+const googleEnabled = !!(process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET && secret.length >= 32);
+const localId = process.env.ADMIN_USERNAME ?? '';
+const localHash = process.env.ADMIN_PASSWORD_HASH ?? '';
+const localEnabled = !!(localId && localHash && secret.length >= 32);
+export const authEnabled = googleEnabled || localEnabled;
+export function verifyPassword(password: string, encoded = localHash) {
+  const [salt, hash] = encoded.split(':');
+  if (!salt || !/^[a-f0-9]{128}$/.test(hash ?? '')) return false;
+  const actual = scryptSync(password, salt, 64);
+  return timingSafeEqual(actual, Buffer.from(hash, 'hex'));
+}
 type Identity = { sub: string; admin: boolean; csrf: string };
 
 async function admins(): Promise<string[]> {
@@ -28,7 +38,7 @@ export async function identity(request: FastifyRequest): Promise<Identity | null
   if (!authEnabled) return null;
   const { rows } = await pool.query('SELECT user_id, csrf FROM auth_sessions WHERE id=$1 AND expires_at>now()', [digest(cookie(request))]);
   const session = rows[0];
-  return session?.user_id ? { sub: session.user_id, csrf: session.csrf, admin: (await admins()).includes(session.user_id) } : null;
+  return session?.user_id ? { sub: session.user_id, csrf: session.csrf, admin: (localEnabled && session.user_id === `local:${localId}`) || (await admins()).includes(session.user_id) } : null;
 }
 export async function requireUser(request: FastifyRequest, reply: FastifyReply) {
   const user = await identity(request);
@@ -64,14 +74,37 @@ export async function verifyGoogleToken(token: string, nonce: string) {
     || typeof claims.sub !== 'string' || !claims.sub || claims.sub.length > 255) throw new Error('토큰 검증 오류');
   return claims.sub as string;
 }
+const attempts = new Map<string, { count: number; until: number }>();
 export function registerAuth(app: FastifyInstance) {
   app.addHook('onSend', async (request, reply, payload) => {
     if (request.url.startsWith('/api/')) reply.header('cache-control', 'no-store');
     return payload;
   });
   app.get('/api/auth/session', async request => ({ enabled: authEnabled, user: await identity(request) }));
+  app.post<{ Body: { username: string; password: string } }>('/api/auth/login', {
+    schema: { body: { type: 'object', required: ['username', 'password'], additionalProperties: false,
+      properties: { username: { type: 'string', maxLength: 255 }, password: { type: 'string', maxLength: 1024 } } } },
+  }, async (request, reply) => {
+    if (request.headers.origin !== origin) return reply.code(403).send({ message: '요청 출처가 올바르지 않습니다.' });
+    if (!localEnabled) return reply.code(503).send({ message: '서버의 관리자 인증 설정이 필요합니다.' });
+    const now = Date.now();
+    if (attempts.size > 10000) for (const [key, entry] of attempts) if (entry.until <= now) attempts.delete(key);
+    const attempt = attempts.get(request.ip);
+    if (attempt && attempt.until > now && attempt.count >= 5) return reply.code(429).send({ message: '로그인 시도가 많습니다. 15분 후 다시 시도하세요.' });
+    const valid = verifyPassword(request.body.password);
+    if (request.body.username !== localId || !valid) {
+      attempts.set(request.ip, { count: (attempt && attempt.until > now ? attempt.count : 0) + 1, until: attempt && attempt.until > now ? attempt.until : now + 900000 });
+      return reply.code(401).send({ message: '아이디 또는 비밀번호가 올바르지 않습니다.' });
+    }
+    attempts.delete(request.ip);
+    await pool.query('DELETE FROM auth_sessions WHERE expires_at<=now() OR id=$1', [digest(cookie(request))]);
+    const token = random();
+    await pool.query("INSERT INTO auth_sessions (id,user_id,csrf,expires_at) VALUES ($1,$2,$3,now()+interval '7 days')", [digest(token), `local:${localId}`, random()]);
+    setCookie(reply, token, 604800);
+    return { ok: true };
+  });
   app.get('/api/auth/login', async (_request, reply) => {
-    if (!authEnabled) return reply.code(503).send({ message: '운영자가 Google 인증 설정을 완료해야 합니다.' });
+    if (!googleEnabled) return reply.code(503).send({ message: '운영자가 Google 인증 설정을 완료해야 합니다.' });
     const token = random(), state = random(), nonce = random(), verifier = random();
     await pool.query('DELETE FROM auth_sessions WHERE expires_at<=now()');
     await pool.query('INSERT INTO auth_sessions (id, csrf, state, nonce, verifier, expires_at) VALUES ($1,$2,$3,$4,$5,now()+interval \'10 minutes\')', [digest(token), random(), state, nonce, verifier]);
@@ -84,7 +117,7 @@ export function registerAuth(app: FastifyInstance) {
   app.get<{ Querystring: { code?: string; state?: string } }>('/api/auth/callback', async (request, reply) => {
     const { rows } = await pool.query('DELETE FROM auth_sessions WHERE id=$1 AND user_id IS NULL AND expires_at>now() RETURNING *', [digest(cookie(request))]);
     const pending = rows[0];
-    if (!authEnabled || !pending || !request.query.code || request.query.state !== pending.state) return reply.code(400).send({ message: '로그인 요청이 만료되었거나 유효하지 않습니다.' });
+    if (!googleEnabled || !pending || !request.query.code || request.query.state !== pending.state) return reply.code(400).send({ message: '로그인 요청이 만료되었거나 유효하지 않습니다.' });
     try {
       const response = await fetch('https://oauth2.googleapis.com/token', { method: 'POST', signal: AbortSignal.timeout(10000),
         body: new URLSearchParams({ code: request.query.code, client_id: process.env.GOOGLE_CLIENT_ID!, client_secret: process.env.GOOGLE_CLIENT_SECRET!, redirect_uri: callback, grant_type: 'authorization_code', code_verifier: pending.verifier }) });

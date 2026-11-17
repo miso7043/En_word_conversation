@@ -284,7 +284,7 @@ function App() {
   const [authEnabled, setAuthEnabled] = useState(false);
   const [settings, changeSettings] = useSettings();
   const [order, setOrder] = useState<'reverse' | 'forward'>(() => readStored<string>('playlist-order-v1', 'reverse') === 'forward' ? 'forward' : 'reverse');
-  const [policy, setPolicy] = useState('update');
+  const policy = 'update';
   const scope = user?.sub ?? 'anonymous';
   const [page, setPage] = useState<'dialogues' | 'sentences'>('dialogues');
   const [lessons, setLessons] = useState<Lesson[]>([]);
@@ -363,7 +363,7 @@ function App() {
     }).catch(() => { setAuthReady(true); setStatus('인증 상태를 확인할 수 없습니다. 서버 연결을 확인하세요.'); });
   }, []);
   useEffect(() => {
-    if (!authReady) return;
+    if (!authReady || (administration && !user?.admin)) return;
     void reload().then(count => setStatus(count ? '' : '등록된 대화가 없습니다.'))
       .catch(() => setStatus('대화 목록을 불러올 수 없습니다. 서버 상태를 확인하세요.'));
     void api<{ canImport: boolean }>('config').then(config => setCanImport(config.canImport)).catch(() => {});
@@ -423,6 +423,37 @@ function App() {
     }
   }
 
+  if (administration) return (
+    <main className="mx-auto max-w-3xl space-y-5 p-6">
+      <h1 className="text-2xl font-bold">자료 관리</h1>
+      {!authReady ? <p role="status">인증 상태를 확인하고 있습니다.</p> : !user?.admin ?
+        <form className="space-y-4" onSubmit={event => {
+          event.preventDefault();
+          const data = new FormData(event.currentTarget);
+          setBusy(true); setStatus('');
+          void api('auth/login', 'POST', { username: data.get('username'), password: data.get('password') })
+            .then(() => location.reload()).catch(error => setStatus(error.message)).finally(() => setBusy(false));
+        }}>
+          <h2>관리자 인증</h2>
+          <label className="block">아이디<input className="ml-3 border p-2" name="username" autoComplete="username" required maxLength={255} /></label>
+          <label className="block">비밀번호<input className="ml-3 border p-2" name="password" type="password" autoComplete="current-password" required maxLength={1024} /></label>
+          <button className="control border" disabled={busy || !authEnabled}>로그인</button>
+          {!authEnabled && <p>서버의 관리자 인증 설정이 필요합니다.</p>}
+        </form> : <>
+          <button className="control border" onClick={() => { void api('auth/logout', 'POST', {}).then(() => location.reload()).catch(error => setStatus(error.message)); }}>로그아웃</button>
+          {canImport && <div className="flex flex-wrap gap-3">
+            <label className="control cursor-pointer border">파일 등록<input aria-label="파일 등록" className="sr-only" type="file" accept=".json" multiple disabled={busy} onChange={event => { void importFiles(event.target.files); event.target.value = ''; }} /></label>
+            <label className="control cursor-pointer border">폴더 등록<input aria-label="폴더 등록" className="sr-only" type="file" {...{ webkitdirectory: '' }} multiple disabled={busy} onChange={event => { void importFiles(event.target.files, true); event.target.value = ''; }} /></label>
+          </div>}
+          <section><h2 className="mb-3 text-lg">등록된 리스트 ({lessons.length})</h2>
+            <ul className="space-y-2">{lessons.map(lesson => <li className="rounded border border-edge p-3" key={lesson.id}>{lesson.id} · {lesson.title}</li>)}</ul>
+          </section>
+        </>}
+      {status && <p role="status">{status}</p>}
+      {importResult && <ImportSummary result={importResult} close={() => setImportResult(null)} />}
+    </main>
+  );
+
   return (
     <div className="mx-auto max-w-6xl">
       <header className="flex flex-wrap items-center gap-3 p-4">
@@ -440,10 +471,6 @@ function App() {
       </header>
       <div className="grid md:grid-cols-[20rem_minmax(0,1fr)]">
       <aside className="p-4 md:sticky md:top-0 md:flex md:h-dvh md:flex-col md:border-r md:border-edge md:bg-panel md:p-5">
-        {administration && <p className="mb-3 text-sm"><a href="/">학습 화면</a></p>}
-        {administration && <section className="mb-3"><h2>자료 관리</h2>{!user ? authEnabled ? <a className="control border" href="/api/auth/login">Google 로그인</a> : <p>Google 인증 설정이 필요합니다.</p> : <><p className="break-all">Google ID: {user.sub}</p><p>{user.admin ? '관리자' : '관리자로 등록되지 않은 계정입니다.'}</p>
-        <button className="control border" onClick={() => { void api('auth/logout', 'POST', {}).then(() => location.reload()); }}>로그아웃</button>
-        {user.admin && <button className="control border" onClick={() => { void api<{ copied: boolean }>('admin/claim-progress', 'POST', {}).then(result => { setStatus(result.copied ? '기존 공동 진도를 복사했습니다.' : '이미 복사한 계정입니다.'); void reload(); }).catch(error => setStatus(error.message)); }}>기존 공동 진도 복사</button>}</>}</section>}
         {page === 'dialogues' && !!lessons.length && (
           <>
             <p className="mb-2 text-sm">선택 {checkedIds.size}개</p>
@@ -469,25 +496,6 @@ function App() {
           </>
         )}
         {page === 'dialogues' && <div className="mt-2 space-y-2 text-sm">
-          {administration && canImport && (
-            <div className="flex flex-wrap gap-2">
-              <select aria-label="가져오기 정책" value={policy} onChange={e => setPolicy(e.target.value)}><option value="update">변경된 자료 갱신·진도 유지</option><option value="skip">기존 자료 건너뛰기</option></select>
-              <label className="control cursor-pointer border border-edge focus-within:outline-2 focus-within:outline-accent">
-                JSON 파일
-                <input type="file" className="sr-only" accept=".json" multiple disabled={busy} onChange={event => {
-                  void importFiles(event.target.files);
-                  event.target.value = '';
-                }} />
-              </label>
-              <label className="control cursor-pointer border border-edge focus-within:outline-2 focus-within:outline-accent">
-                JSON 폴더
-                <input type="file" className="sr-only" {...{ webkitdirectory: '' }} multiple disabled={busy} onChange={event => {
-                  void importFiles(event.target.files, true);
-                  event.target.value = '';
-                }} />
-              </label>
-            </div>
-          )}
           {status && <p role="status" className="break-words text-slate-300">{status}</p>}
           {progressError && <p role="status" className="text-amber-300">{progressError}</p>}
         </div>}
