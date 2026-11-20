@@ -5,7 +5,7 @@ import fastifyStatic from '@fastify/static';
 import { migrate } from 'drizzle-orm/node-postgres/migrator';
 import { parseLesson } from '../shared/lesson.ts';
 import { identity, registerAuth, requireUser, requireAdmin } from './auth.ts';
-import { db, listLessons, pool, saveProgress, importLesson } from './store.ts';
+import { db, listLessons, pool, saveProgress, importLesson, recordStudy } from './store.ts';
 
 const app = Fastify({ logger: { redact: ['req.headers.cookie', 'req.headers.authorization', 'req.headers.x-csrf-token'] }, disableRequestLogging: true });
 registerAuth(app);
@@ -27,6 +27,23 @@ app.put<{ Body: { id: string; position: number } }>('/api/progress', {
   const { id, position } = request.body;
   if (!await saveProgress(id, position, user.sub)) return reply.code(404).send({ message: '대사 위치를 찾을 수 없습니다.' });
   return { ok: true };
+});
+
+// 공개 학습 화면의 익명 사용자도 공통 학습 횟수를 기록한다.
+app.post<{ Body: { id: string; eventId: string } }>('/api/study-completions', {
+  schema: { body: {
+    type: 'object', required: ['id', 'eventId'], additionalProperties: false,
+    properties: { id: { type: 'string', maxLength: 225 }, eventId: { type: 'string', format: 'uuid' } },
+  } },
+}, async (request, reply) => {
+  const origin = request.headers.origin;
+  const sameOrigin = `${request.protocol}://${request.headers.host}`;
+  if (origin !== sameOrigin && origin !== (process.env.PUBLIC_ORIGIN ?? 'http://localhost:43871')) {
+    return reply.code(403).send({ message: '요청 출처가 올바르지 않습니다.' });
+  }
+  const count = await recordStudy(request.body.id, request.body.eventId);
+  if (count === undefined) return reply.code(404).send({ message: '자료를 찾을 수 없습니다.' });
+  return { studyCount: count };
 });
 
 app.get('/api/config', async request => ({ canImport: process.env.ENABLE_IMPORT === '1' && !!(await identity(request))?.admin }));

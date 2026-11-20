@@ -29,14 +29,15 @@ function Paragraphs({ values }: { values: string[] }) {
   return values.map((value, index) => <p key={index} className="mb-2 leading-relaxed text-slate-300">{value}</p>);
 }
 
-function LessonView({ lesson, save, startSelected, autoPlay, onComplete, selectionCount, order, changeOrder, settings, changeSettings, repeat, changeRepeat }: {
+function LessonView({ lesson, save, startSelected, autoPlay, onComplete, selectionCount, order, changeOrder, settings, changeSettings, repeat, changeRepeat, onStudied }: {
+  onStudied: () => void;
   repeat: boolean; changeRepeat: (repeat: boolean) => void;
   lesson: Lesson; save: (position: number) => void;
   startSelected: () => boolean;
   autoPlay: boolean; onComplete: () => void;
   selectionCount: number; order: 'reverse' | 'forward'; changeOrder: (order: 'reverse' | 'forward') => void; settings: Settings; changeSettings: (s: Settings) => void;
 }) {
-  const player = usePlayback(lesson, save, { autoPlay, onComplete, settings });
+  const player = usePlayback(lesson, save, { autoPlay, onComplete, settings, onStudied });
   const wakeStatus = useWakeLock(player.mode === 'playing', settings.wake);
   const flat = lesson.conversations.flatMap(group => group.lines);
   useEffect(() => {
@@ -75,7 +76,10 @@ function LessonView({ lesson, save, startSelected, autoPlay, onComplete, selecti
   return (
     <main className="lesson-content min-w-0 px-4 pb-40 pt-1 sm:px-8 md:px-10 md:pt-10">
       <div className="mb-6 break-words">
-        <h2 id="lesson-title" className="mb-4 text-3xl font-bold tracking-tight sm:text-4xl">{lesson.title}</h2>
+        <div className="mb-4 flex items-start justify-between gap-3">
+          <h2 id="lesson-title" className="min-w-0 text-3xl font-bold tracking-tight sm:text-4xl">{lesson.title}</h2>
+          <p className="ml-auto shrink-0 text-right text-sm text-slate-300" aria-live="polite">학습 {lesson.studyCount ?? 0}회</p>
+        </div>
         <Paragraphs values={lesson.description} />
       </div>
       <section aria-label="음성 제어" className="fixed inset-x-0 bottom-0 z-10 border-t border-edge bg-panel px-4 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] md:sticky md:top-0 md:mb-5 md:rounded-xl md:border md:pb-3">
@@ -345,6 +349,17 @@ function App() {
     setAutoPlay(true);
   }
 
+  function recordCompletion(id: string) {
+    const bytes = crypto.getRandomValues(new Uint8Array(16));
+    bytes[6] = (bytes[6] & 15) | 64;
+    bytes[8] = (bytes[8] & 63) | 128;
+    const hex = Array.from(bytes, value => value.toString(16).padStart(2, '0')).join('');
+    const eventId = `${hex.slice(0, 8)}-${hex.slice(8, 12)}-${hex.slice(12, 16)}-${hex.slice(16, 20)}-${hex.slice(20)}`;
+    void api<{ studyCount: number }>('study-completions', 'POST', { id, eventId }).then(result => {
+      setLessons(items => items.map(item => item.id === id ? { ...item, studyCount: Math.max(item.studyCount ?? 0, result.studyCount) } : item));
+    }).catch(() => setProgressError('학습 횟수를 저장하지 못했습니다. 서버 연결을 확인하세요.'));
+  }
+
   async function reload() {
     await pending.current;
     const data = await api<Lesson[]>('lessons');
@@ -524,7 +539,7 @@ function App() {
           lesson={{ ...selected, position: positions.current.get(selected.id) ?? selected.position }}
           startSelected={startSelected} repeat={repeat} changeRepeat={setRepeat}
           selectionCount={playlist.length} order={order} changeOrder={setOrder} settings={settings} changeSettings={changeSettings}
-          autoPlay={autoPlay} onComplete={playPreviousLesson}
+          autoPlay={autoPlay} onComplete={playPreviousLesson} onStudied={() => recordCompletion(selected.id)}
           save={position => save(selected.id, position)} />
       )}
       </div>

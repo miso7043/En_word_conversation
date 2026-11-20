@@ -158,3 +158,17 @@ player.toggle();render();flush();assert.equal(spoken.at(-1).volume,0);assert.equ
 spoken.at(-1).onend({elapsedTime:1});render();advance(2999);assert.equal(completed,0);advance(1);assert.equal(completed,1);assert.equal(player.mode,'idle');advance(5000);assert.equal(completed,1);
 player.playLine(1);render();flush();spoken.at(-1).onerror({error:'synthesis-failed'});render();assert.equal(player.mode,'idle');assert.equal(player.turnProgress,null);advance(5000);assert.equal(completed,1);
 console.log('PASS: 내 역할 음소거 재시작·마지막 문장 자동 완료·음성 오류 취소');
+
+// 처음부터 실제로 모든 문장을 마친 경우에만 학습 횟수 이벤트를 보낸다.
+slots.length=0;spoken.length=0;timers.clear();let studied=0;
+options={onStudied:()=>studied++,settings:{rate:1,repeat:1,role:''}};
+render();render();player.playLine(1);render();flush();spoken.at(-1).onend();render();assert.equal(studied,0);
+player.playLine(0);render();flush();player.nextLine();render();flush();spoken.at(-1).onend();render();assert.equal(studied,0);
+player.playLine(0);render();flush();spoken.at(-1).onend();render();flush();player.toggle();render();player.toggle();render();flush();
+const finalSpeech=spoken.at(-1);finalSpeech.onend();render();assert.equal(studied,1);finalSpeech.onend();render();assert.equal(studied,1);
+player.playLine(0);render();flush();spoken.at(-1).onend();render();flush();player.stop();render();assert.equal(studied,1);
+options={onStudied:()=>studied++,settings:{rate:1,repeat:2,role:'B'}};render();
+player.playLine(0);render();flush();spoken.at(-1).onend();render();flush();spoken.at(-1).onend();render();flush();
+spoken.at(-1).onend({elapsedTime:1});render();advance(3000);flush();assert.equal(studied,1);
+spoken.at(-1).onend({elapsedTime:1});render();advance(3000);assert.equal(studied,2);
+console.log('PASS: 전체 재생만 집계·중간 시작/건너뛰기/정지 제외·일시정지 유지·중복 종료 제외·문장 반복과 역할 연습 완료 집계');

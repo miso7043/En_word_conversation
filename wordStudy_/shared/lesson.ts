@@ -7,6 +7,7 @@ export type Lesson = {
   description: string[];
   conversations: Dialogue[];
   position: number;
+  studyCount?: number;
   revision?: string;
   sourceDate?: string | null;
 };

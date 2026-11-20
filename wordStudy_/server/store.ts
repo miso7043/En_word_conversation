@@ -9,7 +9,7 @@ import { conversations, lessons, lines, progress } from './schema.ts';
 export const pool = new pg.Pool({ connectionString: process.env.DATABASE_URL });
 export const db = drizzle(pool);
 function contentHash(lesson: Lesson) {
-  const { id, position, revision, date, sourceDate, ...content } = lesson;
+  const { id, position, revision, date, sourceDate, studyCount, ...content } = lesson;
   return createHash('sha256').update(JSON.stringify({ ...content, sourceDate: sourceDate ?? null })).digest('hex');
 }
 export async function importLesson(lesson: Lesson, policy: 'skip' | 'update') {
@@ -92,4 +92,18 @@ export async function claimLegacyProgress(userId: string) {
     return !!claim.rowCount;
   } catch (error) { await client.query('ROLLBACK'); throw error; }
   finally { client.release(); }
+}
+
+// 완료 이벤트 재전송과 동시 요청의 중복 집계·갱신 유실을 방지한다.
+export async function recordStudy(id: string, eventId: string) {
+  return db.transaction(async tx => {
+    const [lesson] = await tx.select().from(lessons).where(eq(lessons.id, id)).for('update');
+    if (!lesson) return undefined;
+    const inserted = await tx.execute(sql`INSERT INTO study_completions (event_id, lesson_id)
+      VALUES (${eventId}::uuid, ${id}) ON CONFLICT DO NOTHING RETURNING event_id`);
+    if (!inserted.rowCount) return lesson.studyCount;
+    const [updated] = await tx.update(lessons).set({ studyCount: sql`${lessons.studyCount} + 1` })
+      .where(eq(lessons.id, id)).returning({ count: lessons.studyCount });
+    return updated.count;
+  });
 }

@@ -6,6 +6,7 @@ export const lessons = pgTable('lessons', {
   date: timestamp({ withTimezone: true, mode: 'date' }),
   description: text().array().notNull(),
   revision: text().notNull().default(''),
+  studyCount: integer('study_count').notNull().default(0),
 });
 
 export const conversations = pgTable('conversations', {

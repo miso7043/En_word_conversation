@@ -15,6 +15,13 @@
       "when": 1794902400000,
       "tag": "0001_learning_auth",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1795132800000,
+      "tag": "0002_study_count",
+      "breakpoints": true
     }
   ]
 }

@@ -40,10 +40,13 @@ type TurnClock = TurnProgress & { startedAt: number; deadline: number; finish: (
 const extraTime = 3000;
 
 export function usePlayback(lesson: Lesson, save: (position: number) => void,
-  options: { autoPlay?: boolean; onComplete?: () => void; settings?: Settings } = {}) {
+  options: { autoPlay?: boolean; onComplete?: () => void; onStudied?: () => void; settings?: Settings } = {}) {
   const settings = useRef(options.settings);
   settings.current = options.settings;
   const repeats = useRef(0);
+  const coverage = useRef<number | null>(null);
+  const studied = useRef(options.onStudied);
+  studied.current = options.onStudied;
   const [turnProgress, setTurnProgress] = useState<TurnProgress | null>(null);
   const turn = useRef<TurnClock | null>(null);
   const turnTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -121,6 +124,7 @@ export function usePlayback(lesson: Lesson, save: (position: number) => void,
   }
 
   function stop(label = '재생을 정지했습니다.') {
+    coverage.current = null;
     changeMode('idle');
     cancelSpeech();
     move(0);
@@ -156,7 +160,16 @@ export function usePlayback(lesson: Lesson, save: (position: number) => void,
     repeats.current++;
     let next = index + 1;
     if (repeats.current < (settings.current?.repeat ?? 1)) next = index;
-    else repeats.current = 0;
+    else {
+      repeats.current = 0;
+      if (coverage.current === index) {
+        coverage.current = index + 1;
+        if (coverage.current === flat.length) {
+          coverage.current = null;
+          studied.current?.();
+        }
+      }
+    }
     if (next >= flat.length) { stop('재생이 끝났습니다.'); completion.current?.(); }
     else if (state.current === 'playing') speak(next, assignments);
     else move(next);
@@ -215,6 +228,7 @@ export function usePlayback(lesson: Lesson, save: (position: number) => void,
     if (!voices.length || !flat[index]) return;
     cancelSpeech();
     repeats.current = 0;
+    coverage.current = index === 0 ? 0 : null;
     const assignments = assignVoices(lesson, voices, previous.current);
     previous.current = assignments.map(group => {
       const first = group.values().next().value;
@@ -242,6 +256,7 @@ export function usePlayback(lesson: Lesson, save: (position: number) => void,
   }
 
   function nextLine() {
+    coverage.current = null;
     cancelSpeech(); repeats.current = 0;
     const next = current.current + 1;
     if (next >= flat.length) { stop('재생이 끝났습니다.'); completion.current?.(); return; }

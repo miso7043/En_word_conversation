@@ -49,7 +49,7 @@ try {
   await db.query("INSERT INTO progress VALUES ('local','legacy.json',1), ('admin','legacy.json',1)");
   await start();
   const legacy = (await request('lessons')).find(l => l.id === 'legacy.json');
-  assert.equal(legacy.title, '기존 자료');assert.equal(legacy.conversations[0].lines.length, 2);assert.equal('tags' in legacy,false);assert.equal('level' in legacy,false);
+  assert.equal(legacy.studyCount,1);assert.equal(legacy.title, '기존 자료');assert.equal(legacy.conversations[0].lines.length, 2);assert.equal('tags' in legacy,false);assert.equal('level' in legacy,false);
   assert.equal((await db.query("SELECT position FROM progress WHERE user_id='local' AND lesson_id='legacy.json'")).rows[0].position,1);
   const seeds=(await request('lessons')).filter(l=>l.id!=='legacy.json');assert.equal(seeds.length,22);assert.equal(seeds.flatMap(l=>l.conversations).length,222);assert.equal(seeds.flatMap(l=>l.conversations.flatMap(c=>c.lines)).length,430);
   assert.deepEqual(await request('config'),{canImport:false});
@@ -66,6 +66,18 @@ try {
   await request('progress','PUT',{id:name,position:1});
   const find=async()=> (await request('lessons')).find(l=>l.id===name);
   assert.equal((await find()).position,1);
+  assert.equal((await find()).studyCount,0);
+  const eventId='00000000-0000-4000-8000-000000000001';
+  who='';
+  assert.equal((await request('study-completions','POST',{id:name,eventId})).studyCount,1);
+  assert.equal((await request('study-completions','POST',{id:name,eventId})).studyCount,1);
+  await request('study-completions','POST',{id:name,eventId},403,{origin:'https://evil.example'});
+  assert.equal((await request('study-completions','POST',{id:name,eventId},200,{origin:'http://127.0.0.1:43872'})).studyCount,1);
+  await request('study-completions','POST',{id:name,eventId:'invalid'},400);
+  await request('study-completions','POST',{id:'missing.json',eventId},404);
+  await Promise.all([2,3,4].map(n=>request('study-completions','POST',{id:name,eventId:`00000000-0000-4000-8000-00000000000${n}`})));
+  assert.equal((await find()).studyCount,4);
+  who='admin-token';
   assert.deepEqual((await find()).conversations[0].lines[0].keyPhrase,['Hello']);
   assert.equal((await request('import','POST',{...payload(),modified:123456})).status,'unchanged');
   data.level='retired-field';data.tags=['ignored'];
@@ -73,7 +85,7 @@ try {
   data.title='수정 자료';
   assert.equal((await request('import','POST',{...payload(),policy:'skip'})).status,'skipped');assert.equal((await find()).title,'검증 자료');
   data.conversations[0].lines.unshift({speaker:'A',text:'Inserted.'});
-  assert.equal((await request('import','POST',payload())).status,'updated');assert.equal((await find()).position,2);
+  assert.equal((await request('import','POST',payload())).status,'updated');assert.equal((await find()).position,2);assert.equal((await find()).studyCount,4);
   who='member-token';assert.equal((await find()).position,0);await request('progress','PUT',{id:name,position:1});
   who='admin-token';assert.equal((await find()).position,2);
   data.conversations[0].lines=[{speaker:'A',text:'Only remaining.'}];await request('import','POST',payload());assert.equal((await find()).position,0);
@@ -90,10 +102,10 @@ try {
   assert.equal((await db.query("SELECT count(*) FROM progress WHERE user_id='local'")).rows[0].count,'2');
   const login=await fetch(`${base}auth/login`,{redirect:'manual'});assert.equal(login.status,302);assert.ok(login.headers.get('set-cookie').includes('HttpOnly'));assert.ok(new URL(login.headers.get('location')).searchParams.get('code_challenge'));
   await request('auth/callback?code=invalid&state=invalid','GET',undefined,400);
-  await stop();await start();assert.equal((await find()).title,'수정 자료');
+  await stop();await start();assert.equal((await find()).title,'수정 자료');assert.equal((await find()).studyCount,4);assert.equal((await request('lessons')).find(l=>l.id==='legacy.json').studyCount,1);
   for (const path of ['audio', 'audio/old/file', 'audio/old/export']) await request(path,'GET',undefined,404);
   await request('admin/audio','POST',{},404);
   await request('auth/logout','POST',{});await request('import','POST',payload(),401);
   await stop();await start('0');assert.deepEqual(await request('config'),{canImport:false});await request('import','POST',payload(),404);
-  console.log('PASS: 구형 DB 마이그레이션·기존 seed·진도 보존, 관리자/일반/익명/만료 권한, CSRF, 변경 해시, 갱신·문장 이동·보정, 동시 가져오기, 롤백, 공동 진도 복사, 음성 생성 API 제거, 로그아웃, 가져오기 기본 차단');
+  console.log('PASS: 학습 횟수 기존 1/신규 0·익명 완주 저장·중복/동시 요청·갱신/재시작 보존, 구형 DB 마이그레이션·기존 seed·진도 보존, 관리자/일반/익명/만료 권한, CSRF, 변경 해시, 갱신·문장 이동·보정, 동시 가져오기, 롤백, 공동 진도 복사, 음성 생성 API 제거, 로그아웃, 가져오기 기본 차단');
 } finally { await stop();await db.end();await admin.query(`DROP DATABASE ${database} WITH (FORCE)`);await admin.end();await rm(temp,{recursive:true,force:true}); }
