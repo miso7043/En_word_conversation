@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import type { Lesson } from '../shared/lesson';
 import { usePlayback } from './usePlayback';
-import { selectedPlaylist, updateSelection } from './playlist';
+import { nextPlaylistLesson, selectedPlaylist, updateSelection } from './playlist';
 import './style.css';
 import { StudyControls, Concealed, useSettings, useWakeLock, type Settings } from './study';
 import { readStored, writeStored, bookmark, restore, type Bookmark } from './storage';
@@ -29,7 +29,8 @@ function Paragraphs({ values }: { values: string[] }) {
   return values.map((value, index) => <p key={index} className="mb-2 leading-relaxed text-slate-300">{value}</p>);
 }
 
-function LessonView({ lesson, save, startSelected, autoPlay, onComplete, selectionCount, order, changeOrder, settings, changeSettings }: {
+function LessonView({ lesson, save, startSelected, autoPlay, onComplete, selectionCount, order, changeOrder, settings, changeSettings, repeat, changeRepeat }: {
+  repeat: boolean; changeRepeat: (repeat: boolean) => void;
   lesson: Lesson; save: (position: number) => void;
   startSelected: () => boolean;
   autoPlay: boolean; onComplete: () => void;
@@ -93,6 +94,7 @@ function LessonView({ lesson, save, startSelected, autoPlay, onComplete, selecti
             <button className="control border border-edge" disabled={!player.canPlay} onClick={player.nextLine}>다음 문장</button>
             <select className="min-h-11" aria-label="연속 재생 방향" value={order} onChange={e => changeOrder(e.target.value as 'reverse' | 'forward')}><option value="reverse">아래 → 위</option><option value="forward">위 → 아래</option></select>
           </div>
+          <label className="ml-2 flex min-h-11 items-center gap-2"><input type="checkbox" checked={repeat} onChange={event => changeRepeat(event.target.checked)} />반복 재생</label>
           <StudyControls settings={settings} change={changeSettings} speakers={[...new Set(flat.map(line => line.speaker))]} count={flat.length} />
         </div>
         {selectionCount > 0 && <p className="mt-1 text-sm text-slate-300">선택 {selectionCount}개{selectionCount > 1 ? ' 연속 재생' : ' 재생'}</p>}
@@ -291,6 +293,7 @@ function App() {
   const [selectedId, setSelectedId] = useState('');
   const [session, setSession] = useState(0);
   const [autoPlay, setAutoPlay] = useState(false);
+  const [repeat, setRepeat] = useState(false);
   const [checkedIds, setCheckedIds] = useState<Set<string>>(() => new Set());
   const selectionAnchor = useRef<string | null>(null);
   const [status, setStatus] = useState('대화 목록을 불러오는 중입니다.');
@@ -331,14 +334,14 @@ function App() {
 
   function playPreviousLesson() {
     if (!selected) return;
-    const index = playlist.findIndex(lesson => lesson.id === selected.id);
-    const previous = index < 0 ? undefined : playlist[index + 1];
+    const previous = nextPlaylistLesson(playlist, selected, repeat);
     if (!previous) {
       setAutoPlay(false);
       return;
     }
-    changeSettings({ ...settings, role: '' });
+    if (previous.id !== selected.id) changeSettings({ ...settings, role: '' });
     setSelectedId(previous.id);
+    setSession(value => value + 1);
     setAutoPlay(true);
   }
 
@@ -459,7 +462,7 @@ function App() {
     <div className="mx-auto max-w-6xl">
       <header className="flex flex-wrap items-center gap-3 p-4">
         <nav aria-label="학습 메뉴" className="flex gap-2">
-          {([['dialogues', '대화 연습'], ['sentences', '문장읽기']] as const).map(([value, label]) => (
+          {([['dialogues', '대화연습'], ['sentences', '문장읽기']] as const).map(([value, label]) => (
             <button key={value} aria-current={page === value ? 'page' : undefined} onClick={() => {
               setAutoPlay(false);
               setPage(value);
@@ -519,7 +522,7 @@ function App() {
       {page === 'dialogues' && selected && !busy && (
         <LessonView key={`${selected.id}-${session}`}
           lesson={{ ...selected, position: positions.current.get(selected.id) ?? selected.position }}
-          startSelected={startSelected}
+          startSelected={startSelected} repeat={repeat} changeRepeat={setRepeat}
           selectionCount={playlist.length} order={order} changeOrder={setOrder} settings={settings} changeSettings={changeSettings}
           autoPlay={autoPlay} onComplete={playPreviousLesson}
           save={position => save(selected.id, position)} />

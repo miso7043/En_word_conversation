@@ -3,7 +3,7 @@ import { readFileSync } from 'node:fs';
 import { stripTypeScriptTypes } from 'node:module';
 const source = readFileSync(new URL('../src/playlist.ts', import.meta.url), 'utf8')
   .replace(/^import type .*;\n/gm, '');
-const { updateSelection, selectedPlaylist } = await import(`data:text/javascript;base64,${Buffer.from(stripTypeScriptTypes(source)).toString('base64')}`);
+const { nextPlaylistLesson, updateSelection, selectedPlaylist } = await import(`data:text/javascript;base64,${Buffer.from(stripTypeScriptTypes(source)).toString('base64')}`);
 const ids = ['a', 'b', 'c', 'd', 'e'];
 let selected = updateSelection(ids, new Set(), 'd', null, false, false);
 assert.deepEqual([...selected], ['d']);
@@ -20,3 +20,15 @@ assert.deepEqual(selectedPlaylist(lessons, selected).map(item => item.id), ['e',
 assert.deepEqual(selectedPlaylist(lessons, new Set()), []);
 assert.deepEqual(selectedPlaylist(lessons, new Set(['unknown'])), []);
 console.log('PASS: individual toggle, Ctrl selection, Shift ranges, Ctrl+Shift additive range, checked-only bottom-to-top playlist, empty lessons');
+
+const playlist = selectedPlaylist(lessons, new Set(['a', 'b']));
+assert.equal(nextPlaylistLesson(playlist, playlist[0], false), playlist[1]);
+assert.equal(nextPlaylistLesson(playlist, playlist[1], false), undefined);
+assert.equal(nextPlaylistLesson(playlist, playlist[1], true), playlist[0]);
+assert.equal(nextPlaylistLesson([lessons[0]], lessons[0], true), lessons[0]);
+assert.equal(nextPlaylistLesson([], lessons[0], true), lessons[0]);
+assert.equal(nextPlaylistLesson([], lessons[0], false), undefined);
+assert.equal(nextPlaylistLesson(playlist, lessons[4], true), lessons[4]);
+const forward = selectedPlaylist(lessons, new Set(['a', 'b']), 'forward');
+assert.equal(nextPlaylistLesson(forward, forward[1], true), forward[0]);
+console.log('PASS: 선택 방향별 목록 반복·단일/미선택 자료 반복·반복 해제 시 종료');

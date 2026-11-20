@@ -21,3 +21,10 @@ export function selectedPlaylist(lessons: Lesson[], selected: Set<string>, order
     && lesson.conversations.some(group => group.lines.length));
   return order === 'reverse' ? items.toReversed() : items;
 }
+
+// 선택 목록은 지정된 방향으로 순환하고, 목록 밖 자료는 현재 자료만 반복한다.
+export function nextPlaylistLesson<T extends { id: string }>(playlist: T[], current: T, repeat: boolean): T | undefined {
+  const index = playlist.findIndex(lesson => lesson.id === current.id);
+  if (index < 0) return repeat ? current : undefined;
+  return playlist[index + 1] ?? (repeat ? playlist[0] : undefined);
+}
