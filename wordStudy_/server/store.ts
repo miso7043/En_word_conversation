@@ -16,8 +16,15 @@ export async function importLesson(lesson: Lesson, policy: 'skip' | 'update') {
   const { id, title, description } = lesson;
   const revision = contentHash(lesson);
   return db.transaction(async tx => {
-    // 같은 파일명의 추가와 갱신을 모두 직렬화한다.
-    await tx.execute(sql`SELECT pg_advisory_xact_lock(hashtext(${id}))`);
+    // 파일명이 다른 동일 자료의 동시 등록도 직렬화한다.
+    await tx.execute(sql`SELECT pg_advisory_xact_lock(hashtext('wordstudy-import'))`);
+    const duplicate = await tx.execute(sql`
+      SELECT l.id FROM lessons l WHERE l.title = ${title}
+      AND COALESCE((SELECT jsonb_agg(c.title ORDER BY c.ordinal)
+        FROM conversations c WHERE c.lesson_id = l.id), '[]'::jsonb)
+        = ${JSON.stringify(lesson.conversations.map(dialogue => dialogue.title ?? null))}::jsonb
+      LIMIT 1`);
+    if (duplicate.rowCount) return 'skipped' as const;
     const [existing] = await tx.select().from(lessons).where(eq(lessons.id, id)).for('update');
     if (existing && policy === 'skip') return 'skipped' as const;
     if (existing?.revision === revision) return 'unchanged' as const;
