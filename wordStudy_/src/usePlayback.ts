@@ -71,7 +71,23 @@ export function usePlayback(lesson: Lesson, save: (position: number) => void,
   useEffect(() => {
     if (!options.autoPlay || autoStarted.current || !voices.length || !flat.length) return;
     autoStarted.current = true;
-    start(0);
+    const line = document.getElementById('line-0');
+    line?.scrollIntoView({ block: 'center',
+      behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
+    // Wait until the viewport has settled, then leave a quiet gap before speech.
+    let previousTop = line?.getBoundingClientRect().top;
+    let stableSince = performance.now();
+    function waitForScroll() {
+      const top = line?.getBoundingClientRect().top;
+      if (top !== previousTop) { previousTop = top; stableSince = performance.now(); }
+      if (performance.now() - stableSince < 300) {
+        pending.current = setTimeout(waitForScroll, 50);
+        return;
+      }
+      pending.current = null;
+      start(0);
+    }
+    pending.current = setTimeout(waitForScroll, 50);
   }, [options.autoPlay, voices, flat]);
 
   useEffect(() => {
@@ -170,9 +186,17 @@ export function usePlayback(lesson: Lesson, save: (position: number) => void,
         }
       }
     }
-    if (next >= flat.length) { stop('재생이 끝났습니다.'); completion.current?.(); }
+    if (next >= flat.length) finishLesson();
     else if (state.current === 'playing') speak(next, assignments);
     else move(next);
+  }
+
+  function finishLesson() {
+    stop('재생이 끝났습니다.');
+    pending.current = setTimeout(() => {
+      pending.current = null;
+      completion.current?.();
+    }, 300);
   }
 
   function speak(index: number, assignments: typeof cast) {
@@ -259,7 +283,7 @@ export function usePlayback(lesson: Lesson, save: (position: number) => void,
     coverage.current = null;
     cancelSpeech(); repeats.current = 0;
     const next = current.current + 1;
-    if (next >= flat.length) { stop('재생이 끝났습니다.'); completion.current?.(); return; }
+    if (next >= flat.length) { finishLesson(); return; }
     if (!cast.length) { start(next); return; }
     changeMode('playing'); speak(next, cast);
   }

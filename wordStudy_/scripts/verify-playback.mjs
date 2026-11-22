@@ -108,7 +108,16 @@ console.log('PASS: rapid pause/A/B clicks, stale events, pending stop, sequentia
 slots.length = 0;
 let completed = 0;
 options = { autoPlay: true, onComplete: () => { completed++; } };
-render(); render(); render(); flush();
+const beforeAuto = spoken.length;
+let scrollTop = 500;
+context.document.getElementById = () => ({
+  scrollIntoView() {}, getBoundingClientRect: () => ({ top: scrollTop }),
+});
+render(); render(); render();
+advance(250); scrollTop = 200; advance(250); scrollTop = 0; advance(50);
+advance(299); assert.equal(spoken.length, beforeAuto);
+advance(121);
+context.document.getElementById = () => null;
 assert.equal(player.mode, 'playing');
 assert.equal(spoken.at(-1).text, 'First sentence.');
 // A checkbox change must update completion behavior even during an utterance.
@@ -116,6 +125,7 @@ options = { autoPlay: true, onComplete: () => { completed += 10; } };
 render();
 spoken.at(-1).onend(); render(); flush();
 spoken.at(-1).onend(); render();
+advance(299); assert.equal(completed, 0); advance(1);
 assert.equal(completed, 10);
 assert.equal(player.mode, 'idle');
 flush();
@@ -155,7 +165,7 @@ options={settings:{rate:1,repeat:1,role:'B'},onComplete:()=>completed++};
 render();render();player.playLine(1);render();flush();const lastRole=spoken.at(-1);assert.equal(lastRole.volume,0);
 player.toggle();render();assert.equal(player.mode,'paused');assert.equal(player.turnProgress,null);
 player.toggle();render();flush();assert.equal(spoken.at(-1).volume,0);assert.equal(spoken.at(-1).text,'Second sentence.');lastRole.onend({elapsedTime:1});render();assert.equal(player.turnProgress.phase,'speech');
-spoken.at(-1).onend({elapsedTime:1});render();advance(2999);assert.equal(completed,0);advance(1);assert.equal(completed,1);assert.equal(player.mode,'idle');advance(5000);assert.equal(completed,1);
+spoken.at(-1).onend({elapsedTime:1});render();advance(2999);assert.equal(completed,0);advance(1);assert.equal(completed,0);advance(300);assert.equal(completed,1);assert.equal(player.mode,'idle');advance(5000);assert.equal(completed,1);
 player.playLine(1);render();flush();spoken.at(-1).onerror({error:'synthesis-failed'});render();assert.equal(player.mode,'idle');assert.equal(player.turnProgress,null);advance(5000);assert.equal(completed,1);
 console.log('PASS: 내 역할 음소거 재시작·마지막 문장 자동 완료·음성 오류 취소');
 
@@ -172,3 +182,15 @@ player.playLine(0);render();flush();spoken.at(-1).onend();render();flush();spoke
 spoken.at(-1).onend({elapsedTime:1});render();advance(3000);flush();assert.equal(studied,1);
 spoken.at(-1).onend({elapsedTime:1});render();advance(3000);assert.equal(studied,2);
 console.log('PASS: 전체 재생만 집계·중간 시작/건너뛰기/정지 제외·일시정지 유지·중복 종료 제외·문장 반복과 역할 연습 완료 집계');
+
+// 화면 전환 대기 중 정지하면 다음 학습으로 이동하지 않는다.
+slots.length=0;spoken.length=0;timers.clear();completed=0;
+options={onComplete:()=>completed++};
+render();render();player.playLine(1);render();flush();
+spoken.at(-1).onend();render();advance(299);player.stop();render();advance(1000);
+assert.equal(completed,0);
+// 스크롤 대기 중 정지하면 예약된 자동 재생도 취소한다.
+slots.length=0;spoken.length=0;timers.clear();options={autoPlay:true};
+render();render();render();advance(100);player.stop();render();advance(1000);
+assert.equal(spoken.length,0);
+console.log('PASS: 스크롤 완료 후 대기·화면 전환 전 300ms 대기·대기 중 정지 취소');
