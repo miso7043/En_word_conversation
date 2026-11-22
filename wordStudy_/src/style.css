@@ -38,8 +38,9 @@
 
 input:not([type=checkbox]), select { background: var(--color-panel); color: inherit; border: 1px solid var(--color-edge); border-radius: .4rem; padding: .45rem; }
 .study-controls input[type=number] { width: 5rem; }
-mark { background: #fae08a; color: #241f08; border-radius: .2rem; }
+mark { background: transparent; color: #fbbf24; font-weight: 700; }
 :root[data-theme=light] { color-scheme: light; --color-canvas: #f4f7fa; --color-panel: #ffffff; --color-edge: #9aaabb; --color-accent: #036983; }
+:root[data-theme=light] mark { color: #92400e; }
 :root[data-theme=light] body, :root[data-theme=light] .text-slate-100 { color: #172b3a; }
 :root[data-theme=light] :is(.text-slate-300,.text-slate-400) { color: #405466; }
 :root[data-theme=light] .bg-sky-950 { background: #e0f0f6; }
