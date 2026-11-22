@@ -54,6 +54,10 @@ Vite 개발 서버는 `/api`를 43871 백엔드로 프록시합니다. 관리자
 
 `npm run verify:highlight`로 변형 인식과 오탐 방지 사례를 검증합니다.
 
+`could have + PP`처럼 과거분사 자리를 포함하는 문형도 지원합니다. `PP`, `p.p.`, `p. p.`를 과거분사 자리로 처리하며, `could have done`, `could have worked`, `could’ve gone` 등을 강조합니다. `would/should/might/must have + PP`에도 같은 규칙이 적용됩니다. 규칙형 `-ed`와 내장 불규칙 과거분사 목록을 사용하므로 인터넷이 필요하지 않습니다. 문형 사이에 부사가 삽입된 경우나 목록에 없는 불규칙 과거분사는 인식하지 못할 수 있습니다.
+
+기본 조동사 완료 문형은 `could not have done`, `couldn’t have finished` 같은 부정형과 `Could you have left` 같은 대명사 주어 의문형도 인식합니다. `I could have.`처럼 과거분사가 생략된 문장은 PP가 없으므로 이 규칙에서는 강조하지 않습니다.
+
 `npm run build`는 TypeScript의 미사용 선언·매개변수 검사도 실행합니다. 현재 직접 의존성은 React·Fastify·PostgreSQL 접근과 프런트 빌드에 필요한 패키지로 구성됩니다.
 
 적용된 `drizzle/` 마이그레이션 이력은 수정하지 않습니다. 과거 DB에 남은 추가 메타데이터 열은 보존하지만 현재 ORM 스키마·API·가져오기에서는 읽거나 갱신하지 않습니다. 기존 학습 JSON과 진도 데이터는 그대로 유지합니다.
