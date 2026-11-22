@@ -1,5 +1,6 @@
 import { useEffect, useId, useRef, useState } from 'react';
 import { readStored, writeStored } from './storage';
+import { highlightParts } from './highlight';
 export type Settings = { rate: number; repeat: number; hideEnglish: boolean; hideMeaning: boolean;
   role: string; wake: boolean; theme: string };
 const defaults: Settings = { rate: .95, repeat: 1, hideEnglish: false, hideMeaning: false, role: '', wake: false, theme: 'dark' };
@@ -45,9 +46,7 @@ export function Concealed({ text, hidden, phrases = [], label }: { text: string;
   const [open, setOpen] = useState(false);
   useEffect(() => setOpen(false), [hidden, text]);
   if (hidden && !open) return <button className="control border border-edge" onClick={() => setOpen(true)}>{label}</button>;
-  const matches = phrases.filter(Boolean).sort((a, b) => b.length - a.length);
-  const pattern = matches.length ? new RegExp(`(${matches.map(p => p.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|')})`, 'gi') : null;
-  return <>{pattern ? text.split(pattern).map((part, i) => matches.some(p => p.toLowerCase() === part.toLowerCase()) ? <mark key={i}>{part}</mark> : part) : text}</>;
+  return <>{highlightParts(text, phrases).map((part, i) => part.highlighted ? <mark key={i}>{part.text}</mark> : part.text)}</>;
 }
 export function useWakeLock(playing: boolean, enabled: boolean) {
   const [status, setStatus] = useState('');

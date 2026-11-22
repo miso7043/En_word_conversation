@@ -126,7 +126,7 @@ function LessonView({ lesson, save, startSelected, autoPlay, onComplete, selecti
                     <button className="control min-w-11 border border-edge bg-panel px-2 text-accent" disabled={!player.canPlay} onClick={() => player.playLine(position)}
                       aria-label={`${line.speaker} · ${index + 1}번째 대사 · ${active ? playLabel : '여기부터 재생'}`}>{line.speaker}</button>
                     <div className="min-w-0 break-words py-1">
-                      <p lang="en" className="leading-relaxed"><Concealed label="영어 보기" text={line.text} hidden={settings.hideEnglish} phrases={line.keyPhrase} /></p>
+                      <p lang="en" className="leading-relaxed"><Concealed label="영어 보기" text={line.text} hidden={settings.hideEnglish} phrases={line.keyPhrase?.length ? line.keyPhrase : [lesson.title]} /></p>
                       {line.meaning && <p className="mt-1 text-sm leading-relaxed text-slate-300"><Concealed label="해석 보기" text={line.meaning} hidden={settings.hideMeaning} /></p>}
                       {player.turnProgress && player.position === position && <div className="mt-3 role-progress">
                         <progress aria-label="내 역할 연습 진행" max={player.turnProgress.speechMs + 3000} value={player.turnProgress.phase === 'extra' ? player.turnProgress.speechMs + 3000 - player.turnProgress.remainingMs : undefined} />
