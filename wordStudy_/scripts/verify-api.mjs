@@ -73,6 +73,12 @@ try {
   const find=async()=> (await request('lessons')).find(l=>l.id===name);
   assert.equal((await find()).position,1);
   assert.equal((await find()).studyCount,0);
+  assert.equal((await find()).memorized,false);
+  await request('memorized','PUT',{id:name,memorized:true},403,{origin:'https://evil.example'});
+  await request('memorized','PUT',{id:'missing.json',memorized:true},404);
+  await request('memorized','PUT',{id:name},400);
+  assert.deepEqual(await request('memorized','PUT',{id:name,memorized:true}),{memorized:true});
+  assert.equal((await find()).memorized,true);
   const eventId='00000000-0000-4000-8000-000000000001';
   who='';
   assert.equal((await request('study-completions','POST',{id:name,eventId})).studyCount,1);
@@ -109,7 +115,7 @@ try {
   assert.equal((await db.query("SELECT count(*) FROM progress WHERE user_id='local'")).rows[0].count,'2');
   const login=await fetch(`${base}auth/login`,{redirect:'manual'});assert.equal(login.status,302);assert.ok(login.headers.get('set-cookie').includes('HttpOnly'));assert.ok(new URL(login.headers.get('location')).searchParams.get('code_challenge'));
   await request('auth/callback?code=invalid&state=invalid','GET',undefined,400);
-  await stop();await start();assert.equal((await find()).title,'수정 자료');assert.equal((await find()).studyCount,4);assert.equal((await request('lessons')).find(l=>l.id==='legacy.json').studyCount,1);
+  await stop();await start();assert.equal((await find()).memorized,true);await request('memorized','PUT',{id:name,memorized:false});assert.equal((await find()).memorized,false);assert.equal((await find()).title,'수정 자료');assert.equal((await find()).studyCount,4);assert.equal((await request('lessons')).find(l=>l.id==='legacy.json').studyCount,1);
   for (const path of ['audio', 'audio/old/file', 'audio/old/export']) await request(path,'GET',undefined,404);
   await request('admin/audio','POST',{},404);
   await request('auth/logout','POST',{});await request('import','POST',payload(),401);

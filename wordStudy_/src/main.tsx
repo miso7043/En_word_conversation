@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { Fragment, useEffect, useRef, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import type { Lesson } from '../shared/lesson';
 import { usePlayback } from './usePlayback';
@@ -294,6 +294,8 @@ function App() {
   const scope = user?.sub ?? 'anonymous';
   const [page, setPage] = useState<'dialogues' | 'sentences'>('dialogues');
   const [lessons, setLessons] = useState<Lesson[]>([]);
+  const orderedLessons = [...lessons].sort((a, b) => Number(!!a.memorized) - Number(!!b.memorized));
+  const [memorizedPending, setMemorizedPending] = useState<Set<string>>(new Set());
   const [selectedId, setSelectedId] = useState('');
   const [session, setSession] = useState(0);
   const [autoPlay, setAutoPlay] = useState(false);
@@ -309,14 +311,14 @@ function App() {
   const positions = useRef(new Map<string, number>());
   const currentScope = useRef(scope); currentScope.current = scope;
   const selected = lessons.find(lesson => lesson.id === selectedId) ?? lessons[0];
-  const playlist = selectedPlaylist(lessons, checkedIds, order);
+  const playlist = selectedPlaylist(orderedLessons, checkedIds, order);
   const allChecked = lessons.length > 0 && playlist.length === lessons.length;
   useEffect(() => { if (authReady) writeStored(`selection-v1:${scope}`, [...checkedIds]); }, [checkedIds]);
   useEffect(() => { writeStored('playlist-order-v1', order); }, [order]);
 
   function checkLesson(id: string, event: { shiftKey: boolean; ctrlKey: boolean; metaKey: boolean }) {
     const anchor = selectionAnchor.current;
-    setCheckedIds(previous => updateSelection(lessons.map(lesson => lesson.id), previous,
+    setCheckedIds(previous => updateSelection(orderedLessons.map(lesson => lesson.id), previous,
       id, anchor, event.shiftKey, event.ctrlKey || event.metaKey));
     if (!event.shiftKey || anchor === null) selectionAnchor.current = id;
   }
@@ -358,6 +360,19 @@ function App() {
     void api<{ studyCount: number }>('study-completions', 'POST', { id, eventId }).then(result => {
       setLessons(items => items.map(item => item.id === id ? { ...item, studyCount: Math.max(item.studyCount ?? 0, result.studyCount) } : item));
     }).catch(() => setProgressError('학습 횟수를 저장하지 못했습니다. 서버 연결을 확인하세요.'));
+  }
+
+  async function toggleMemorized(id: string, memorized: boolean) {
+    setMemorizedPending(items => new Set(items).add(id));
+    try {
+      const result = await api<{ memorized: boolean }>('memorized', 'PUT', { id, memorized });
+      setLessons(items => items.map(item => item.id === id ? { ...item, memorized: result.memorized } : item));
+      setProgressError('');
+    } catch {
+      setProgressError('암기 상태를 저장하지 못했습니다. 서버 연결을 확인하세요.');
+    } finally {
+      setMemorizedPending(items => { const next = new Set(items); next.delete(id); return next; });
+    }
   }
 
   async function reload() {
@@ -507,7 +522,13 @@ function App() {
             </div>
             <p className="mb-2 text-xs text-slate-400">체크: 재생할 자료 선택 · Ctrl+클릭: 개별 선택 · Shift+클릭: 범위 선택</p>
             <nav aria-label="대화 목록" className="max-h-40 sm:max-h-64 min-h-0 flex-1 space-y-2 overflow-y-auto p-1 md:max-h-none">
-              {lessons.map(lesson => (
+              {orderedLessons.map((lesson, index) => (
+                <Fragment key={lesson.id}>
+                {lesson.memorized && (index === 0 || !orderedLessons[index - 1].memorized) && (
+                  <div role="separator" aria-label="Memorized" className="flex items-center gap-3 py-3 text-xs text-slate-400">
+                    <span className="h-px flex-1 bg-edge" /><span>Memorized</span><span className="h-px flex-1 bg-edge" />
+                  </div>
+                )}
                 <div key={lesson.id} className={`flex items-center gap-2 rounded-xl border px-2 ${checkedIds.has(lesson.id) ? 'border-accent bg-sky-950' : 'border-edge'}`}>
                   <input type="checkbox" className="h-4 w-4 shrink-0 accent-sky-400"
                     aria-label={`${lesson.title} 연속 재생 선택`} checked={checkedIds.has(lesson.id)}
@@ -521,7 +542,15 @@ function App() {
                   {lesson.title}
                   {lesson.date && <span className="mt-1 block text-xs text-slate-400">{dateFormat.format(new Date(lesson.date))}</span>}
                 </button>
+                <label className="flex shrink-0 flex-col items-center gap-1 py-2 text-[10px]">
+                  <input type="checkbox" className="h-4 w-4 accent-sky-400"
+                    aria-label={`${lesson.title} Memorized`} checked={!!lesson.memorized}
+                    disabled={memorizedPending.has(lesson.id)}
+                    onChange={event => { void toggleMemorized(lesson.id, event.target.checked); }} />
+                  Memorized
+                </label>
                 </div>
+                </Fragment>
               ))}
             </nav>
           </>

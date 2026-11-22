@@ -9,7 +9,7 @@ import { conversations, lessons, lines, progress } from './schema.ts';
 export const pool = new pg.Pool({ connectionString: process.env.DATABASE_URL });
 export const db = drizzle(pool);
 function contentHash(lesson: Lesson) {
-  const { id, position, revision, date, sourceDate, studyCount, ...content } = lesson;
+  const { id, position, revision, date, sourceDate, studyCount, memorized, ...content } = lesson;
   return createHash('sha256').update(JSON.stringify({ ...content, sourceDate: sourceDate ?? null })).digest('hex');
 }
 export async function importLesson(lesson: Lesson, policy: 'skip' | 'update') {
@@ -113,4 +113,9 @@ export async function recordStudy(id: string, eventId: string) {
       .where(eq(lessons.id, id)).returning({ count: lessons.studyCount });
     return updated.count;
   });
+}
+
+export async function saveMemorized(id: string, memorized: boolean) {
+  const rows = await db.update(lessons).set({ memorized }).where(eq(lessons.id, id)).returning({ id: lessons.id });
+  return rows.length > 0;
 }

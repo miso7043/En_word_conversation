@@ -1,4 +1,4 @@
-import { foreignKey, integer, pgTable, primaryKey, text, timestamp } from 'drizzle-orm/pg-core';
+import { boolean, foreignKey, integer, pgTable, primaryKey, text, timestamp } from 'drizzle-orm/pg-core';
 
 export const lessons = pgTable('lessons', {
   id: text().primaryKey(),
@@ -6,6 +6,7 @@ export const lessons = pgTable('lessons', {
   date: timestamp({ withTimezone: true, mode: 'date' }),
   description: text().array().notNull(),
   revision: text().notNull().default(''),
+  memorized: boolean().notNull().default(false),
   studyCount: integer('study_count').notNull().default(0),
 });
 

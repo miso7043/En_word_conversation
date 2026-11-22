@@ -8,6 +8,7 @@ export type Lesson = {
   conversations: Dialogue[];
   position: number;
   studyCount?: number;
+  memorized?: boolean;
   revision?: string;
   sourceDate?: string | null;
 };
