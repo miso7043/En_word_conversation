@@ -2,6 +2,8 @@
 
 Node 24·React·Fastify·PostgreSQL 17 버전입니다. 서버 없이 쓰는 `../htmlVersion/`과 실행 방식이 다릅니다. 학습 UI와 JSON 형식은 [루트 README](../README.md)를 참조하세요.
 
+라즈베리파이 설치·방화벽·부팅 자동 실행은 [배포 안내](docs/raspberry-pi.md)를 참조하세요.
+
 ## 시작·중지
 
 ```bash
