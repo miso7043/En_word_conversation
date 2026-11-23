@@ -33,23 +33,98 @@ const participles = new Set(('been had done gone come got gotten taken given mad
 // 기능어는 그대로 비교해 다른 구문까지 일치하는 것을 막는다.
 const fixed = new Set('a an the in on at to into of for from with by as and or but if than then it this that these those i you he she we they me him us them can could will would shall should may might must not out up down off over under after before through about'.split(' '));
 
+// 문법 자리표시자는 문맥 분석기가 아닌, 범위가 제한된 문형 규칙으로 처리한다.
+const slotAliases: Array<[string, string]> = [
+  ['past participle|과거분사|pp', 'slotpp'],
+  ['present participle|현재분사', 'sloting'],
+  ['noun phrase|명사구|np|noun|명사', 'slotnoun'],
+  ['subject|주어', 'slotsubject'], ['object|목적어', 'slotobject'],
+  ['complement|보어', 'slotcomplement'], ['pronoun|대명사', 'slotpronoun'],
+  ['adjective|adj|형용사', 'slotadjective'], ['adverb|adv|부사', 'slotadverb'],
+  ['preposition|prep|전치사', 'slotpreposition'], ['conjunction|conj|접속사', 'slotconjunction'],
+  ['interjection|interj|감탄사', 'slotinterjection'], ['determiner|det|한정사|관사', 'slotdeterminer'],
+  ['gerund|동명사', 'sloting'], ['infinitive|부정사', 'slotinfinitive'],
+  ['verb|동사', 'slotverb'],
+];
+const pronouns = new Set('i you he she it we they me him her us them this that these those someone somebody everyone everybody anyone anybody nobody'.split(' '));
+const adverbs = new Set('still already just really probably possibly certainly definitely always never often sometimes usually also even only very quite too well here there now then'.split(' '));
+const prepositions = new Set('in on at to into of for from with by as over under after before through about without between among'.split(' '));
+const conjunctions = new Set('and or but so because although if when while since unless'.split(' '));
+const determiners = new Set('a an the this that these those my your his her its our their some any each every no'.split(' '));
+const nounStops = new Set([...conjunctions, ...[...prepositions].filter(word => word !== 'of'), 'is', 'am', 'are', 'was', 'were', 'be', 'been', 'being', 'has', 'have', 'had', 'will', 'would', 'can', 'could', 'should', 'must']);
+
 function tokens(text: string, expandContractions = false): Token[] {
   const result = [...text.matchAll(/[a-z]+(?:['’][a-z]+)*/gi)].map(match => ({
     word: match[0].toLowerCase().replaceAll('’', "'"), start: match.index!, end: match.index! + match[0].length,
   }));
   return expandContractions ? result.flatMap(token => {
-    const contraction = /^(could|would|should|might|must)('ve|n't)$/.exec(token.word);
-    return contraction ? [{ ...token, word: contraction[1] }, { ...token, word: contraction[2] === "'ve" ? 'have' : 'not' }] : [token];
+    const modal = /^(could|would|should|might|must)('ve|n't)$/.exec(token.word);
+    if (modal) return [{ ...token, word: modal[1] }, { ...token, word: modal[2] === "'ve" ? 'have' : 'not' }];
+    const be = /^(i'm|you're|he's|she's|it's|we're|they're|that's|there's)$/.exec(token.word);
+    if (be) return [{ ...token, word: token.word.split("'")[0] },
+      { ...token, word: token.word === "i'm" ? 'am' : token.word.endsWith("'re") ? 'are' : 'is' }];
+    return [token];
   }) : result;
 }
 
 function patternTargets(phrase: string): Token[][] {
-  const target = tokens(phrase.replace(/\bp\s*\.\s*p\s*\.?/gi, 'PP'));
-  if (target.length !== 3 || !/^(could|would|should|might|must)$/.test(target[0].word)
-    || target[1].word !== 'have' || target[2].word !== 'pp') return [target];
-  // 기본 문형에 대응하는 부정형·대명사 주어 의문형도 같은 문형으로 표시한다.
-  return [target, ...'not i you he she it we they'.split(' ').map(word =>
-    [target[0], { word, start: 0, end: 0 }, ...target.slice(1)])];
+  const patterns: Token[][] = [];
+  for (let alternative of phrase.split(/[/／]/)) {
+    alternative = alternative.replace(/\bp\s*\.\s*p\s*\.?/gi, 'PP')
+      .replace(/[~～〜]+/g, ' slotgap ');
+    for (const [aliases, marker] of slotAliases) {
+      alternative = alternative.replace(new RegExp(`(?<![a-z가-힣])(?:${aliases})(?![a-z가-힣])`, 'gi'), marker);
+    }
+    // S/V/N/O/C 약어는 대문자 또는 점이 있는 문법 표기만 인정한다.
+    alternative = alternative.replace(/\b([SVNOC])\b|\b([svnoc])\.(?=\s|$)/g, (_, upper: string, dotted: string) =>
+      ({ s: 'slotsubject', v: 'slotverb', n: 'slotnoun', o: 'slotobject', c: 'slotcomplement' })[(upper ?? dotted).toLowerCase() as 's'] ?? '');
+    const target = tokens(alternative, true);
+    while (target[0]?.word === 'slotgap') target.shift();
+    while (target.at(-1)?.word === 'slotgap') target.pop();
+    // 자리표시자만 있는 제목은 모든 문장을 강조하지 않는다.
+    if (!target.some(token => !token.word.startsWith('slot'))) continue;
+    // as they explain은 같은 문형의 as he explains 등에도 대응한다.
+    for (let i = 0; i + 2 < target.length; i++) {
+      if (target[i].word === 'as' && target[i + 1].word === 'they' && target[i + 2].word === 'explain') {
+        target[i + 1] = { ...target[i + 1], word: 'slotpronoun' };
+      }
+    }
+    patterns.push(target);
+    if (target[0]?.word === 'be') {
+      patterns.push([target[0], { word: 'slotsubject', start: 0, end: 0 }, ...target.slice(1)]);
+    }
+    if (target.map(token => token.word).join(' ') === 'it comes after') patterns.push(target.slice(1));
+    if (target.length === 3 && /^(could|would|should|might|must)$/.test(target[0].word)
+      && target[1].word === 'have' && target[2].word === 'slotpp') {
+      patterns.push(...'not i you he she it we they'.split(' ').map(word =>
+        [target[0], { word, start: 0, end: 0 }, ...target.slice(1)]));
+    }
+  }
+  return patterns;
+}
+
+function connected(text: string, previous: Token, actual: Token): boolean {
+  return previous.start === actual.start && previous.end === actual.end
+    || /^[\s,\-–—]+$/.test(text.slice(previous.end, actual.start));
+}
+
+function slotAccepts(slot: string, words: string[]): boolean {
+  const word = words[0];
+  if (slot === 'slotgap') return true;
+  if (slot === 'slotpp') return words.length === 1 && (participles.has(word) || /^[a-z]{2,}ed$/.test(word));
+  if (slot === 'sloting') return words.length === 1 && /^[a-z]+ing$/.test(word);
+  if (slot === 'slotpronoun') return words.length === 1 && pronouns.has(word);
+  if (slot === 'slotpreposition') return words.length === 1 && prepositions.has(word);
+  if (slot === 'slotconjunction') return words.length === 1 && conjunctions.has(word);
+  if (slot === 'slotdeterminer') return words.length === 1 && determiners.has(word);
+  if (slot === 'slotinterjection') return words.length === 1 && /^(oh|ah|wow|hey|oops|ouch|alas|hooray)$/.test(word);
+  if (slot === 'slotadverb') return words.length === 1 && (adverbs.has(word) || word.endsWith('ly'));
+  if (slot === 'slotinfinitive') return words.length >= 2 && word === 'to';
+  if (slot === 'slotnoun') return words.some(w => !determiners.has(w)) && !words.some(w => nounStops.has(w));
+  if (slot === 'slotsubject') return !words.some(w => nounStops.has(w));
+  if (slot === 'slotobject' || slot === 'slotcomplement') return !words.some(w => conjunctions.has(w));
+  if (slot === 'slotadjective') return words.length === 1 && !fixed.has(word) && !determiners.has(word);
+  return slot === 'slotverb' && !conjunctions.has(word) && !determiners.has(word);
 }
 
 function forms(word: string): Set<string> {
@@ -76,28 +151,55 @@ function forms(word: string): Set<string> {
 export function highlightParts(text: string, phrases: string[]): HighlightPart[] {
   const ranges: Array<{ start: number; end: number }> = [];
   for (const phrase of phrases) {
-    // 문형 표기 PP / p.p. / p. p.와 구분 기호 +를 처리한다.
     for (const target of patternTargets(phrase)) {
-      if (!target.length) continue;
-      const grammarPattern = target.some(token => token.word === 'pp');
-      const source = tokens(text, grammarPattern);
+      const strictHave = target.some(token => token.word === 'slotpp')
+        && target.some(token => /^(could|would|should|might|must)$/.test(token.word));
+      const source = tokens(text, true);
       const variants = target.map(token => forms(token.word));
-      for (let i = 0; i + target.length <= source.length; i++) {
-        const matches = target.every((token, j) => {
-          const actual = source[i + j];
-          // 단어 사이는 공백·쉼표·하이픈만 허용해 문장 경계를 넘지 않는다.
-          if (j) {
-            const previous = source[i + j - 1];
-            const sameContraction = previous.start === actual.start && previous.end === actual.end;
-            if (!sameContraction && !/^[\s,\-–—]+$/.test(text.slice(previous.end, actual.start))) return false;
+      for (let start = 0; start < source.length; start++) {
+        let budget = 3000;
+        function match(part: number, position: number): number | undefined {
+          if (--budget <= 0 || position - start > 64) return undefined;
+          if (part === target.length) return position;
+          if (position >= source.length) return undefined;
+          if (position > start && !connected(text, source[position - 1], source[position])) return undefined;
+          const word = target[part].word;
+          if (word.startsWith('slot')) {
+            const max = word === 'slotgap' ? 24 : 8;
+            const available = Math.min(max, source.length - position);
+            // 끝의 명사구는 구두점·접속사 등에서 멈추고, 중간 자리는 뒤의 고정 표현을 찾는다.
+            const lengths = Array.from({ length: available + 1 }, (_, i) => i)
+              .filter(n => n > 0 || word === 'slotgap');
+            if (part === target.length - 1) lengths.reverse();
+            for (const count of lengths) {
+              const slice = source.slice(position, position + count);
+              if (slice.some((token, i) => i > 0 && (!connected(text, slice[i - 1], token)
+                || /[,;:]/.test(text.slice(slice[i - 1].end, token.start))))) continue;
+              if (!slotAccepts(word, slice.map(token => token.word))) continue;
+              const end = match(part + 1, position + count);
+              if (end !== undefined) return end;
+            }
+            return undefined;
           }
-          if (token.word === 'pp') return participles.has(actual.word) || /^[a-z]{2,}ed$/.test(actual.word);
-          if (token.word === "one's") return possessives.has(actual.word) || /'s$/.test(actual.word);
-          if (token.word === 'oneself') return /^(myself|yourself|yourselves|himself|herself|itself|ourselves|themselves|oneself)$/.test(actual.word);
-          // 문형의 have를 has/had로 확대하지 않아 could had went 같은 오탐을 막는다.
-          return grammarPattern ? token.word === actual.word : variants[j].has(actual.word);
-        });
-        if (matches) ranges.push({ start: source[i].start, end: source[i + target.length - 1].end });
+          const actual = source[position].word;
+          const matches = word === "one's" ? possessives.has(actual) || /'s$/.test(actual)
+            : word === 'oneself' ? /^(myself|yourself|yourselves|himself|herself|itself|ourselves|themselves|oneself)$/.test(actual)
+            : strictHave && word === 'have' ? word === actual : variants[part].has(actual);
+          if (!matches) return undefined;
+          // is still up for처럼 be 바로 뒤의 짧은 부사 삽입을 허용한다.
+          if (word === 'be') {
+            for (let next = position + 1; next <= Math.min(position + 3, source.length); next++) {
+              if (next > position + 1 && (!adverbs.has(source[next - 1].word)
+                || !connected(text, source[next - 2], source[next - 1]))) break;
+              const end = match(part + 1, next);
+              if (end !== undefined) return end;
+            }
+            return undefined;
+          }
+          return match(part + 1, position + 1);
+        }
+        const end = match(0, start);
+        if (end !== undefined && end > start) ranges.push({ start: source[start].start, end: source[end - 1].end });
       }
     }
   }

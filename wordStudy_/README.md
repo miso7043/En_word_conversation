@@ -58,6 +58,24 @@ Vite 개발 서버는 `/api`를 43871 백엔드로 프록시합니다. 관리자
 
 기본 조동사 완료 문형은 `could not have done`, `couldn’t have finished` 같은 부정형과 `Could you have left` 같은 대명사 주어 의문형도 인식합니다. `I could have.`처럼 과거분사가 생략된 문장은 PP가 없으므로 이 규칙에서는 강조하지 않습니다.
 
+제목의 `/`(또는 `／`)는 대안 구분자로 사용합니다. `denote / denoting`은 두 표현과 그 규칙 변화를 각각 찾으며, `take off / give up`처럼 숙어 대안도 지원합니다. `~`, `～`, `〜`는 실제 글자로 비교하지 않습니다. 앞뒤의 물결표는 생략하고, 중간의 물결표는 같은 문장 안에서 최대 24단어의 생략 자리로 처리합니다. `It comes after ~`는 긴 주어 뒤의 `comes after`에도 대응합니다.
+
+영문·한글 문법 표기는 다음과 같이 자리표시자로 처리합니다. `+`는 구분 기호입니다.
+
+| 자리 | 지원 표기 |
+| --- | --- |
+| 명사·명사구 | noun, n., N, 명사, noun phrase, NP, 명사구 |
+| 주어·동사·목적어·보어 | subject/주어/S, verb/동사/V, object/목적어/O, complement/보어/C |
+| 대명사 | pronoun, 대명사 |
+| 형용사·부사 | adjective/adj/형용사, adverb/adv/부사 |
+| 전치사·접속사·감탄사 | preposition/prep/전치사, conjunction/conj/접속사, interjection/interj/감탄사 |
+| 한정사·관사 | determiner, det, 한정사, 관사 |
+| 분사·동명사·부정사 | PP/p.p./past participle/과거분사, present participle/현재분사, gerund/동명사, infinitive/부정사 |
+
+예를 들어 `be up for + noun`은 `is still up for debate`, `you’re up for a promotion`, `Are you up for dinner`를, `That's what + 주어 + 동사 ~ as they explain ~`은 `That’s what customers tell me as they explain`을 강조합니다. 뒤의 `as he explains` 같은 대명사·동사 변화도 인식합니다. 문형의 고정 표현과 자리의 범위를 함께 강조하며 원문은 바꾸지 않습니다.
+
+이 기능은 문형 표기를 해석하는 오프라인 규칙이며 문장의 품사를 완전히 분석하는 도구는 아닙니다. 명사구·주어·동사 등은 최대 8단어 안에서 고정 표현과 문장부호를 기준으로 추정하므로 복잡한 문장에서는 과소·과다 강조가 생길 수 있습니다. 자리표시자만 있는 제목은 모든 문장을 강조하지 않도록 제외합니다. 예외는 실제 표현을 문장별 `keyPhrase`로 지정해 보완하세요.
+
 `npm run build`는 TypeScript의 미사용 선언·매개변수 검사도 실행합니다. 현재 직접 의존성은 React·Fastify·PostgreSQL 접근과 프런트 빌드에 필요한 패키지로 구성됩니다.
 
 적용된 `drizzle/` 마이그레이션 이력은 수정하지 않습니다. 과거 DB에 남은 추가 메타데이터 열은 보존하지만 현재 ORM 스키마·API·가져오기에서는 읽거나 갱신하지 않습니다. 기존 학습 JSON과 진도 데이터는 그대로 유지합니다.
