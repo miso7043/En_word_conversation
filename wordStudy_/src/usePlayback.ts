@@ -59,6 +59,9 @@ export function usePlayback(lesson: Lesson, save: (position: number) => void,
   const [message, setMessage] = useState('');
   const [position, setPosition] = useState(lesson.position < flat.length ? lesson.position : 0);
   const [cast, setCast] = useState<ReturnType<typeof assignVoices>>([]);
+  const description = lesson.description?.join('\n\n').trim() ?? '';
+  const [readingDescription, setReadingDescription] = useState(false);
+  const descriptionRun = useRef<{ text: string; index: number; assignments: typeof cast } | null>(null);
   const active = useRef<SpeechSynthesisUtterance | null>(null);
   const pending = useRef<ReturnType<typeof setTimeout> | null>(null);
   const current = useRef(position);
@@ -71,7 +74,7 @@ export function usePlayback(lesson: Lesson, save: (position: number) => void,
   useEffect(() => {
     if (!options.autoPlay || autoStarted.current || !voices.length || !flat.length) return;
     autoStarted.current = true;
-    const line = document.getElementById('line-0');
+    const line = document.getElementById(settings.current?.readDescription !== false && description ? 'lesson-title' : 'line-0');
     line?.scrollIntoView({ block: 'center',
       behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
     // Wait until the viewport has settled, then leave a quiet gap before speech.
@@ -85,7 +88,7 @@ export function usePlayback(lesson: Lesson, save: (position: number) => void,
         return;
       }
       pending.current = null;
-      start(0);
+      start(0, true);
     }
     pending.current = setTimeout(waitForScroll, 50);
   }, [options.autoPlay, voices, flat]);
@@ -108,7 +111,7 @@ export function usePlayback(lesson: Lesson, save: (position: number) => void,
       }
       setVoices(eligible);
     }
-    function cancel() { changeMode('idle'); cancelSpeech(); }
+    function cancel() { clearDescription(); changeMode('idle'); cancelSpeech(); }
     refresh();
     synth?.addEventListener('voiceschanged', refresh);
     window.addEventListener('pagehide', cancel);
@@ -122,11 +125,11 @@ export function usePlayback(lesson: Lesson, save: (position: number) => void,
 
   useEffect(() => {
     if (mode !== 'playing') return;
-    document.getElementById(`line-${position}`)?.scrollIntoView({
+    document.getElementById(readingDescription ? 'lesson-title' : `line-${position}`)?.scrollIntoView({
       block: 'center',
       behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth',
     });
-  }, [mode, position]);
+  }, [mode, position, readingDescription]);
 
   function changeMode(next: Mode) {
     state.current = next;
@@ -139,7 +142,10 @@ export function usePlayback(lesson: Lesson, save: (position: number) => void,
     save(next);
   }
 
+  function clearDescription() { descriptionRun.current = null; setReadingDescription(false); }
+
   function stop(label = '재생을 정지했습니다.') {
+    clearDescription();
     coverage.current = null;
     changeMode('idle');
     cancelSpeech();
@@ -248,9 +254,40 @@ export function usePlayback(lesson: Lesson, save: (position: number) => void,
     }, 120);
   }
 
-  function start(index: number) {
+  function speakDescription(run: NonNullable<typeof descriptionRun.current>) {
+    const utterance = new SpeechSynthesisUtterance(run.text);
+    const korean = synth.getVoices().find(voice => /^ko(?:[-_]|$)/i.test(voice.lang));
+    if (korean) utterance.voice = korean;
+    utterance.lang = 'ko-KR';
+    utterance.rate = settings.current?.rate ?? 0.95;
+    utterance.volume = 1;
+    active.current = utterance;
+    utterance.onend = () => {
+      if (active.current !== utterance) return;
+      active.current = null;
+      clearDescription();
+      speak(run.index, run.assignments);
+    };
+    utterance.onerror = event => {
+      if (active.current !== utterance) return;
+      // 한국어 음성을 제공하지 못하는 기기에서도 영어 학습은 이어간다.
+      active.current = null;
+      clearDescription();
+      console.warn('[영어 대화 연습] 한국어 설명 재생 오류:', event.error);
+      speak(run.index, run.assignments);
+    };
+    pending.current = setTimeout(() => {
+      pending.current = null;
+      if (active.current !== utterance || state.current !== 'playing') return;
+      if (synth.paused) synth.resume();
+      synth.speak(utterance);
+    }, 120);
+  }
+
+  function start(index: number, withDescription = false) {
     if (!voices.length || !flat[index]) return;
     cancelSpeech();
+    clearDescription();
     repeats.current = 0;
     coverage.current = index === 0 ? 0 : null;
     const assignments = assignVoices(lesson, voices, previous.current);
@@ -260,7 +297,12 @@ export function usePlayback(lesson: Lesson, save: (position: number) => void,
     });
     setCast(assignments);
     changeMode('playing');
-    speak(index, assignments);
+    if (withDescription && settings.current?.readDescription !== false && description) {
+      const run = { text: description, index, assignments };
+      descriptionRun.current = run;
+      setReadingDescription(true);
+      speakDescription(run);
+    } else speak(index, assignments);
   }
 
   function toggle() {
@@ -275,14 +317,17 @@ export function usePlayback(lesson: Lesson, save: (position: number) => void,
       changeMode('playing');
       const extra = turn.current?.phase === 'extra' ? turn.current : null;
       if (extra) { extra.deadline = performance.now() + extra.remainingMs; tickExtra(extra); }
+      else if (descriptionRun.current) speakDescription(descriptionRun.current);
       else speak(current.current, cast);
-    } else start(current.current);
+    } else start(current.current, true);
   }
 
   function nextLine() {
-    coverage.current = null;
+    const skippingDescription = !!descriptionRun.current;
+    if (!skippingDescription) coverage.current = null;
+    const next = descriptionRun.current?.index ?? current.current + 1;
+    clearDescription();
     cancelSpeech(); repeats.current = 0;
-    const next = current.current + 1;
     if (next >= flat.length) { finishLesson(); return; }
     if (!cast.length) { start(next); return; }
     changeMode('playing'); speak(next, cast);
@@ -296,10 +341,10 @@ export function usePlayback(lesson: Lesson, save: (position: number) => void,
     cast, mode, position, toggle, stop, nextLine, turnProgress,
     canPlay: !!voices.length && !!flat.length,
     playLine: (index: number) => {
-      if (state.current !== 'idle' && current.current === index) toggle();
+      if (!descriptionRun.current && state.current !== 'idle' && current.current === index) toggle();
       else start(index);
     },
-    status: mode === 'playing' ? turnProgress ? (turnProgress.phase === 'speech' ? '내 차례 · 음소거로 연습 중' : '내 차례 · 추가 3초 연습 중') : `읽는 중 · ${position + 1} / ${flat.length}`
+    status: mode === 'playing' ? readingDescription ? '한국어 설명을 읽는 중' : turnProgress ? (turnProgress.phase === 'speech' ? '내 차례 · 음소거로 연습 중' : '내 차례 · 추가 3초 연습 중') : `읽는 중 · ${position + 1} / ${flat.length}`
       : mode === 'paused' ? '일시정지됨' : message || voiceStatus,
   };
 }

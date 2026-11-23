@@ -311,6 +311,8 @@ function App() {
   const [authReady, setAuthReady] = useState(false);
   const [authEnabled, setAuthEnabled] = useState(false);
   const [settings, changeSettings] = useSettings();
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(() => readStored<boolean>('sidebar-collapsed-v1', false) === true);
+  useEffect(() => { writeStored('sidebar-collapsed-v1', sidebarCollapsed); }, [sidebarCollapsed]);
   const [order, setOrder] = useState<'reverse' | 'forward'>(() => readStored<string>('playlist-order-v1', 'reverse') === 'forward' ? 'forward' : 'reverse');
   const policy = 'update';
   const scope = user?.sub ?? 'anonymous';
@@ -589,8 +591,11 @@ function App() {
         <label className="ml-auto hidden text-sm md:block"><span className="sr-only">테마</span><select aria-label="테마" value={settings.theme} onChange={event => { changeSettings({ ...settings, theme: event.target.value }); notify(`${({ dark: '어둡게', light: '밝게', system: '시스템' } as Record<string, string>)[event.target.value]} 테마`); }}><option value="dark">어둡게</option><option value="light">밝게</option><option value="system">시스템</option></select></label>
       </header>
       {page === 'dialogues' && (status || progressError) && <p role="status" className="mobile-message px-4 text-sm text-slate-300">{progressError || status}</p>}
-      <div className="grid md:grid-cols-[20rem_minmax(0,1fr)]">
-      <aside className="desktop-lessons p-5 md:sticky md:top-0 md:flex md:h-dvh md:flex-col md:border-r md:border-edge md:bg-panel">{lessonList()}</aside>
+      <div className={`study-layout ${sidebarCollapsed ? 'sidebar-collapsed' : ''}`}>
+      <aside className="desktop-lessons md:sticky md:top-0 md:flex md:h-dvh md:flex-col md:border-r md:border-edge md:bg-panel">
+        <div className="sidebar-toggle-row"><button className="icon-button border border-edge" aria-label={sidebarCollapsed ? '목록 펼치기' : '목록 접기'} title={sidebarCollapsed ? '목록 펼치기' : '목록 접기'} aria-expanded={!sidebarCollapsed} aria-controls="desktop-lesson-list" onClick={() => setSidebarCollapsed(value => !value)}><Icon name={sidebarCollapsed ? 'expand' : 'collapse'} /></button></div>
+        <div id="desktop-lesson-list" className="sidebar-list-content" hidden={sidebarCollapsed}>{lessonList()}</div>
+      </aside>
       <dialog ref={picker} aria-labelledby="lesson-picker-title" className="lesson-picker study-controls m-auto w-[calc(100%-2rem)] max-w-lg rounded-2xl border border-edge bg-panel p-4 text-slate-100 backdrop:bg-black/60" onClick={event => {
         if (event.target === event.currentTarget) {
           const bounds = event.currentTarget.getBoundingClientRect();

@@ -48,6 +48,7 @@ mark { background: transparent; color: #fbbf24; font-weight: 700; }
 
 .role-progress progress { display:block; width:100%; height:.65rem; accent-color:var(--color-accent); }
 
+.lesson-content, main[aria-labelledby="sentence-reader-title"] { padding-bottom:calc(112px + env(safe-area-inset-bottom)); }
 .lesson-content { min-height:calc(100dvh + 2.5rem); overflow-anchor:none; }
 
 .icon-button { display:inline-flex; width:44px; height:44px; flex-shrink:0; align-items:center; justify-content:center; border-radius:.6rem; }
@@ -62,13 +63,20 @@ mark { background: transparent; color: #fbbf24; font-weight: 700; }
 .playback-notice { position:absolute; bottom:calc(100% + 8px); left:8px; right:8px; border:1px solid var(--color-edge); border-radius:.6rem; padding:8px; background:var(--color-panel); font-size:.85rem; }
 .setting-toast { position:fixed; z-index:100; bottom:calc(76px + env(safe-area-inset-bottom)); left:50%; transform:translateX(-50%); max-width:calc(100vw - 24px); pointer-events:none; text-align:center; }
 .setting-toast span { display:block; width:max-content; max-width:100%; border:1px solid var(--color-edge); border-radius:12px; padding:10px 16px; background:var(--color-panel); color:var(--color-accent); box-shadow:0 6px 24px #0004; }
+.study-layout { display:grid; }
 .desktop-lessons { display:none; }
+.sidebar-toggle-row { display:flex; justify-content:flex-end; margin-bottom:12px; }
+.sidebar-list-content:not([hidden]) { display:flex; min-height:0; flex:1; flex-direction:column; }
+html { scroll-padding-bottom:calc(100px + env(safe-area-inset-bottom)); }
 .lesson-picker { max-height:80dvh; }
 .lesson-picker .lesson-list { max-height:calc(80dvh - 210px); }
 @media (min-width:768px) {
   .study-header { gap:12px; padding:16px; }
   .menu-button { padding:0 12px; }
   .mobile-picker-trigger,.mobile-message { display:none; }
-  .desktop-lessons { display:flex; }
-  .playback-panel { position:sticky; inset:auto; top:0; margin-bottom:20px; border:1px solid var(--color-edge); border-radius:12px; padding:8px; }
+  .study-layout { --sidebar-width:20rem; grid-template-columns:var(--sidebar-width) minmax(0,1fr); }
+  .study-layout.sidebar-collapsed { --sidebar-width:64px; }
+  .desktop-lessons { display:flex; padding:20px; }
+  .sidebar-collapsed .desktop-lessons { padding:10px; }
+  .playback-panel { position:fixed; inset:auto 16px max(16px,env(safe-area-inset-bottom)) auto; width:320px; max-width:calc(100vw - var(--sidebar-width) - 32px); border:1px solid var(--color-edge); border-radius:12px; padding:8px; }
 }

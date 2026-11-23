@@ -194,3 +194,51 @@ slots.length=0;spoken.length=0;timers.clear();options={autoPlay:true};
 render();render();render();advance(100);player.stop();render();advance(1000);
 assert.equal(spoken.length,0);
 console.log('PASS: 스크롤 완료 후 대기·화면 전환 전 300ms 대기·대기 중 정지 취소');
+
+// 설명은 한국어로 먼저 읽고, 영어 대사 완주 기록·반복 횟수와 분리한다.
+lesson.description = ['이것은 단어 설명입니다.', '두 번째 설명입니다.'];
+const korean = { name:'Korean', lang:'ko-KR', voiceURI:'korean' };
+synth.getVoices = () => [voice, korean];
+function descriptionCase(nextOptions = {}) {
+  slots.length=0; spoken.length=0; timers.clear();
+  options=nextOptions; render(); render();
+}
+let descriptionStudied=0;
+descriptionCase({settings:{rate:.8,repeat:1,role:'A'},onStudied:()=>descriptionStudied++});
+player.toggle();render();flush();
+const intro=spoken.at(-1);
+assert.equal(intro.text,lesson.description.join('\n\n'));
+assert.equal(intro.lang,'ko-KR');assert.equal(intro.voice,korean);assert.equal(intro.volume,1);assert.equal(intro.rate,.8);
+assert.equal(player.status,'한국어 설명을 읽는 중');assert.equal(player.position,0);assert.equal(player.turnProgress,null);
+player.toggle();render();assert.equal(player.mode,'paused');
+intro.onend();render();flush();assert.equal(spoken.length,1);
+player.toggle();render();flush();assert.equal(spoken.at(-1).text,intro.text);
+spoken.at(-1).onend();render();flush();
+assert.equal(spoken.at(-1).text,'First sentence.');assert.equal(spoken.at(-1).volume,0);assert.equal(descriptionStudied,0);
+spoken.at(-1).onend({elapsedTime:1});render();advance(3000);flush();
+assert.equal(spoken.at(-1).text,'Second sentence.');spoken.at(-1).onend();render();assert.equal(descriptionStudied,1);
+// 설명 도중 다음 문장은 첫 영어 문장으로 이동하고, 영어 완주 집계는 유지한다.
+descriptionCase({onStudied:()=>descriptionStudied++});player.toggle();render();flush();const skippedIntro=spoken.at(-1);
+player.nextLine();render();flush();assert.equal(spoken.at(-1).text,'First sentence.');
+skippedIntro.onend();render();assert.equal(spoken.length,2);
+spoken.at(-1).onend();render();flush();spoken.at(-1).onend();render();assert.equal(descriptionStudied,2);
+// 정지는 설명의 늦은 이벤트를 취소하고, 화자 버튼은 지정한 영어 대사로 바로 이동한다.
+descriptionCase();player.toggle();render();flush();const stoppedIntro=spoken.at(-1);player.stop();render();
+stoppedIntro.onend();stoppedIntro.onerror({error:'interrupted'});render();flush();assert.equal(spoken.length,1);assert.equal(player.mode,'idle');
+player.toggle();render();flush();player.playLine(0);render();flush();assert.equal(spoken.at(-1).text,'First sentence.');
+// 설정 해제·빈 설명은 바로 영어로 시작한다.
+descriptionCase({settings:{readDescription:false}});player.toggle();render();flush();assert.equal(spoken[0].text,'First sentence.');
+lesson.description=[];descriptionCase();player.toggle();render();flush();assert.equal(spoken[0].text,'First sentence.');
+// 한국어 음성 목록이 없으면 ko-KR 언어를 요청하고, 엔진 오류 시 영어로 이어간다.
+lesson.description=['한국어 설명'];synth.getVoices=()=>[voice];descriptionCase();player.toggle();render();flush();
+assert.equal(spoken[0].lang,'ko-KR');assert.equal(spoken[0].voice,undefined);
+spoken[0].onerror({error:'language-unavailable'});render();flush();assert.equal(spoken.at(-1).text,'First sentence.');
+// 연속·자동 재생도 자료마다 설명을 먼저 읽는다.
+synth.getVoices=()=>[voice,korean];descriptionCase({autoPlay:true});render();advance(500);
+assert.equal(spoken[0].lang,'ko-KR');assert.equal(spoken[0].text,'한국어 설명');
+console.log('PASS: 한국어 설명 기본 재생·음성/속도·역할 제외·일시정지/재시작·정지/늦은 이벤트·설명 건너뛰기·완주 집계·설정 해제·빈 설명·한국어 오류 대체·자동 재생');
+
+// 저장 진도가 중간에 있어도 자동 연속 재생의 설명 건너뛰기는 첫 대사로 이동한다.
+lesson.position=1;descriptionCase({autoPlay:true});render();advance(500);
+assert.equal(spoken[0].lang,'ko-KR');player.nextLine();render();flush();
+assert.equal(spoken.at(-1).text,'First sentence.');lesson.position=0;

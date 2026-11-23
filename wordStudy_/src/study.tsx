@@ -3,12 +3,13 @@ import { readStored, writeStored } from './storage';
 import { Icon, useToast } from './ui';
 import { highlightParts } from './highlight';
 export type Settings = { rate: number; repeat: number; hideEnglish: boolean; hideMeaning: boolean;
-  role: string; wake: boolean; theme: string };
-const defaults: Settings = { rate: .95, repeat: 1, hideEnglish: false, hideMeaning: false, role: '', wake: false, theme: 'dark' };
+  role: string; wake: boolean; theme: string; readDescription: boolean };
+const defaults: Settings = { rate: .95, repeat: 1, hideEnglish: false, hideMeaning: false, role: '', wake: false, theme: 'dark', readDescription: true };
 export function useSettings() {
   const [settings, setSettings] = useState<Settings>(() => {
     const raw = readStored<Partial<Settings>>('study-settings-v1', {});
     return { ...defaults, rate: clamp(raw?.rate, .5, 1.5, .95), repeat: Math.round(clamp(raw?.repeat, 1, 10, 1)),
+      readDescription: raw.readDescription !== false,
       hideEnglish: raw.hideEnglish === true, hideMeaning: raw.hideMeaning === true, wake: raw.wake === true,
       theme: ['light', 'dark', 'system'].includes(raw.theme ?? '') ? raw.theme! : 'dark' };
   });
@@ -37,7 +38,7 @@ export function StudyControls({ settings: s, change, speakers = [], count = 0 }:
       <div className="grid gap-5">
         <label className="flex items-center justify-between gap-3">속도 <input aria-label="재생 속도" type="number" min="0.5" max="1.5" step="0.05" value={s.rate} onChange={e => change({ ...s, rate: clamp(+e.target.value, .5, 1.5, .95) })} /></label>
         {!!count && <label className="flex items-center justify-between gap-3">문장 반복 <input type="number" min="1" max="10" value={s.repeat} onChange={e => change({ ...s, repeat: Math.round(clamp(+e.target.value, 1, 10, 1)) })} /></label>}
-        {(['hideEnglish', 'hideMeaning', 'wake'] as const).filter(key => count > 0 || key === 'wake').map(key => <label key={key} className="flex items-center gap-2"><input type="checkbox" checked={s[key]} onChange={e => { change({ ...s, [key]: e.target.checked }); notify(`${({ hideEnglish: '영어 가리기', hideMeaning: '해석 가리기', wake: '화면 유지' })[key]} ${e.target.checked ? '켬' : '끔'}`); }} /> {({ hideEnglish: '영어 가리기', hideMeaning: '해석 가리기', wake: '재생 중 화면 유지' })[key]}</label>)}
+        {(['readDescription', 'hideEnglish', 'hideMeaning', 'wake'] as const).filter(key => count > 0 || key === 'wake').map(key => <label key={key} className="flex items-center gap-2"><input type="checkbox" checked={s[key]} onChange={e => { change({ ...s, [key]: e.target.checked }); notify(`${({ readDescription: '한국어 설명 읽기', hideEnglish: '영어 가리기', hideMeaning: '해석 가리기', wake: '화면 유지' })[key]} ${e.target.checked ? '켬' : '끔'}`); }} /> {({ readDescription: '한국어 설명 읽기', hideEnglish: '영어 가리기', hideMeaning: '해석 가리기', wake: '재생 중 화면 유지' })[key]}</label>)}
         {!!count && <label className="flex items-center justify-between gap-3">내 역할 <select aria-label="내 역할" value={s.role} onChange={e => change({ ...s, role: e.target.value })}><option value="">모두 읽기</option>{speakers.map(speaker => <option key={speaker}>{speaker}</option>)}</select></label>}
       </div>
     </dialog>

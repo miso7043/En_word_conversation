@@ -1,7 +1,7 @@
 import { createPortal } from 'react-dom';
 import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from 'react';
 
-export type IconName = 'play' | 'pause' | 'stop' | 'next' | 'up' | 'down' | 'settings' | 'list' | 'chat' | 'read' | 'moon' | 'sun' | 'system' | 'close';
+export type IconName = 'play' | 'pause' | 'stop' | 'next' | 'up' | 'down' | 'settings' | 'list' | 'chat' | 'read' | 'moon' | 'sun' | 'system' | 'close' | 'collapse' | 'expand';
 export function Icon({ name }: { name: IconName }) {
   const paths: Record<IconName, ReactNode> = {
     play: <path d="m8 5 11 7-11 7Z" fill="currentColor" stroke="none" />,
@@ -17,6 +17,8 @@ export function Icon({ name }: { name: IconName }) {
     moon: <path d="M20 15A9 9 0 0 1 9 4 9 9 0 1 0 20 15Z" />,
     sun: <><circle cx="12" cy="12" r="4" /><path d="M12 2v2m0 16v2M2 12h2m16 0h2M5 5l1 1m12 12 1 1M5 19l1-1M18 6l1-1" /></>,
     system: <><rect x="2" y="3" width="20" height="14" rx="2" /><path d="M12 17v4m-5 0h10" /></>,
+    collapse: <path d="m15 5-7 7 7 7" />,
+    expand: <path d="m9 5 7 7-7 7" />,
     close: <path d="m6 6 12 12M6 18 18 6" />,
   };
   return <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" focusable="false">{paths[name]}</svg>;
