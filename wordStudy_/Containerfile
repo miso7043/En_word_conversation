@@ -1,5 +1,7 @@
 FROM docker.io/library/node:24-bookworm-slim AS build
 WORKDIR /app
+ARG APP_BASE_PATH=
+ENV APP_BASE_PATH=$APP_BASE_PATH
 COPY package.json package-lock.json ./
 RUN npm ci --no-audit --no-fund
 COPY tsconfig.json vite.config.ts index.html ./

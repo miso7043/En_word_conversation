@@ -108,3 +108,24 @@ podman exec wordStudy_ node --experimental-transform-types \
 실패하면 트랜잭션 전체를 롤백합니다. 빈 폴더는 거부합니다. 실행 중 자료 관리 작업은 피하세요. 재시작 시 과거 seed 자료가 다시 추가되지 않도록 서버 소스의 `seed/`도 같은 JSON 목록으로 교체한 뒤 앱 이미지를 다시 빌드하고 앱을 재생성하세요. 앱 컨테이너의 `node` 사용자가 읽을 수 있도록 seed 디렉터리는 755, JSON 파일은 644 권한을 지정합니다. 기존 seed는 DB 백업과 함께 별도 보관합니다. `htmlVersion/json/`의 원본 파일은 보존하며, HTML 정적 실행 방식에는 DB 교체가 적용되지 않습니다.
 
 2026-11-23 적용 검증: 별도 임시 DB에서 전체 등록에 성공했고, 운영 서버 앱을 재생성한 뒤 `/api/health` 정상 응답과 `/api/lessons`의 84개 자료·852개 대화·1,901개 문장을 seed JSON과 전체 대조했습니다. 로그인 세션 수 유지와 `pg_restore --list`를 통한 백업 형식 검증도 통과했습니다.
+
+
+## 도메인 첫 화면과 영어 학습 경로
+
+`rp-yoon.duckdns.org` 운영 환경은 다음과 같이 설정합니다.
+
+```dotenv
+PUBLIC_ORIGIN=https://rp-yoon.duckdns.org
+APP_BASE_PATH=/enWordStudy
+```
+
+`PUBLIC_ORIGIN`에는 경로를 붙이지 않습니다. `APP_BASE_PATH`는 프런트 빌드와 백엔드에 모두 적용되므로 변경 후 `sh ./start.sh`로 다시 빌드·재생성합니다. Nginx는 기존처럼 요청 경로를 유지하여 앱으로 전달합니다.
+
+- 블로그 첫 화면: `https://rp-yoon.duckdns.org/` — “태환 블로그” 표시
+- 영어 학습: `https://rp-yoon.duckdns.org/enWordStudy` — 끝에 `/`가 붙은 주소로 이동
+- 관리자: `https://rp-yoon.duckdns.org/enWordStudy/administration`
+- API 상태: `https://rp-yoon.duckdns.org/enWordStudy/api/health`
+
+Google 인증을 사용하는 경우 Google Cloud의 승인된 리디렉션 URI에도 `https://rp-yoon.duckdns.org/enWordStudy/api/auth/callback`을 등록합니다. 로컬 관리자 로그인은 별도 외부 설정 변경이 없습니다. `APP_BASE_PATH`가 비어 있으면 기존 루트 배포 방식을 유지합니다. `htmlVersion/`의 정적 실행 주소에는 영향을 주지 않습니다.
+
+2026-11-23 경로 배포 검증: 타입 검사·하위 경로 프런트 빌드·`npm run verify`·`APP_BASE_PATH=/enWordStudy` 관리자 로그인/권한/CSRF 검증을 통과했습니다. 운영 HTTPS 도메인에서 블로그 문구, `/enWordStudy`의 308 이동, JS/CSS 응답, 관리자 페이지, 인증·상태 API와 학습 자료 84개·문장 1,901개를 확인했습니다.

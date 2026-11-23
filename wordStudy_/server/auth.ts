@@ -1,13 +1,13 @@
 import { createHash, createPublicKey, randomBytes, scryptSync, timingSafeEqual, verify } from 'node:crypto';
 import { readFile } from 'node:fs/promises';
 import type { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
+import { publicOrigin as origin, route } from './paths.ts';
 import { pool, claimLegacyProgress } from './store.ts';
 
 const random = () => randomBytes(32).toString('base64url');
 const secret = process.env.SESSION_SECRET ?? '';
 const digest = (value: string) => createHash('sha256').update(secret).update(value).digest('hex');
-const origin = process.env.PUBLIC_ORIGIN ?? 'http://localhost:43871';
-const callback = `${origin}/api/auth/callback`;
+const callback = `${origin}${route('/api/auth/callback')}`;
 const googleEnabled = !!(process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET && secret.length >= 32);
 const localId = process.env.ADMIN_USERNAME ?? '';
 const localHash = process.env.ADMIN_PASSWORD_HASH ?? '';
@@ -77,11 +77,11 @@ export async function verifyGoogleToken(token: string, nonce: string) {
 const attempts = new Map<string, { count: number; until: number }>();
 export function registerAuth(app: FastifyInstance) {
   app.addHook('onSend', async (request, reply, payload) => {
-    if (request.url.startsWith('/api/')) reply.header('cache-control', 'no-store');
+    if (request.url.startsWith(route('/api/'))) reply.header('cache-control', 'no-store');
     return payload;
   });
-  app.get('/api/auth/session', async request => ({ enabled: authEnabled, user: await identity(request) }));
-  app.post<{ Body: { username: string; password: string } }>('/api/auth/login', {
+  app.get(route('/api/auth/session'), async request => ({ enabled: authEnabled, user: await identity(request) }));
+  app.post<{ Body: { username: string; password: string } }>(route('/api/auth/login'), {
     schema: { body: { type: 'object', required: ['username', 'password'], additionalProperties: false,
       properties: { username: { type: 'string', maxLength: 255 }, password: { type: 'string', maxLength: 1024 } } } },
   }, async (request, reply) => {
@@ -103,7 +103,7 @@ export function registerAuth(app: FastifyInstance) {
     setCookie(reply, token, 604800);
     return { ok: true };
   });
-  app.get('/api/auth/login', async (_request, reply) => {
+  app.get(route('/api/auth/login'), async (_request, reply) => {
     if (!googleEnabled) return reply.code(503).send({ message: '운영자가 Google 인증 설정을 완료해야 합니다.' });
     const token = random(), state = random(), nonce = random(), verifier = random();
     await pool.query('DELETE FROM auth_sessions WHERE expires_at<=now()');
@@ -114,7 +114,7 @@ export function registerAuth(app: FastifyInstance) {
       code_challenge: createHash('sha256').update(verifier).digest('base64url'), code_challenge_method: 'S256' }).toString();
     return reply.redirect(url.href);
   });
-  app.get<{ Querystring: { code?: string; state?: string } }>('/api/auth/callback', async (request, reply) => {
+  app.get<{ Querystring: { code?: string; state?: string } }>(route('/api/auth/callback'), async (request, reply) => {
     const { rows } = await pool.query('DELETE FROM auth_sessions WHERE id=$1 AND user_id IS NULL AND expires_at>now() RETURNING *', [digest(cookie(request))]);
     const pending = rows[0];
     if (!googleEnabled || !pending || !request.query.code || request.query.state !== pending.state) return reply.code(400).send({ message: '로그인 요청이 만료되었거나 유효하지 않습니다.' });
@@ -127,16 +127,16 @@ export function registerAuth(app: FastifyInstance) {
       const token = random();
       await pool.query('INSERT INTO auth_sessions (id,user_id,csrf,expires_at) VALUES ($1,$2,$3,now()+interval \'7 days\')', [digest(token), sub, random()]);
       setCookie(reply, token, 604800);
-      return reply.redirect('/administration');
+      return reply.redirect(route('/administration'));
     } catch { return reply.code(400).send({ message: 'Google 로그인 검증에 실패했습니다. 다시 로그인하세요.' }); }
   });
-  app.post('/api/auth/logout', async (request, reply) => {
+  app.post(route('/api/auth/logout'), async (request, reply) => {
     if (!await requireUser(request, reply)) return;
     await pool.query('DELETE FROM auth_sessions WHERE id=$1', [digest(cookie(request))]);
     setCookie(reply, '', 0);
     return { ok: true };
   });
-  app.post('/api/admin/claim-progress', async (request, reply) => {
+  app.post(route('/api/admin/claim-progress'), async (request, reply) => {
     const user = await requireAdmin(request, reply);
     if (!user) return;
     return { copied: await claimLegacyProgress(user.sub) };

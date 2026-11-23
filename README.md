@@ -43,6 +43,8 @@ sh ./start.sh
 - 모바일 Google 로그인·화면 유지 기능은 HTTPS 운영 주소를 사용하세요.
 - 소스 변경을 적용하려면 `start.sh`로 다시 빌드합니다.
 
+운영 서버의 영어 학습 주소는 [https://rp-yoon.duckdns.org/enWordStudy](https://rp-yoon.duckdns.org/enWordStudy)이며, 도메인 첫 화면에는 “태환 블로그”를 표시합니다. 하위 경로 설정은 [라즈베리파이 배포 안내](wordStudy_/docs/raspberry-pi.md)를 참조하세요.
+
 Google 관리자 설정과 운영 명령은 [서버 설정 안내](wordStudy_/README.md)를 참조하세요.
 
 ## 학습 기능

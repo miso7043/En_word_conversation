@@ -15,7 +15,7 @@ const dateFormat = new Intl.DateTimeFormat('ko-KR', {
 });
 
 async function api<T>(path: string, method = 'GET', body?: object): Promise<T> {
-  const response = await fetch(`/api/${path}`, {
+  const response = await fetch(`${import.meta.env.BASE_URL}api/${path}`, {
     method,
     headers: body ? { 'Content-Type': 'application/json', 'X-CSRF-Token': csrfToken } : undefined,
     body: body ? JSON.stringify(body) : undefined,
@@ -284,7 +284,7 @@ function ImportSummary({ result, close }: { result: ImportResult; close: () => v
 }
 
 function App() {
-  const administration = location.pathname === '/administration';
+  const administration = location.pathname === `${import.meta.env.BASE_URL}administration`;
   const [user, setUser] = useState<User | null>(null);
   const [authReady, setAuthReady] = useState(false);
   const [authEnabled, setAuthEnabled] = useState(false);

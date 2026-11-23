@@ -19,6 +19,8 @@ services:
     build:
       context: .
       dockerfile: Containerfile
+      args:
+        APP_BASE_PATH: ${APP_BASE_PATH:-}
     environment:
       DATABASE_URL: postgresql://wordstudy:${WORDSTUDY_DB_PASSWORD:?Run ./start.sh first}@db:5432/wordstudy
       ENABLE_IMPORT: ${ENABLE_IMPORT:-0}
@@ -28,6 +30,7 @@ services:
       GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-}
       SESSION_SECRET: ${SESSION_SECRET:-}
       PUBLIC_ORIGIN: ${PUBLIC_ORIGIN:-http://localhost:43871}
+      APP_BASE_PATH: ${APP_BASE_PATH:-}
     volumes:
       - ./config:/app/config:ro
     depends_on:
