@@ -86,7 +86,8 @@ function LessonView({ lesson, save, startSelected, autoPlay, onComplete, selecti
       </div>
       <section aria-label="음성 제어" className="playback-panel">
         <div className="playback-row">
-          <button className="icon-button bg-accent text-slate-950" aria-label={playLabel} disabled={!player.canPlay && !selectionCount} onClick={() => {
+          <button className="icon-button bg-accent text-slate-950" aria-label={playLabel} disabled={!flat.length && !selectionCount} onClick={() => {
+            if (player.mode !== 'playing' && !player.checkVoices()) return;
             if (player.mode !== 'idle' || !startSelected()) player.toggle();
           }} aria-keyshortcuts="Space" title={playLabel}>
             <Icon name={player.mode === 'playing' ? 'pause' : 'play'} />
@@ -200,8 +201,9 @@ function SentenceReader({ settings, changeSettings }: { settings: Settings; chan
   }
 
   function speak(value: string) {
-    const alternatives = voices.filter(voice => voiceKey(voice) !== previousVoice.current);
-    const pool = alternatives.length ? alternatives : voices;
+    const available = (synth?.getVoices() ?? []).filter(voice => /^en(?:[-_]|$)/i.test(voice.lang));
+    const alternatives = available.filter(voice => voiceKey(voice) !== previousVoice.current);
+    const pool = alternatives.length ? alternatives : available;
     const voice = pool[Math.floor(Math.random() * pool.length)];
     if (!voice) return;
     previousVoice.current = voiceKey(voice);
@@ -248,7 +250,11 @@ function SentenceReader({ settings, changeSettings }: { settings: Settings; chan
       }} className="mb-3 w-full rounded-xl border border-edge bg-panel p-3 focus-visible:outline-accent" />
       <section aria-label="문장 읽기 제어" className="playback-panel">
         <div className="playback-row">
-          <button className="icon-button bg-accent text-slate-950" aria-label={playing ? paused ? '이어 듣기' : '일시정지' : '재생'} title={playing ? paused ? '이어 듣기' : '일시정지' : '재생'} disabled={!text.trim() || !voices.length} onClick={() => {
+          <button className="icon-button bg-accent text-slate-950" aria-label={playing ? paused ? '이어 듣기' : '일시정지' : '재생'} title={playing ? paused ? '이어 듣기' : '일시정지' : '재생'} disabled={!text.trim()} onClick={() => {
+            if ((!playing || paused) && !(synth?.getVoices() ?? []).some(voice => /^en(?:[-_]|$)/i.test(voice.lang))) {
+              window.alert('재생할 목소리가 없습니다.');
+              return;
+            }
             if (playing) {
               if (paused) synth.resume(); else synth.pause();
               setPaused(!paused);

@@ -1,0 +1,54 @@
+import assert from 'node:assert/strict';
+const { chromium } = await import(process.env.PLAYWRIGHT_MODULE ?? 'playwright');
+const browser=await chromium.launch({executablePath:process.env.CHROME_PATH ?? '/opt/google/chrome/chrome',headless:true,args:['--no-sandbox']});
+try {
+  const page=await browser.newPage({viewport:{width:390,height:844}});
+  const errors=[],alerts=[],completions=[];
+  page.on('pageerror',error=>errors.push(error.message));
+  page.on('dialog',async dialog=>{assert.equal(dialog.type(),'alert');alerts.push(dialog.message());await dialog.accept();});
+  await page.addInitScript(()=>{
+    window.spoken=[];window.voicePool=[];
+    window.SpeechSynthesisUtterance=class{constructor(text){this.text=text;}};
+    Object.defineProperty(window,'speechSynthesis',{value:{paused:false,getVoices:()=>window.voicePool,addEventListener(){},removeEventListener(){},cancel(){},resume(){},pause(){},speak(item){window.spoken.push(item);item.onstart?.();}}});
+  });
+  const lessons=['First','Second'].map(title=>({id:title+'.json',title,position:0,date:null,description:[],conversations:[{title:'대화',description:[],lines:[{speaker:'A',text:title+' line.'}]}]}));
+  await page.route('**/api/lessons',route=>route.fulfill({json:lessons}));
+  await page.route('**/api/study-completions',route=>{completions.push(route.request().postDataJSON());return route.fulfill({json:{studyCount:1}});});
+  await page.goto(process.env.BASE_URL ?? 'http://127.0.0.1:43879');
+  const bar=page.getByRole('region',{name:'음성 제어',exact:true});
+  const play=bar.getByRole('button',{name:'재생',exact:true});
+  await play.waitFor();assert.equal(await play.isEnabled(),true);
+  await play.click();assert.deepEqual(alerts,['재생할 목소리가 없습니다.']);
+  assert.equal(await page.evaluate(()=>window.spoken.length),0);
+  assert.equal(await bar.getByRole('button',{name:'일시정지',exact:true}).count(),0);
+  assert.equal(completions.length,0);
+  await page.getByRole('button',{name:'자료 선택',exact:true}).click();
+  const picker=page.getByRole('dialog',{name:'자료 선택',exact:true});
+  await picker.getByLabel('Second 연속 재생 선택',{exact:true}).check();
+  await page.keyboard.press('Escape');
+  await play.click();assert.equal(alerts.length,2);assert.equal(await page.locator('#lesson-title').textContent(),'First');
+  await page.getByRole('button',{name:'자료 선택',exact:true}).click();
+  await picker.getByLabel('Second 연속 재생 선택',{exact:true}).uncheck();
+  await page.keyboard.press('Escape');
+  // 음성 목록이 늦게 준비되고 voiceschanged가 오지 않아도 클릭 시 재조회한다.
+  await page.evaluate(()=>window.voicePool=[{name:'English',lang:'en-US',voiceURI:'test'}]);
+  await play.click();await page.waitForFunction(()=>window.spoken.length===1);
+  assert.equal(alerts.length,2);
+  await bar.getByRole('button',{name:'정지',exact:true}).click();
+  await page.getByRole('button',{name:'문장읽기',exact:true}).click();
+  await page.getByLabel('영어 문장',{exact:true}).fill('Read this sentence.');
+  const reader=page.getByRole('region',{name:'문장 읽기 제어',exact:true});
+  await page.evaluate(()=>window.voicePool=[]);
+  await reader.getByRole('button',{name:'재생',exact:true}).click();
+  assert.equal(alerts.length,3);assert.equal(alerts.at(-1),'재생할 목소리가 없습니다.');
+  assert.equal(await page.evaluate(()=>window.spoken.length),1);
+  await page.evaluate(()=>window.voicePool=[{name:'English',lang:'en-US',voiceURI:'test'}]);
+  await reader.getByRole('button',{name:'재생',exact:true}).click();
+  await page.waitForFunction(()=>window.spoken.length===2);
+  await reader.getByRole('button',{name:'일시정지',exact:true}).click();
+  await page.evaluate(()=>window.voicePool=[]);
+  await reader.getByRole('button',{name:'이어 듣기',exact:true}).click();
+  assert.equal(alerts.length,4);assert.equal(await reader.getByRole('button',{name:'이어 듣기',exact:true}).count(),1);
+  assert.deepEqual(errors,[]);
+  console.log('PASS: 음성 0개 대화/선택/문장읽기 alert·재생/기록/자료 전환 차단·이어 듣기 차단·늦은 음성 준비 재조회');
+} finally {await browser.close();}

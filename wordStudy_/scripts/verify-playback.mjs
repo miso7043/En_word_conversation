@@ -11,6 +11,7 @@ const timers = new Map();
 let timerId = 0;
 let now = 0;
 const spoken = [];
+const alerts = [];
 const voice = { name: 'English', lang: 'en-US', voiceURI: 'english' };
 const synth = {
   paused: false,
@@ -28,7 +29,7 @@ const synth = {
 };
 const context = vm.createContext({
   console: { info() {}, table() {}, warn() {} },
-  window: { speechSynthesis: synth, addEventListener() {}, removeEventListener() {} },
+  window: { alert(message) { alerts.push(message); }, speechSynthesis: synth, addEventListener() {}, removeEventListener() {} },
   document: { getElementById: () => null },
   matchMedia: () => ({ matches: true }),
   SpeechSynthesisUtterance: class { constructor(text) { this.text = text; } },
@@ -242,3 +243,15 @@ console.log('PASS: 한국어 설명 기본 재생·음성/속도·역할 제외�
 lesson.position=1;descriptionCase({autoPlay:true});render();advance(500);
 assert.equal(spoken[0].lang,'ko-KR');player.nextLine();render();flush();
 assert.equal(spoken.at(-1).text,'First sentence.');lesson.position=0;
+
+// 클릭 시 음성이 없으면 알림만 표시하고 재생·예약·완주를 시작하지 않는다.
+lesson.description=[];synth.getVoices=()=>[];descriptionCase();
+player.toggle();render();flush();
+assert.equal(alerts.at(-1),'재생할 목소리가 없습니다.');assert.equal(player.mode,'idle');
+assert.equal(spoken.length,0);assert.equal(timers.size,0);
+// voiceschanged 없이 늦게 준비된 음성도 클릭 시 다시 읽어 사용할 수 있다.
+synth.getVoices=()=>[voice];player.toggle();render();flush();assert.equal(spoken.at(-1).text,'First sentence.');
+player.toggle();render();synth.getVoices=()=>[];const beforeResume=spoken.length;
+player.toggle();render();flush();assert.equal(player.mode,'paused');assert.equal(spoken.length,beforeResume);
+assert.equal(alerts.at(-1),'재생할 목소리가 없습니다.');
+console.log('PASS: 음성 0개 알림·재생/이어 듣기 차단·늦게 준비된 음성 클릭 재확인');

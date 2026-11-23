@@ -8,6 +8,14 @@ const locale = (voice: SpeechSynthesisVoice) => voice.lang.replaceAll('_', '-').
 const voiceKey = (voice: SpeechSynthesisVoice) => `${locale(voice)}:${voice.voiceURI || voice.name}`;
 const isEligibleVoice = (voice: SpeechSynthesisVoice) => locales.includes(locale(voice)) && !childVoice.test(voice.name);
 
+function availableVoices(synth: SpeechSynthesis | undefined) {
+  const found = new Map<string, SpeechSynthesisVoice>();
+  for (const voice of synth?.getVoices() ?? []) {
+    if (isEligibleVoice(voice) && !found.has(voiceKey(voice))) found.set(voiceKey(voice), voice);
+  }
+  return [...found.values()];
+}
+
 function shuffle<T>(items: T[]): T[] {
   for (let index = items.length - 1; index > 0; index--) {
     const other = Math.floor(Math.random() * (index + 1));
@@ -96,12 +104,7 @@ export function usePlayback(lesson: Lesson, save: (position: number) => void,
   useEffect(() => {
     let lastReport: string | undefined;
     function refresh() {
-      const found = new Map<string, SpeechSynthesisVoice>();
-      for (const voice of synth?.getVoices() ?? []) {
-        if (!isEligibleVoice(voice) || found.has(voiceKey(voice))) continue;
-        found.set(voiceKey(voice), voice);
-      }
-      const eligible = [...found.values()];
+      const eligible = availableVoices(synth);
       const report = eligible.map(({ name, lang }) => ({ name, lang }));
       const signature = JSON.stringify(report);
       if (signature !== lastReport) {
@@ -284,13 +287,21 @@ export function usePlayback(lesson: Lesson, save: (position: number) => void,
     }, 120);
   }
 
+  function checkVoices() {
+    if (availableVoices(synth).length) return true;
+    window.alert('재생할 목소리가 없습니다.');
+    return false;
+  }
+
   function start(index: number, withDescription = false) {
-    if (!voices.length || !flat[index]) return;
+    if (!flat[index] || !checkVoices()) return;
+    const currentVoices = availableVoices(synth);
+    setVoices(currentVoices);
     cancelSpeech();
     clearDescription();
     repeats.current = 0;
     coverage.current = index === 0 ? 0 : null;
-    const assignments = assignVoices(lesson, voices, previous.current);
+    const assignments = assignVoices(lesson, currentVoices, previous.current);
     previous.current = assignments.map(group => {
       const first = group.values().next().value;
       return first ? voiceKey(first) : '';
@@ -314,6 +325,7 @@ export function usePlayback(lesson: Lesson, save: (position: number) => void,
       // Keep the sentence position and restart it when playback resumes.
       cancelSpeech(!!extra);
     } else if (state.current === 'paused') {
+      if (!checkVoices()) return;
       changeMode('playing');
       const extra = turn.current?.phase === 'extra' ? turn.current : null;
       if (extra) { extra.deadline = performance.now() + extra.remainingMs; tickExtra(extra); }
@@ -338,7 +350,7 @@ export function usePlayback(lesson: Lesson, save: (position: number) => void,
       ? '일부 화자가 같은 목소리를 사용합니다.' : '';
 
   return {
-    cast, mode, position, toggle, stop, nextLine, turnProgress,
+    cast, mode, position, toggle, stop, nextLine, turnProgress, checkVoices,
     canPlay: !!voices.length && !!flat.length,
     playLine: (index: number) => {
       if (!descriptionRun.current && state.current !== 'idle' && current.current === index) toggle();
