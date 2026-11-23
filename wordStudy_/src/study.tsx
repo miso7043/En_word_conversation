@@ -1,5 +1,6 @@
 import { useEffect, useId, useRef, useState } from 'react';
 import { readStored, writeStored } from './storage';
+import { Icon, useToast } from './ui';
 import { highlightParts } from './highlight';
 export type Settings = { rate: number; repeat: number; hideEnglish: boolean; hideMeaning: boolean;
   role: string; wake: boolean; theme: string };
@@ -22,10 +23,11 @@ export function useSettings() {
 }
 function clamp(value: unknown, min: number, max: number, fallback: number) { return typeof value === 'number' && Number.isFinite(value) ? Math.min(max, Math.max(min, value)) : fallback; }
 export function StudyControls({ settings: s, change, speakers = [], count = 0 }: { settings: Settings; change: (next: Settings) => void; speakers?: string[]; count?: number }) {
+  const notify = useToast();
   const dialog = useRef<HTMLDialogElement>(null);
   const title = useId();
-  return <div className="ml-auto shrink-0">
-    <button className="control border border-edge" type="button" aria-haspopup="dialog" onClick={() => dialog.current?.showModal()}>학습 설정</button>
+  return <div className="study-settings-trigger ml-auto shrink-0">
+    <button className="icon-button border border-edge" type="button" aria-label="학습 설정" title="학습 설정" aria-haspopup="dialog" onClick={() => dialog.current?.showModal()}><Icon name="settings" /></button>
     <dialog ref={dialog} aria-labelledby={title} className="study-controls m-auto max-h-[85dvh] w-[calc(100%-2rem)] max-w-lg overflow-y-auto rounded-2xl border border-edge bg-panel p-5 text-slate-100 backdrop:bg-black/60" onClick={event => {
       if (event.target !== event.currentTarget) return;
       const bounds = event.currentTarget.getBoundingClientRect();
@@ -35,7 +37,7 @@ export function StudyControls({ settings: s, change, speakers = [], count = 0 }:
       <div className="grid gap-5">
         <label className="flex items-center justify-between gap-3">속도 <input aria-label="재생 속도" type="number" min="0.5" max="1.5" step="0.05" value={s.rate} onChange={e => change({ ...s, rate: clamp(+e.target.value, .5, 1.5, .95) })} /></label>
         {!!count && <label className="flex items-center justify-between gap-3">문장 반복 <input type="number" min="1" max="10" value={s.repeat} onChange={e => change({ ...s, repeat: Math.round(clamp(+e.target.value, 1, 10, 1)) })} /></label>}
-        {(['hideEnglish', 'hideMeaning', 'wake'] as const).filter(key => count > 0 || key === 'wake').map(key => <label key={key} className="flex items-center gap-2"><input type="checkbox" checked={s[key]} onChange={e => change({ ...s, [key]: e.target.checked })} /> {({ hideEnglish: '영어 가리기', hideMeaning: '해석 가리기', wake: '재생 중 화면 유지' })[key]}</label>)}
+        {(['hideEnglish', 'hideMeaning', 'wake'] as const).filter(key => count > 0 || key === 'wake').map(key => <label key={key} className="flex items-center gap-2"><input type="checkbox" checked={s[key]} onChange={e => { change({ ...s, [key]: e.target.checked }); notify(`${({ hideEnglish: '영어 가리기', hideMeaning: '해석 가리기', wake: '화면 유지' })[key]} ${e.target.checked ? '켬' : '끔'}`); }} /> {({ hideEnglish: '영어 가리기', hideMeaning: '해석 가리기', wake: '재생 중 화면 유지' })[key]}</label>)}
         {!!count && <label className="flex items-center justify-between gap-3">내 역할 <select aria-label="내 역할" value={s.role} onChange={e => change({ ...s, role: e.target.value })}><option value="">모두 읽기</option>{speakers.map(speaker => <option key={speaker}>{speaker}</option>)}</select></label>}
       </div>
     </dialog>

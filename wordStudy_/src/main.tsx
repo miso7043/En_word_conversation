@@ -4,6 +4,7 @@ import type { Lesson } from '../shared/lesson';
 import { usePlayback } from './usePlayback';
 import { nextPlaylistLesson, selectedPlaylist, updateSelection } from './playlist';
 import './style.css';
+import { Icon, ToastProvider, useToast } from './ui';
 import { StudyControls, Concealed, useSettings, useWakeLock, type Settings } from './study';
 import { readStored, writeStored, bookmark, restore, type Bookmark } from './storage';
 let csrfToken = '';
@@ -37,6 +38,7 @@ function LessonView({ lesson, save, startSelected, autoPlay, onComplete, selecti
   autoPlay: boolean; onComplete: () => void;
   selectionCount: number; order: 'reverse' | 'forward'; changeOrder: (order: 'reverse' | 'forward') => void; settings: Settings; changeSettings: (s: Settings) => void;
 }) {
+  const notify = useToast();
   const player = usePlayback(lesson, save, { autoPlay, onComplete, settings, onStudied });
   const wakeStatus = useWakeLock(player.mode === 'playing', settings.wake);
   const flat = lesson.conversations.flatMap(group => group.lines);
@@ -74,7 +76,7 @@ function LessonView({ lesson, save, startSelected, autoPlay, onComplete, selecti
   let offset = 0;
 
   return (
-    <main className="lesson-content min-w-0 px-4 pb-40 pt-1 sm:px-8 md:px-10 md:pt-10">
+    <main className="lesson-content min-w-0 px-4 pb-24 pt-1 sm:px-8 md:px-10 md:pt-10">
       <div className="mb-6 break-words">
         <div className="mb-4 flex items-start justify-between gap-3">
           <h2 id="lesson-title" className="min-w-0 text-3xl font-bold tracking-tight sm:text-4xl">{lesson.title}</h2>
@@ -82,28 +84,31 @@ function LessonView({ lesson, save, startSelected, autoPlay, onComplete, selecti
         </div>
         <Paragraphs values={lesson.description} />
       </div>
-      <section aria-label="음성 제어" className="fixed inset-x-0 bottom-0 z-10 border-t border-edge bg-panel px-4 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] md:sticky md:top-0 md:mb-5 md:rounded-xl md:border md:pb-3">
-        <div className="flex flex-wrap items-center gap-2">
-          <button className="control bg-accent text-slate-950" disabled={!player.canPlay && !selectionCount} onClick={() => {
+      <section aria-label="음성 제어" className="playback-panel">
+        <div className="playback-row">
+          <button className="icon-button bg-accent text-slate-950" aria-label={playLabel} disabled={!player.canPlay && !selectionCount} onClick={() => {
             if (player.mode !== 'idle' || !startSelected()) player.toggle();
-          }}
-            aria-keyshortcuts="Space" title="재생 중 스페이스바로 일시정지·이어 듣기">
-            {playLabel}
+          }} aria-keyshortcuts="Space" title={playLabel}>
+            <Icon name={player.mode === 'playing' ? 'pause' : 'play'} />
           </button>
-          <button className="control border border-edge" disabled={player.mode === 'idle' && player.position === 0} onClick={() => {
+          <button className="icon-button border border-edge" aria-label="정지" title="정지" disabled={player.mode === 'idle' && player.position === 0} onClick={() => {
             player.stop();
             requestAnimationFrame(() => document.getElementById('lesson-title')?.scrollIntoView({ block: 'start', behavior: 'instant' }));
-          }}>정지</button>
-          <div className="flex items-center gap-2">
-            <button className="control border border-edge" disabled={!player.canPlay} onClick={player.nextLine}>다음 문장</button>
-            <select className="min-h-11" aria-label="연속 재생 방향" value={order} onChange={e => changeOrder(e.target.value as 'reverse' | 'forward')}><option value="reverse">아래 → 위</option><option value="forward">위 → 아래</option></select>
-          </div>
-          <label className="ml-2 flex min-h-11 items-center gap-2"><input type="checkbox" checked={repeat} onChange={event => changeRepeat(event.target.checked)} />반복 재생</label>
+          }}><Icon name="stop" /></button>
+          <button className="icon-button border border-edge" aria-label="다음 문장" title="다음 문장" disabled={!player.canPlay} onClick={player.nextLine}><Icon name="next" /></button>
+          <button className="icon-button border border-edge" aria-label={`연속 재생 방향: ${order === 'reverse' ? '아래에서 위' : '위에서 아래'}`} title={order === 'reverse' ? '아래에서 위 · 방향 바꾸기' : '위에서 아래 · 방향 바꾸기'} onClick={() => {
+            const next = order === 'reverse' ? 'forward' : 'reverse';
+            changeOrder(next);
+            notify(`재생 방향: ${next === 'reverse' ? '아래에서 위' : '위에서 아래'}`);
+          }}><Icon name={order === 'reverse' ? 'up' : 'down'} /></button>
+          <label className="icon-button repeat-toggle" title="반복 재생"><input type="checkbox" aria-label="반복 재생" checked={repeat} onChange={event => {
+            changeRepeat(event.target.checked);
+            notify(`반복 재생 ${event.target.checked ? '켬' : '끔'}`);
+          }} /></label>
           <StudyControls settings={settings} change={changeSettings} speakers={[...new Set(flat.map(line => line.speaker))]} count={flat.length} />
         </div>
-        {selectionCount > 0 && <p className="mt-1 text-sm text-slate-300">선택 {selectionCount}개{selectionCount > 1 ? ' 연속 재생' : ' 재생'}</p>}
-        {wakeStatus && <p role="status">{wakeStatus}</p>}
-        <p className="mt-1 min-h-5 text-sm text-slate-300" role="status">{player.status}</p>
+        <p className="sr-only" role="status">{player.status}</p>
+        {wakeStatus && <p className="playback-notice" role="status">{wakeStatus}</p>}
       </section>
       {lesson.conversations.map((dialogue, group) => {
         const start = offset;
@@ -148,6 +153,8 @@ type ImportResult = Record<'added' | 'updated' | 'unchanged' | 'skipped' | 'fail
 const emptyImport = (): ImportResult => ({ added: [], updated: [], unchanged: [], skipped: [], failed: [] });
 
 function SentenceReader({ settings, changeSettings }: { settings: Settings; changeSettings: (s: Settings) => void }) {
+  const notify = useToast();
+  const [paused, setPaused] = useState(false);
   const config = useRef(settings); config.current = settings;
   const [text, setText] = useState(() => { try { return localStorage.getItem('sentence-reader-text') ?? ''; } catch { return ''; } });
   const [voices, setVoices] = useState<SpeechSynthesisVoice[]>([]);
@@ -188,6 +195,7 @@ function SentenceReader({ settings, changeSettings }: { settings: Settings; chan
     active.current = null;
     synth?.cancel();
     setPlaying(false);
+    setPaused(false);
     setMessage('재생을 정지했습니다.');
   }
 
@@ -203,6 +211,7 @@ function SentenceReader({ settings, changeSettings }: { settings: Settings; chan
     utterance.rate = config.current.rate;
     active.current = utterance;
     setPlaying(true);
+    setPaused(false);
     const label = `${voice.name} (${voice.lang})`;
     setMessage(`재생 중 · ${label}`);
     utterance.onend = () => {
@@ -225,30 +234,35 @@ function SentenceReader({ settings, changeSettings }: { settings: Settings; chan
   }
 
   const wakeStatus = useWakeLock(playing, settings.wake);
-  const status = message || (!synth ? '이 브라우저는 음성 재생을 지원하지 않습니다.'
+  const status = paused ? '일시정지됨' : message || (!synth ? '이 브라우저는 음성 재생을 지원하지 않습니다.'
     : voices.length ? `사용 가능한 영어 목소리 ${voices.length}개 · 재생할 때 무작위로 선택합니다.`
     : '사용 가능한 영어 목소리가 아직 없습니다.');
 
   return (
-    <main className="min-w-0 px-4 py-4 sm:px-8 md:px-10 md:py-10" aria-labelledby="sentence-reader-title">
+    <main className="min-w-0 px-4 pt-4 pb-24 sm:px-8 md:px-10 md:py-10" aria-labelledby="sentence-reader-title">
       <h2 id="sentence-reader-title" className="mb-4 text-3xl font-bold">영어 문장 읽기</h2>
       <label htmlFor="sentence-reader-input" className="mb-2 block text-slate-300">영어 문장</label>
       <textarea id="sentence-reader-input" lang="en" spellCheck={false} rows={12} value={text} onChange={event => {
         setText(event.target.value);
         try { localStorage.setItem('sentence-reader-text', event.target.value); } catch { /* 저장 실패 시에도 입력 유지 */ }
       }} className="mb-3 w-full rounded-xl border border-edge bg-panel p-3 focus-visible:outline-accent" />
-      <div className="flex flex-wrap items-center gap-2">
-        <button className="control bg-accent text-slate-950" disabled={!text.trim() || !voices.length} onClick={() => {
-          stop();
-          speak(text.trim());
-        }}>▶ 재생</button>
-        <button className="control border border-edge" disabled={!playing} onClick={stop}>정지</button>
-        <label className="ml-2 flex min-h-11 items-center gap-2"><input type="checkbox" checked={repeat} onChange={event => {
-          repeating.current = event.target.checked;
-          setRepeat(event.target.checked);
-        }} />반복 재생</label>
-        <StudyControls settings={settings} change={changeSettings} />
-      </div>
+      <section aria-label="문장 읽기 제어" className="playback-panel">
+        <div className="playback-row">
+          <button className="icon-button bg-accent text-slate-950" aria-label={playing ? paused ? '이어 듣기' : '일시정지' : '재생'} title={playing ? paused ? '이어 듣기' : '일시정지' : '재생'} disabled={!text.trim() || !voices.length} onClick={() => {
+            if (playing) {
+              if (paused) synth.resume(); else synth.pause();
+              setPaused(!paused);
+            } else { stop(); speak(text.trim()); }
+          }}><Icon name={playing && !paused ? 'pause' : 'play'} /></button>
+          <button className="icon-button border border-edge" aria-label="정지" title="정지" disabled={!playing} onClick={stop}><Icon name="stop" /></button>
+          <label className="icon-button repeat-toggle" title="반복 재생"><input type="checkbox" aria-label="반복 재생" checked={repeat} onChange={event => {
+            repeating.current = event.target.checked;
+            setRepeat(event.target.checked);
+            notify(`반복 재생 ${event.target.checked ? '켬' : '끔'}`);
+          }} /></label>
+          <StudyControls settings={settings} change={changeSettings} />
+        </div>
+      </section>
       <p role="status">{wakeStatus}</p>
       <p className="mt-2 text-sm text-slate-300" role="status">{status}</p>
     </main>
@@ -284,6 +298,14 @@ function ImportSummary({ result, close }: { result: ImportResult; close: () => v
 }
 
 function App() {
+  const notify = useToast();
+  const picker = useRef<HTMLDialogElement>(null);
+  useEffect(() => {
+    const wide = matchMedia('(min-width: 768px)');
+    const close = () => { if (wide.matches) picker.current?.close(); };
+    wide.addEventListener('change', close);
+    return () => wide.removeEventListener('change', close);
+  }, []);
   const administration = location.pathname === `${import.meta.env.BASE_URL}administration`;
   const [user, setUser] = useState<User | null>(null);
   const [authReady, setAuthReady] = useState(false);
@@ -318,8 +340,10 @@ function App() {
 
   function checkLesson(id: string, event: { shiftKey: boolean; ctrlKey: boolean; metaKey: boolean }) {
     const anchor = selectionAnchor.current;
-    setCheckedIds(previous => updateSelection(orderedLessons.map(lesson => lesson.id), previous,
-      id, anchor, event.shiftKey, event.ctrlKey || event.metaKey));
+    const next = updateSelection(orderedLessons.map(lesson => lesson.id), checkedIds,
+      id, anchor, event.shiftKey, event.ctrlKey || event.metaKey);
+    setCheckedIds(next);
+    notify(`재생할 자료 ${next.size}개 선택`);
     if (!event.shiftKey || anchor === null) selectionAnchor.current = id;
   }
 
@@ -457,6 +481,64 @@ function App() {
     }
   }
 
+  function lessonList() { return <>
+        {page === 'dialogues' && !!lessons.length && (
+          <>
+            <div className="mb-2 flex items-center justify-between gap-2 text-sm">
+              <label className="flex min-h-11 items-center gap-2">
+                <input type="checkbox" className="h-4 w-4 shrink-0 accent-sky-400"
+                  checked={allChecked}
+                  ref={input => { if (input) input.indeterminate = playlist.length > 0 && !allChecked; }}
+                  onChange={event => {
+                    selectionAnchor.current = null;
+                    setCheckedIds(new Set(event.target.checked ? lessons.map(lesson => lesson.id) : []));
+                    notify(event.target.checked ? '전체 자료 선택' : '전체 선택 해제');
+                  }} />
+                전체 선택
+              </label>
+              <span>선택 {playlist.length}개</span>
+            </div>
+            <p className="mb-2 text-xs text-slate-400">체크: 재생할 자료 선택 · Ctrl+클릭: 개별 선택 · Shift+클릭: 범위 선택</p>
+            <nav aria-label="대화 목록" className="lesson-list min-h-0 flex-1 space-y-2 overflow-y-auto p-1">
+              {orderedLessons.map((lesson, index) => (
+                <Fragment key={lesson.id}>
+                {lesson.memorized && (index === 0 || !orderedLessons[index - 1].memorized) && (
+                  <div role="separator" aria-label="Memorized" className="flex items-center gap-3 py-3 text-xs text-slate-400">
+                    <span className="h-px flex-1 bg-edge" /><span>Memorized</span><span className="h-px flex-1 bg-edge" />
+                  </div>
+                )}
+                <div key={lesson.id} className={`flex items-center gap-2 rounded-xl border px-2 ${checkedIds.has(lesson.id) ? 'border-accent bg-sky-950' : 'border-edge'}`}>
+                  <input type="checkbox" className="h-4 w-4 shrink-0 accent-sky-400"
+                    aria-label={`${lesson.title} 연속 재생 선택`} checked={checkedIds.has(lesson.id)}
+                    onChange={() => {}} onClick={event => checkLesson(lesson.id, event)} />
+                <button key={lesson.id} aria-current={selected?.id === lesson.id}
+                  className="min-w-0 flex-1 select-none rounded-xl border border-transparent px-2 py-2 text-left hover:border-accent aria-[current=true]:border-accent"
+                  onClick={event => {
+                    if (event.ctrlKey || event.metaKey || event.shiftKey) checkLesson(lesson.id, event);
+                    else { selectLesson(lesson.id); picker.current?.close(); }
+                  }}>
+                  {lesson.title}
+                  {lesson.date && <span className="mt-1 block text-xs text-slate-400">{dateFormat.format(new Date(lesson.date))}</span>}
+                </button>
+                <label className="flex shrink-0 flex-col items-center gap-1 py-2 text-[10px]">
+                  <input type="checkbox" className="h-4 w-4 accent-sky-400"
+                    aria-label={`${lesson.title} Memorized`} checked={!!lesson.memorized}
+                    disabled={memorizedPending.has(lesson.id)}
+                    onChange={event => { void toggleMemorized(lesson.id, event.target.checked); }} />
+                  Memorized
+                </label>
+                </div>
+                </Fragment>
+              ))}
+            </nav>
+          </>
+        )}
+        {page === 'dialogues' && <div className="mt-2 space-y-2 text-sm">
+          {status && <p role="status" className="break-words text-slate-300">{status}</p>}
+          {progressError && <p role="status" className="text-amber-300">{progressError}</p>}
+        </div>}
+  </>; }
+
   if (administration) return (
     <main className="mx-auto max-w-3xl space-y-5 p-6">
       <h1 className="text-2xl font-bold">자료 관리</h1>
@@ -490,76 +572,34 @@ function App() {
 
   return (
     <div className="mx-auto max-w-6xl">
-      <header className="flex flex-wrap items-center gap-3 p-4">
-        <nav aria-label="학습 메뉴" className="flex gap-2">
-          {([['dialogues', '대화연습'], ['sentences', '문장읽기']] as const).map(([value, label]) => (
-            <button key={value} aria-current={page === value ? 'page' : undefined} onClick={() => {
+      <header className="study-header">
+        <nav aria-label="학습 메뉴" className="flex shrink-0 gap-1">
+          {([['dialogues', '대화연습', 'chat'], ['sentences', '문장읽기', 'read']] as const).map(([value, label, icon]) => (
+            <button key={value} aria-label={label} title={label} aria-current={page === value ? 'page' : undefined} onClick={() => {
               setAutoPlay(false);
               setPage(value);
               window.scrollTo(0, 0);
-            }}
-              className={`control border ${page === value ? 'border-accent bg-sky-950 text-accent' : 'border-edge'}`}>{label}</button>
+            }} className={`menu-button border ${page === value ? 'border-accent bg-sky-950 text-accent' : 'border-edge'}`}><Icon name={icon} /><span className="hidden md:inline">{label}</span></button>
           ))}
         </nav>
-        <label className="ml-auto text-sm"><span className="sr-only">테마</span><select aria-label="테마" value={settings.theme} onChange={e => changeSettings({ ...settings, theme: e.target.value })}><option value="dark">어둡게</option><option value="light">밝게</option><option value="system">시스템</option></select></label>
+        {page === 'dialogues' && <button className="icon-button mobile-picker-trigger border border-edge" aria-label="자료 선택" title="자료 선택" aria-haspopup="dialog" onClick={() => picker.current?.showModal()}><Icon name="list" /></button>}
+        <div className="theme-buttons ml-auto flex gap-1 md:hidden" role="group" aria-label="테마">
+          {([['dark', '어둡게', 'moon'], ['light', '밝게', 'sun'], ['system', '시스템', 'system']] as const).map(([value, label, icon]) => <button key={value} className={`theme-button border ${settings.theme === value ? 'border-accent bg-sky-950 text-accent' : 'border-edge'}`} aria-label={label} title={label} aria-pressed={settings.theme === value} onClick={() => { changeSettings({ ...settings, theme: value }); notify(`${label} 테마`); }}><Icon name={icon} /></button>)}
+        </div>
+        <label className="ml-auto hidden text-sm md:block"><span className="sr-only">테마</span><select aria-label="테마" value={settings.theme} onChange={event => { changeSettings({ ...settings, theme: event.target.value }); notify(`${({ dark: '어둡게', light: '밝게', system: '시스템' } as Record<string, string>)[event.target.value]} 테마`); }}><option value="dark">어둡게</option><option value="light">밝게</option><option value="system">시스템</option></select></label>
       </header>
+      {page === 'dialogues' && (status || progressError) && <p role="status" className="mobile-message px-4 text-sm text-slate-300">{progressError || status}</p>}
       <div className="grid md:grid-cols-[20rem_minmax(0,1fr)]">
-      <aside className="p-4 md:sticky md:top-0 md:flex md:h-dvh md:flex-col md:border-r md:border-edge md:bg-panel md:p-5">
-        {page === 'dialogues' && !!lessons.length && (
-          <>
-            <div className="mb-2 flex items-center justify-between gap-2 text-sm">
-              <label className="flex min-h-11 items-center gap-2">
-                <input type="checkbox" className="h-4 w-4 shrink-0 accent-sky-400"
-                  checked={allChecked}
-                  ref={input => { if (input) input.indeterminate = playlist.length > 0 && !allChecked; }}
-                  onChange={event => {
-                    selectionAnchor.current = null;
-                    setCheckedIds(new Set(event.target.checked ? lessons.map(lesson => lesson.id) : []));
-                  }} />
-                전체 선택
-              </label>
-              <span>선택 {playlist.length}개</span>
-            </div>
-            <p className="mb-2 text-xs text-slate-400">체크: 재생할 자료 선택 · Ctrl+클릭: 개별 선택 · Shift+클릭: 범위 선택</p>
-            <nav aria-label="대화 목록" className="max-h-40 sm:max-h-64 min-h-0 flex-1 space-y-2 overflow-y-auto p-1 md:max-h-none">
-              {orderedLessons.map((lesson, index) => (
-                <Fragment key={lesson.id}>
-                {lesson.memorized && (index === 0 || !orderedLessons[index - 1].memorized) && (
-                  <div role="separator" aria-label="Memorized" className="flex items-center gap-3 py-3 text-xs text-slate-400">
-                    <span className="h-px flex-1 bg-edge" /><span>Memorized</span><span className="h-px flex-1 bg-edge" />
-                  </div>
-                )}
-                <div key={lesson.id} className={`flex items-center gap-2 rounded-xl border px-2 ${checkedIds.has(lesson.id) ? 'border-accent bg-sky-950' : 'border-edge'}`}>
-                  <input type="checkbox" className="h-4 w-4 shrink-0 accent-sky-400"
-                    aria-label={`${lesson.title} 연속 재생 선택`} checked={checkedIds.has(lesson.id)}
-                    onChange={() => {}} onClick={event => checkLesson(lesson.id, event)} />
-                <button key={lesson.id} aria-current={selected?.id === lesson.id}
-                  className="min-w-0 flex-1 select-none rounded-xl border border-transparent px-2 py-2 text-left hover:border-accent aria-[current=true]:border-accent"
-                  onClick={event => {
-                    if (event.ctrlKey || event.metaKey || event.shiftKey) checkLesson(lesson.id, event);
-                    else selectLesson(lesson.id);
-                  }}>
-                  {lesson.title}
-                  {lesson.date && <span className="mt-1 block text-xs text-slate-400">{dateFormat.format(new Date(lesson.date))}</span>}
-                </button>
-                <label className="flex shrink-0 flex-col items-center gap-1 py-2 text-[10px]">
-                  <input type="checkbox" className="h-4 w-4 accent-sky-400"
-                    aria-label={`${lesson.title} Memorized`} checked={!!lesson.memorized}
-                    disabled={memorizedPending.has(lesson.id)}
-                    onChange={event => { void toggleMemorized(lesson.id, event.target.checked); }} />
-                  Memorized
-                </label>
-                </div>
-                </Fragment>
-              ))}
-            </nav>
-          </>
-        )}
-        {page === 'dialogues' && <div className="mt-2 space-y-2 text-sm">
-          {status && <p role="status" className="break-words text-slate-300">{status}</p>}
-          {progressError && <p role="status" className="text-amber-300">{progressError}</p>}
-        </div>}
-      </aside>
+      <aside className="desktop-lessons p-5 md:sticky md:top-0 md:flex md:h-dvh md:flex-col md:border-r md:border-edge md:bg-panel">{lessonList()}</aside>
+      <dialog ref={picker} aria-labelledby="lesson-picker-title" className="lesson-picker study-controls m-auto w-[calc(100%-2rem)] max-w-lg rounded-2xl border border-edge bg-panel p-4 text-slate-100 backdrop:bg-black/60" onClick={event => {
+        if (event.target === event.currentTarget) {
+          const bounds = event.currentTarget.getBoundingClientRect();
+          if (event.clientX < bounds.left || event.clientX > bounds.right || event.clientY < bounds.top || event.clientY > bounds.bottom) event.currentTarget.close();
+        }
+      }}>
+        <div className="mb-3 flex items-center justify-between gap-3"><h2 id="lesson-picker-title" className="text-xl font-bold">자료 선택</h2><form method="dialog"><button className="icon-button border border-edge" aria-label="선택 닫기" title="닫기"><Icon name="close" /></button></form></div>
+        {lessonList()}
+      </dialog>
       <div className="min-w-0">
       {importResult && <ImportSummary result={importResult} close={() => setImportResult(null)} />}
       {page === 'sentences' && <SentenceReader settings={settings} changeSettings={changeSettings} />}
@@ -577,4 +617,4 @@ function App() {
   );
 }
 
-createRoot(document.getElementById('root')!).render(<App />);
+createRoot(document.getElementById('root')!).render(<ToastProvider><App /></ToastProvider>);

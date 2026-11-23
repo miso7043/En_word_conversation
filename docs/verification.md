@@ -62,3 +62,16 @@ PLAYWRIGHT_MODULE=file:///tmp/wordstudy-browser/node_modules/playwright/index.mj
 - 한 곳에서만 쓰던 저장 래퍼와 사용하지 않는 boolean 옵션, HTML의 이전 제목 스타일·선택 정리 옵션·취소 후 부분 재개 분기를 제거했습니다.
 - 실행 의존성을 실제 import와 빌드 설정에서 확인했습니다. 기존 모델·캐시 파일이 실수로 커밋되지 않도록 Git/컨테이너 제외 규칙은 유지합니다.
 - 이전 작업의 인계 문서를 삭제하고 루트·서버 README를 현재 실행 방법으로 통일했습니다.
+
+## React 아이콘 패널 · 2026-11-23
+
+React 서버 버전의 재생 바는 재생/일시정지·정지·다음 문장·방향 화살표·반복 체크·설정 아이콘을 한 줄로 배치합니다. 모바일 자료 목록은 상단의 자료 선택 팝업으로 옮기고, 학습 메뉴·테마도 한 줄 아이콘으로 표시합니다. 데스크톱은 기존 자료 사이드바와 상단 텍스트 메뉴를 유지합니다. `htmlVersion/`은 이번 화면 변경 대상이 아닙니다.
+
+- 타입 검사·Vite 빌드·`npm run verify` 통과.
+- `verify-compact-browser.mjs`: Chrome의 320·390·768·1440px 너비에서 가로 넘침 없음, 하단 한 줄·44px 조작 영역·패널 높이 검증. 선택 팝업 열기/선택/제목으로 이동/Esc, 방향 저장, 반복 켬/끔 토스트, 팝업 안의 설정 토스트, 테마, 문장읽기 일시정지/이어 듣기 검증 통과.
+- `verify-browser.mjs`: 설정 팝업·포커스 복원·속도·역할 음소거+3초·정지 스크롤·HTML 버전 회귀 검사 통과. React 스크린샷을 갱신했습니다.
+- `verify-study-browser.mjs`, `verify-memorized-browser.mjs`: 학습 횟수·반복 해제·새로고침 유지, 자료 선택 팝업 내 암기 정렬·상태 저장/실패 복원 검증 통과.
+
+새 화면 검증은 기존 fixture 서버를 실행한 뒤 `PLAYWRIGHT_MODULE`을 지정하여 `node wordStudy_/scripts/verify-compact-browser.mjs`로 실행합니다. 운영 경로를 확인할 때는 `BASE_URL=https://rp-yoon.duckdns.org/enWordStudy/`를 지정할 수 있습니다. 음성 합성은 모의 엔진으로 검증하며, 실제 휴대전화 음성·안전 영역은 별도 기기 확인 대상입니다.
+
+운영 반영 후 `BASE_URL=https://rp-yoon.duckdns.org/enWordStudy/`로 동일한 아이콘 화면 검증을 실행해 통과했습니다.

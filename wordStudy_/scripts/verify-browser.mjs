@@ -14,9 +14,9 @@ try {
     assert.equal(await page.getByText(/말해 보기|탭하여 보기|관리·로그인|모든 난이도/).count(),0);
     assert.equal(await page.locator('[aria-label="자료 검색"],[aria-label="난이도 필터"],[aria-label="대화 선택"],#study-search,#study-level,a[href="/administration"]').count(),0);
     const check=page.locator(list).first();await check.check();await page.reload();await page.locator(list).first().waitFor();assert.equal(await page.locator(list).first().isChecked(),true);
-    const bar=page.locator(barSelector),trigger=bar.getByRole('button',{name:'학습 설정',exact:true}),order=bar.getByLabel('연속 재생 방향');
+    const bar=page.locator(barSelector),trigger=bar.getByRole('button',{name:'학습 설정',exact:true}),order=kind==='react'?bar.getByRole('button',{name:/연속 재생 방향/}):bar.getByLabel('연속 재생 방향');
     const bounds=await order.boundingBox(),next=await bar.getByRole('button',{name:'다음 문장',exact:true}).boundingBox();assert.ok(bounds.x>next.x&&Math.abs(bounds.y-next.y)<6);
-    await order.selectOption('forward');await page.reload();await page.locator(list).first().waitFor();assert.equal(await bar.getByLabel('연속 재생 방향').inputValue(),'forward');
+    if(kind==='react')await order.click();else await order.selectOption('forward');await page.reload();await page.locator(list).first().waitFor();if(kind==='react')assert.match(await order.getAttribute('aria-label'),/위에서 아래/);else assert.equal(await order.inputValue(),'forward');
     await trigger.click();const dialog=page.getByRole('dialog',{name:'학습 설정',exact:true});await dialog.waitFor();
     await dialog.getByLabel('영어 가리기',{exact:true}).check();await dialog.getByLabel('해석 가리기',{exact:true}).check();await dialog.getByLabel('재생 속도').fill('0.7');
     if(kind==='html')await dialog.getByLabel('재생 속도').dispatchEvent('change');

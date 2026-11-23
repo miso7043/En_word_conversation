@@ -17,6 +17,7 @@ try {
     await route.fulfill({ json: { memorized } });
   });
   await page.goto(process.env.TEST_URL ?? 'http://127.0.0.1:43871');
+  await page.getByRole('button', { name: '자료 선택', exact: true }).click();
   const nav = page.getByRole('navigation', { name: '대화 목록', exact: true });
   const titles = () => nav.locator('button').evaluateAll(items => items.map(item => item.firstChild.textContent.trim()));
   await nav.getByLabel('New Memorized', { exact: true }).waitFor();
@@ -26,13 +27,14 @@ try {
   await page.waitForFunction(() => document.querySelector('nav[aria-label="대화 목록"] button')?.textContent.trim().startsWith('Old'));
   assert.deepEqual(await titles(), ['Old', 'New', 'Middle']);
   await page.reload();
+  await page.getByRole('button', { name: '자료 선택', exact: true }).click();
   await nav.getByLabel('New Memorized', { exact: true }).waitFor();
   assert.equal(await nav.getByLabel('New Memorized', { exact: true }).isChecked(), true);
   await nav.getByLabel('New Memorized', { exact: true }).click();
   await page.waitForFunction(() => document.querySelector('nav[aria-label="대화 목록"] button')?.textContent.trim().startsWith('New'));
   fail = true;
   await nav.getByLabel('Old Memorized', { exact: true }).click();
-  await page.getByText('암기 상태를 저장하지 못했습니다. 서버 연결을 확인하세요.').waitFor();
+  await page.getByRole('dialog', { name: '자료 선택', exact: true }).getByText('암기 상태를 저장하지 못했습니다. 서버 연결을 확인하세요.').waitFor();
   assert.equal(await nav.getByLabel('Old Memorized', { exact: true }).isChecked(), false);
   assert.equal(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth), false);
   console.log('PASS: 암기 영역 정렬·구분선·체크/해제 이동·새로고침 유지·저장 실패 복원·모바일 너비');
