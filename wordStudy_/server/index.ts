@@ -3,7 +3,7 @@ import { join, resolve } from 'node:path';
 import Fastify from 'fastify';
 import fastifyStatic from '@fastify/static';
 import { migrate } from 'drizzle-orm/node-postgres/migrator';
-import { basePath, publicOrigin, route } from './paths.ts';
+import { basePath, route } from './paths.ts';
 import { parseLesson } from '../shared/lesson.ts';
 import { identity, registerAuth, requireUser, requireAdmin } from './auth.ts';
 import { db, listLessons, pool, saveProgress, importLesson, recordStudy, saveMemorized } from './store.ts';
@@ -15,7 +15,11 @@ app.get(route('/api/health'), async () => {
   await pool.query('SELECT 1');
   return { ok: true };
 });
-app.get(route('/api/lessons'), async (request, reply) => reply.header('cache-control', 'no-store').send(await listLessons((await identity(request))?.sub)));
+app.get(route('/api/lessons'), async (request, reply) => {
+  const user = await identity(request);
+  const items = await listLessons(user?.sub);
+  return reply.header('cache-control', 'no-store').send(user?.admin ? items : items.map(({ studyCount, memorized, ...lesson }) => lesson));
+});
 
 app.put<{ Body: { id: string; position: number } }>(route('/api/progress'), {
   schema: { body: {
@@ -30,35 +34,27 @@ app.put<{ Body: { id: string; position: number } }>(route('/api/progress'), {
   return { ok: true };
 });
 
-// 공개 학습 화면의 익명 사용자도 공통 학습 횟수를 기록한다.
+// 관리자만 공통 학습 횟수를 기록한다. 인증·권한·CSRF를 모두 확인한다.
 app.post<{ Body: { id: string; eventId: string } }>(route('/api/study-completions'), {
   schema: { body: {
     type: 'object', required: ['id', 'eventId'], additionalProperties: false,
     properties: { id: { type: 'string', maxLength: 225 }, eventId: { type: 'string', format: 'uuid' } },
   } },
 }, async (request, reply) => {
-  const origin = request.headers.origin;
-  const sameOrigin = `${request.protocol}://${request.headers.host}`;
-  if (origin !== sameOrigin && origin !== publicOrigin) {
-    return reply.code(403).send({ message: '요청 출처가 올바르지 않습니다.' });
-  }
+  if (!await requireAdmin(request, reply)) return;
   const count = await recordStudy(request.body.id, request.body.eventId);
   if (count === undefined) return reply.code(404).send({ message: '자료를 찾을 수 없습니다.' });
   return { studyCount: count };
 });
 
-// 학습 횟수와 동일하게 공개 학습 화면에서 공통 암기 상태를 저장한다.
+// 암기 상태 변경도 관리자에게만 허용한다.
 app.put<{ Body: { id: string; memorized: boolean } }>(route('/api/memorized'), {
   schema: { body: {
     type: 'object', required: ['id', 'memorized'], additionalProperties: false,
     properties: { id: { type: 'string', maxLength: 225 }, memorized: { type: 'boolean' } },
   } },
 }, async (request, reply) => {
-  const origin = request.headers.origin;
-  if (origin !== `${request.protocol}://${request.headers.host}`
-    && origin !== publicOrigin) {
-    return reply.code(403).send({ message: '요청 출처가 올바르지 않습니다.' });
-  }
+  if (!await requireAdmin(request, reply)) return;
   const { id, memorized } = request.body;
   if (!await saveMemorized(id, memorized)) return reply.code(404).send({ message: '자료를 찾을 수 없습니다.' });
   return { memorized };

@@ -18,6 +18,7 @@ try {
   const events = [];
   const lesson = { id: 'study.json', title: 'Study count', date: null, description: [], position: 0, studyCount: 1,
     conversations: [{ description: [], lines: [{ speaker: 'A', text: 'First.' }, { speaker: 'B', text: 'Last.' }] }] };
+  await page.route('**/api/auth/session', route => route.fulfill({ json: { enabled:true, user:{ sub:'fixture-admin', admin:true, csrf:'fixture' } } }));
   await page.route('**/api/lessons', route => route.fulfill({ json: [{ ...lesson, studyCount: count }] }));
   await page.route('**/api/study-completions', route => {
     events.push(route.request().postDataJSON());

@@ -25,8 +25,9 @@ try {
     await page.locator('#lesson-title').waitFor();
     const bar=page.getByRole('region',{name:'음성 제어',exact:true});
     const initial=await bar.boundingBox();
-    assert.ok(Math.abs(initial.x+initial.width-(width-16))<2,`우측 고정 ${width}`);
-    assert.ok(Math.abs(initial.y+initial.height-828)<2,`하단 고정 ${width}`);
+    const content=await page.locator('.study-layout > .min-w-0').boundingBox();
+    assert.ok(Math.abs(initial.x-content.x)<2 && Math.abs(initial.width-content.width)<2,`본문 너비의 하단 패널 ${width}`);
+    assert.ok(Math.abs(initial.y+initial.height-844)<2,`하단 고정 ${width}`);
     await page.evaluate(()=>window.scrollTo(0,document.documentElement.scrollHeight));
     const after=await bar.boundingBox();
     assert.ok(Math.abs(after.y-initial.y)<1,`스크롤 중 고정 ${width}`);
@@ -81,6 +82,15 @@ try {
   await page.evaluate(()=>window.scrollTo(0,document.documentElement.scrollHeight));
   const actualLast=await page.locator('[id^="line-"]').last().boundingBox();
   assert.ok(actualLast.y>=0 && actualLast.y+actualLast.height<(await bar.boundingBox()).y,'실제 자료의 마지막 문장 노출');
+  await page.getByRole('button',{name:'문장읽기',exact:true}).click();
+  assert.equal(await page.locator('.desktop-lessons').count(),0);
+  const reader=await page.getByRole('main',{name:'영어 문장 읽기',exact:true}).boundingBox();
+  const layout=await page.locator('.study-layout').boundingBox();
+  assert.ok(Math.abs(reader.width-layout.width)<2,'문장읽기 전체 너비');
+  const readerBar=await page.getByRole('region',{name:'문장 읽기 제어',exact:true}).boundingBox();
+  assert.ok(Math.abs(readerBar.width-layout.width)<2,'문장읽기 하단 패널 전체 너비');
+  await page.getByRole('button',{name:'대화연습',exact:true}).click();
+  assert.equal(await page.locator('.desktop-lessons').count(),1);
   assert.deepEqual(errors,[]);
-  console.log('PASS: 768/1024/1440 우측 하단 고정·스크롤/재생 중 마지막 문장 노출·목록 접기/펼치기/저장·한국어 설명 기본값/음성/순서/일시정지/설정 저장');
+  console.log('PASS: 768/1024/1440 본문 하단 전체 너비 고정·문장읽기 사이드바 제거·스크롤/재생 중 마지막 문장 노출·목록 접기/펼치기/저장·한국어 설명 기본값/음성/순서/일시정지/설정 저장');
 } finally { await browser.close(); }

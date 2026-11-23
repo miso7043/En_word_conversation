@@ -9,6 +9,7 @@ try {
     conversations: [{ title: '대화', description: [], lines: [{ speaker: 'A', text: 'Hello.' }] }],
   }));
   let fail = false;
+  await page.route('**/api/auth/session', route => route.fulfill({ json: { enabled:true, user:{ sub:'fixture-admin', admin:true, csrf:'fixture' } } }));
   await page.route('**/api/lessons', route => route.fulfill({ json: lessons }));
   await page.route('**/api/memorized', async route => {
     if (fail) return route.fulfill({ status: 500, json: { message: 'test' } });

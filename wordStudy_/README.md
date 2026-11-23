@@ -42,6 +42,8 @@ Vite 개발 서버는 `/api`를 43871 백엔드로 프록시합니다. 관리자
 - `POST /api/auth/login` (아이디·비밀번호), `GET /api/auth/session`, `GET /api/auth/login`, `GET /api/auth/callback`, `POST /api/auth/logout`
 - `POST /api/import`: `name`, `modified`, `data`, 선택 `policy: update|skip`; 결과 `added|updated|unchanged|skipped`
 - `PUT /api/progress`: 로그인 계정의 `id`, `position`; 익명은 브라우저에 저장
+- `POST /api/study-completions`: 관리자 완주 기록; `id`, `eventId`
+- `PUT /api/memorized`: 관리자 암기 상태 변경; `id`, `memorized`
 - `POST /api/admin/claim-progress`: 관리자 자신의 기존 공동 진도 복사
 
 상태를 변경하는 인증 요청에는 동일한 Origin과 세션에서 받은 `X-CSRF-Token`이 필요합니다. OAuth 토큰·클라이언트 비밀값은 브라우저 저장소에 넣지 않습니다.
@@ -88,4 +90,4 @@ Vite 개발 서버는 `/api`를 43871 백엔드로 프록시합니다. 관리자
 
 파일·폴더 등록은 파일명과 관계없이 메인 `title`을 먼저 비교하고, `conversations`의 제목을 순서대로 비교합니다. 대화 개수와 모든 제목이 같으면 본문·날짜가 달라도 `skipped`로 건너뜁니다. 제목 목록이 다르면 기존 파일명에 대한 `update|skip` 정책을 적용하고, 새 파일명은 등록합니다.
 
-대화 목록의 `Memorized` 체크박스는 공통 암기 상태를 DB에 저장합니다(기본 false). 미암기 자료가 위에, 암기 자료는 `Memorized` 구분선 아래에 표시되며 각 영역의 기존 날짜 정렬을 유지합니다. 체크 해제 시 위 영역으로 돌아갑니다. 공개 학습 화면에서도 변경할 수 있고 새로고침·재시작·자료 갱신 후 유지됩니다. `PUT /api/memorized`는 `{ id, memorized }`를 받으며 동일 출처 요청만 허용합니다.
+대화 목록의 `Memorized` 체크박스는 공통 암기 상태를 DB에 저장합니다(기본 false). 미암기 자료가 위에, 암기 자료는 `Memorized` 구분선 아래에 표시되며 각 영역의 기존 날짜 정렬을 유지합니다. 체크 해제 시 위 영역으로 돌아갑니다. 관리자로 로그인한 경우에만 학습 횟수·암기 체크박스·구분선·암기 기준 정렬을 표시하며 새로고침·재시작·자료 갱신 후 상태를 유지합니다. 비로그인·일반 계정에는 표시하지 않고, 해당 API 응답에서도 학습 횟수·암기 상태를 제외합니다. 일반 사용자의 학습은 횟수에 반영하지 않습니다. `PUT /api/memorized`는 `{ id, memorized }`를 받으며 관리자 인증·권한·동일 출처·CSRF를 모두 확인합니다.

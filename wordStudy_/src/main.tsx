@@ -30,8 +30,8 @@ function Paragraphs({ values }: { values: string[] }) {
   return values.map((value, index) => <p key={index} className="mb-2 leading-relaxed text-slate-300">{value}</p>);
 }
 
-function LessonView({ lesson, save, startSelected, autoPlay, onComplete, selectionCount, order, changeOrder, settings, changeSettings, repeat, changeRepeat, onStudied }: {
-  onStudied: () => void;
+function LessonView({ lesson, save, startSelected, autoPlay, onComplete, selectionCount, order, changeOrder, settings, changeSettings, repeat, changeRepeat, onStudied, showStudyCount }: {
+  onStudied?: () => void; showStudyCount: boolean;
   repeat: boolean; changeRepeat: (repeat: boolean) => void;
   lesson: Lesson; save: (position: number) => void;
   startSelected: () => boolean;
@@ -80,7 +80,7 @@ function LessonView({ lesson, save, startSelected, autoPlay, onComplete, selecti
       <div className="mb-6 break-words">
         <div className="mb-4 flex items-start justify-between gap-3">
           <h2 id="lesson-title" className="min-w-0 text-3xl font-bold tracking-tight sm:text-4xl">{lesson.title}</h2>
-          <p className="ml-auto shrink-0 text-right text-sm text-slate-300" aria-live="polite">학습 {lesson.studyCount ?? 0}회</p>
+          {showStudyCount && <p className="ml-auto shrink-0 text-right text-sm text-slate-300" aria-live="polite">학습 {lesson.studyCount ?? 0}회</p>}
         </div>
         <Paragraphs values={lesson.description} />
       </div>
@@ -318,7 +318,7 @@ function App() {
   const scope = user?.sub ?? 'anonymous';
   const [page, setPage] = useState<'dialogues' | 'sentences'>('dialogues');
   const [lessons, setLessons] = useState<Lesson[]>([]);
-  const orderedLessons = [...lessons].sort((a, b) => Number(!!a.memorized) - Number(!!b.memorized));
+  const orderedLessons = user?.admin ? [...lessons].sort((a, b) => Number(!!a.memorized) - Number(!!b.memorized)) : lessons;
   const [memorizedPending, setMemorizedPending] = useState<Set<string>>(new Set());
   const [selectedId, setSelectedId] = useState('');
   const [session, setSession] = useState(0);
@@ -378,6 +378,7 @@ function App() {
   }
 
   function recordCompletion(id: string) {
+    if (!user?.admin) return;
     const bytes = crypto.getRandomValues(new Uint8Array(16));
     bytes[6] = (bytes[6] & 15) | 64;
     bytes[8] = (bytes[8] & 63) | 128;
@@ -389,6 +390,7 @@ function App() {
   }
 
   async function toggleMemorized(id: string, memorized: boolean) {
+    if (!user?.admin) return;
     setMemorizedPending(items => new Set(items).add(id));
     try {
       const result = await api<{ memorized: boolean }>('memorized', 'PUT', { id, memorized });
@@ -504,7 +506,7 @@ function App() {
             <nav aria-label="대화 목록" className="lesson-list min-h-0 flex-1 space-y-2 overflow-y-auto p-1">
               {orderedLessons.map((lesson, index) => (
                 <Fragment key={lesson.id}>
-                {lesson.memorized && (index === 0 || !orderedLessons[index - 1].memorized) && (
+                {user?.admin && lesson.memorized && (index === 0 || !orderedLessons[index - 1].memorized) && (
                   <div role="separator" aria-label="Memorized" className="flex items-center gap-3 py-3 text-xs text-slate-400">
                     <span className="h-px flex-1 bg-edge" /><span>Memorized</span><span className="h-px flex-1 bg-edge" />
                   </div>
@@ -522,13 +524,13 @@ function App() {
                   {lesson.title}
                   {lesson.date && <span className="mt-1 block text-xs text-slate-400">{dateFormat.format(new Date(lesson.date))}</span>}
                 </button>
-                <label className="flex shrink-0 flex-col items-center gap-1 py-2 text-[10px]">
+                {user?.admin && <label className="flex shrink-0 flex-col items-center gap-1 py-2 text-[10px]">
                   <input type="checkbox" className="h-4 w-4 accent-sky-400"
                     aria-label={`${lesson.title} Memorized`} checked={!!lesson.memorized}
                     disabled={memorizedPending.has(lesson.id)}
                     onChange={event => { void toggleMemorized(lesson.id, event.target.checked); }} />
                   Memorized
-                </label>
+                </label>}
                 </div>
                 </Fragment>
               ))}
@@ -591,11 +593,11 @@ function App() {
         <label className="ml-auto hidden text-sm md:block"><span className="sr-only">테마</span><select aria-label="테마" value={settings.theme} onChange={event => { changeSettings({ ...settings, theme: event.target.value }); notify(`${({ dark: '어둡게', light: '밝게', system: '시스템' } as Record<string, string>)[event.target.value]} 테마`); }}><option value="dark">어둡게</option><option value="light">밝게</option><option value="system">시스템</option></select></label>
       </header>
       {page === 'dialogues' && (status || progressError) && <p role="status" className="mobile-message px-4 text-sm text-slate-300">{progressError || status}</p>}
-      <div className={`study-layout ${sidebarCollapsed ? 'sidebar-collapsed' : ''}`}>
-      <aside className="desktop-lessons md:sticky md:top-0 md:flex md:h-dvh md:flex-col md:border-r md:border-edge md:bg-panel">
+      <div className={`study-layout ${page === 'dialogues' ? `has-lessons ${sidebarCollapsed ? 'sidebar-collapsed' : ''}` : 'reader-layout'}`}>
+      {page === 'dialogues' && <aside className="desktop-lessons md:sticky md:top-0 md:flex md:h-dvh md:flex-col md:border-r md:border-edge md:bg-panel">
         <div className="sidebar-toggle-row"><button className="icon-button border border-edge" aria-label={sidebarCollapsed ? '목록 펼치기' : '목록 접기'} title={sidebarCollapsed ? '목록 펼치기' : '목록 접기'} aria-expanded={!sidebarCollapsed} aria-controls="desktop-lesson-list" onClick={() => setSidebarCollapsed(value => !value)}><Icon name={sidebarCollapsed ? 'expand' : 'collapse'} /></button></div>
         <div id="desktop-lesson-list" className="sidebar-list-content" hidden={sidebarCollapsed}>{lessonList()}</div>
-      </aside>
+      </aside>}
       <dialog ref={picker} aria-labelledby="lesson-picker-title" className="lesson-picker study-controls m-auto w-[calc(100%-2rem)] max-w-lg rounded-2xl border border-edge bg-panel p-4 text-slate-100 backdrop:bg-black/60" onClick={event => {
         if (event.target === event.currentTarget) {
           const bounds = event.currentTarget.getBoundingClientRect();
@@ -613,7 +615,7 @@ function App() {
           lesson={{ ...selected, position: positions.current.get(selected.id) ?? selected.position }}
           startSelected={startSelected} repeat={repeat} changeRepeat={setRepeat}
           selectionCount={playlist.length} order={order} changeOrder={setOrder} settings={settings} changeSettings={changeSettings}
-          autoPlay={autoPlay} onComplete={playPreviousLesson} onStudied={() => recordCompletion(selected.id)}
+          autoPlay={autoPlay} onComplete={playPreviousLesson} showStudyCount={!!user?.admin} onStudied={user?.admin ? () => recordCompletion(selected.id) : undefined}
           save={position => save(selected.id, position)} />
       )}
       </div>
