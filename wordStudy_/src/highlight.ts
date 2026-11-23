@@ -52,6 +52,36 @@ const prepositions = new Set('in on at to into of for from with by as over under
 const conjunctions = new Set('and or but so because although if when while since unless'.split(' '));
 const determiners = new Set('a an the this that these those my your his her its our their some any each every no'.split(' '));
 const nounStops = new Set([...conjunctions, ...[...prepositions].filter(word => word !== 'of'), 'is', 'am', 'are', 'was', 'were', 'be', 'been', 'being', 'has', 'have', 'had', 'will', 'would', 'can', 'could', 'should', 'must']);
+// 숙어의 핵심 단어 앞에 들어가는 관사·정도 표현·흔한 수식어만 허용한다.
+const modifiers = new Set([...determiners, 'total', 'real', 'huge', 'tough', 'extra', 'additional',
+  'great', 'enormous', 'immense', 'intense', 'severe', 'serious', 'strong', 'heavy', 'constant',
+  'considerable', 'significant', 'tremendous', 'unexpected', 'sudden', 'major', 'minor',
+  'big', 'small', 'little', 'much', 'more', 'less', 'many', 'very', 'really', 'extremely', 'so', 'too']);
+const modifierPhrases = ['a lot of', 'lots of', 'a great deal of', 'a good deal of',
+  'a bit of', 'a little bit of', 'plenty of', 'a large amount of', 'a great amount of']
+  .map(phrase => phrase.split(' '));
+
+function insertionEnds(text: string, source: Token[], position: number): number[] {
+  const ends = new Set<number>();
+  const limit = Math.min(position + 6, source.length);
+  function visit(cursor: number) {
+    for (const unit of [[source[cursor]?.word], ...modifierPhrases]) {
+      const end = cursor + unit.length;
+      if (end > limit || unit[0] === undefined) continue;
+      if (unit.length === 1 && !modifiers.has(unit[0])) continue;
+      if (!unit.every((word, i) => {
+        const token = source[cursor + i], previous = source[cursor + i - 1];
+        return token.word === word && previous !== undefined && connected(text, previous, token)
+          && !/[,;:]/.test(text.slice(previous.end, token.start));
+      })) continue;
+      if (ends.has(end)) continue;
+      ends.add(end);
+      if (end < limit) visit(end);
+    }
+  }
+  visit(position);
+  return [...ends].sort((a, b) => a - b);
+}
 
 function tokens(text: string, expandContractions = false): Token[] {
   const result = [...text.matchAll(/[a-z]+(?:['’][a-z]+)*/gi)].map(match => ({
@@ -152,6 +182,7 @@ export function highlightParts(text: string, phrases: string[]): HighlightPart[]
   const ranges: Array<{ start: number; end: number }> = [];
   for (const phrase of phrases) {
     for (const target of patternTargets(phrase)) {
+      const allowModifiers = target.length > 1 && !target.some(token => token.word.startsWith('slot'));
       const strictHave = target.some(token => token.word === 'slotpp')
         && target.some(token => /^(could|would|should|might|must)$/.test(token.word));
       const source = tokens(text, true);
@@ -196,7 +227,18 @@ export function highlightParts(text: string, phrases: string[]): HighlightPart[]
             }
             return undefined;
           }
-          return match(part + 1, position + 1);
+          const end = match(part + 1, position + 1);
+          if (end !== undefined) return end;
+          // 핵심 단어의 순서를 보존하고, 다음 내용어 앞의 제한된 수식어만 건너뛴다.
+          const nextWord = target[part + 1]?.word;
+          if (allowModifiers && nextWord && !fixed.has(nextWord) && !nextWord.includes("'")) {
+            for (const next of insertionEnds(text, source, position + 1)) {
+              if (source[next] && /[,;:]/.test(text.slice(source[next - 1].end, source[next].start))) continue;
+              const modifiedEnd = match(part + 1, next);
+              if (modifiedEnd !== undefined) return modifiedEnd;
+            }
+          }
+          return undefined;
         }
         const end = match(0, start);
         if (end !== undefined && end > start) ranges.push({ start: source[start].start, end: source[end - 1].end });
