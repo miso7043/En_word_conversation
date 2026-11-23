@@ -93,3 +93,18 @@ sudo nginx -t
 6시간 간격으로 갱신 시기를 확인하고 인증서가 갱신되면 Nginx를 다시 불러옵니다. 외부 80번 포트는 갱신 검증을 위해 유지하세요. 공인 IP가 바뀌면 인증서와 `PUBLIC_ORIGIN`도 새 IP로 갱신해야 합니다. 비밀키·인증서는 `/etc/letsencrypt/`에 보관하며 저장소에 추가하지 않습니다.
 
 참고: [Let's Encrypt의 Certbot IP 인증서 공식 안내](https://letsencrypt.org/2026/03/11/shorter-certs-certbot)
+
+## 영어 학습 자료 전체 교체
+
+`scripts/replace-lessons.mjs`는 지정한 JSON 폴더를 검증한 뒤 하나의 트랜잭션으로 DB의 영어 학습 자료 목록을 교체합니다. 폴더에 없는 기존 자료는 삭제하며, 같은 파일명의 자료는 학습 횟수·암기 상태를 유지하고 진도를 새 문장에 맞춥니다. 삭제된 자료의 관련 진도·완료 기록은 함께 삭제됩니다. 로그인 세션·관리자 설정·DB 볼륨은 변경하지 않습니다.
+
+운영 DB를 먼저 `pg_dump -Fc`로 백업하고, 별도 임시 DB에서 검증한 뒤 적용하세요. JSON 폴더와 스크립트가 앱 컨테이너에 있어야 합니다. 예를 들어 JSON을 `/tmp/wordstudy-json-refresh`, 스크립트를 `/app/scripts/replace-lessons.mjs`에 복사했다면 다음처럼 실행합니다.
+
+```bash
+podman exec wordStudy_ node --experimental-transform-types \
+  scripts/replace-lessons.mjs /tmp/wordstudy-json-refresh --apply
+```
+
+실패하면 트랜잭션 전체를 롤백합니다. 빈 폴더는 거부합니다. 실행 중 자료 관리 작업은 피하세요. 재시작 시 과거 seed 자료가 다시 추가되지 않도록 서버 소스의 `seed/`도 같은 JSON 목록으로 교체한 뒤 앱 이미지를 다시 빌드하고 앱을 재생성하세요. 앱 컨테이너의 `node` 사용자가 읽을 수 있도록 seed 디렉터리는 755, JSON 파일은 644 권한을 지정합니다. 기존 seed는 DB 백업과 함께 별도 보관합니다. `htmlVersion/json/`의 원본 파일은 보존하며, HTML 정적 실행 방식에는 DB 교체가 적용되지 않습니다.
+
+2026-11-23 적용 검증: 별도 임시 DB에서 전체 등록에 성공했고, 운영 서버 앱을 재생성한 뒤 `/api/health` 정상 응답과 `/api/lessons`의 84개 자료·852개 대화·1,901개 문장을 seed JSON과 전체 대조했습니다. 로그인 세션 수 유지와 `pg_restore --list`를 통한 백업 형식 검증도 통과했습니다.
